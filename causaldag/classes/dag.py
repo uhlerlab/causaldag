@@ -6,7 +6,7 @@ Base class for causal DAGs
 from collections import defaultdict
 import numpy as np
 import itertools as itr
-from causaldag.utils import core_utils
+from ..utils import core_utils
 import operator as op
 
 
