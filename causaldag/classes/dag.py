@@ -1,3 +1,8 @@
+# Author: Chandler Squires
+"""
+Base class for causal DAGs
+"""
+
 from collections import defaultdict
 import numpy as np
 import itertools as itr
@@ -306,6 +311,7 @@ class DAG:
         return amat, node_list
 
     # === optimal interventions
+    @property
     def cpdag(self):
         from .cpdag import CPDAG
         return CPDAG(self)
@@ -313,7 +319,7 @@ class DAG:
     def interventional_cpdag(self, intervened_nodes, cpdag=None):
         from .cpdag import CPDAG
         if cpdag is None:
-            cpdag = self.cpdag()
+            cpdag = self.cpdag
 
         cut_edges = set()
         for node in intervened_nodes:
@@ -323,7 +329,7 @@ class DAG:
 
     def optimal_intervention(self, cpdag=None):
         if cpdag is None:
-            cpdag = self.cpdag()
+            cpdag = self.cpdag
 
         all_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) == 1 for node in self._nodes)
         nodes2num_oriented = {}
@@ -334,7 +340,40 @@ class DAG:
                 continue
             icpdag = self.interventional_cpdag({node}, cpdag)
             nodes2num_oriented[node] = len(icpdag._arcs) - len(cpdag._arcs)
+        if len(nodes2num_oriented) == 0:
+            return next(iter(self._nodes))
         return max(nodes2num_oriented.items(), key=op.itemgetter(1))[0]
+
+    def backdoor(self, i, j):
+        """
+        Returns S satisfying the backdoor criterion if such an S exists, otherwise False.
+
+        S satisfies the backdoor criterion if
+        (i) S blocks every path from i to j with an arrow into i
+        (ii) no node in S is a descendant of i
+
+        :param i:
+        :param j:
+        :return:
+        """
+        pass
+
+    def frontdoor(self, i, j):
+        """
+        Returns S satisfying the frontdoor criterion if such an S exists, otherwise False.
+
+        S satisfies the frontdoor criterion if
+        (i) S blocks all directed paths from i to j
+        (ii) there are no unblocked backdoor paths from i to S
+        (iii) i blocks all backdoor paths from S to j
+        :param i:
+        :param j:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def dsep(self, i, j, c=None):
+        raise NotImplementedError()
 
 
 if __name__ == '__main__':

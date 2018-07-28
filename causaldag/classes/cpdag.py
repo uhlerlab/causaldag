@@ -1,6 +1,14 @@
+# Author: Chandler Squires
+"""
+Base class for completed partially directed acyclic graphs,
+representing the Markov (and I-Markov) equivalence class of
+DAGs
+"""
+
 from collections import defaultdict
 from ..utils import core_utils
 import itertools as itr
+import numpy as np
 
 
 class CPDAG:
@@ -133,11 +141,46 @@ class CPDAG:
         known_edges = cut_edges | self._protected
         return CPDAG(dag, known_edges=known_edges)
 
-    def orient_edge(self, i, j):
+    def add_known_arc(self, i, j):
         return CPDAG(self, {(i, j)})
 
-    def orient_edges(self, edges):
+    def add_known_arcs(self, edges):
         return CPDAG(self, edges)
+
+    def to_amat(self, node_list=None):
+        if node_list is None:
+            node_list = sorted(self._nodes)
+
+        node2ix = {node: i for i, node in enumerate(node_list)}
+        amat = np.zeros([len(self._nodes), len(self._nodes)])
+        for source, target in self._arcs:
+            amat[node2ix[source], node2ix[target]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+        return amat, node_list
+
+    @property
+    def sources(self):
+        # TODO: check logic - maybe should be *possible* sources
+        return {node for node in self._nodes if len(self._parents) == 0}
+
+    @property
+    def sinks(self):
+        # TODO: check logic - maybe should be *possible* sinks
+        return {node for node in self._nodes if len(self._children[node]) == 0}
+
+    def _neighbors_covered(self, node):
+        return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
+
+    def _all_dags(self):
+        sinks = self.sinks
+        for sink in sinks:
+            pass
+
+    def all_dags(self):
+        # pdag2alldags from pcalg.R
+        pass
 
 
 
