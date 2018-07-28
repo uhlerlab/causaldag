@@ -103,7 +103,7 @@ class CPDAG:
                             break
                         else:
                             flag = UNDECIDED
-                        if verbose: print(f'{edge} marked {flag} by (a)')
+                        if verbose: print('{edge} marked {flag} by (a)'.format(edge=edge, flag=flag))
 
                 # check configuration (b) -- acyclicity
                 if flag != PROTECTED:
@@ -114,7 +114,7 @@ class CPDAG:
                                 break
                             else:
                                 flag = UNDECIDED
-                            if verbose: print(f'{edge} marked {flag} by (b)')
+                            if verbose: print('{edge} marked {flag} by (b)'.format(edge=edge, flag=flag))
 
                 # check configuration (d)
                 if flag != PROTECTED:
@@ -124,7 +124,7 @@ class CPDAG:
                                 flag = PROTECTED
                             else:
                                 flag = UNDECIDED
-                            if verbose: print(f'{edge} marked {flag} by (c)')
+                            if verbose: print('{edge} marked {flag} by (c)'.format(edge=edge, flag=flag))
 
                 edge_flags[edge] = flag
 
