@@ -10,4 +10,5 @@ build/
 
 .DS_Store
 .idea/
+release.sh
 
