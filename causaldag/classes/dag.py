@@ -61,7 +61,11 @@ class DAG:
         t = self.topological_sort()
         substrings = []
         for node in t:
-            substrings.append('[%s|%s]' % (node, self._parents[node]))
+            if self._parents[node]:
+                parents_str = ','.join(map(str, self._parents[node]))
+                substrings.append('[%s|%s]' % (node, parents_str))
+            else:
+                substrings.append('[%s]' % node)
         return ''.join(substrings)
 
     def _get_neighbors_dict(self):
