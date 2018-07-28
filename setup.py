@@ -8,6 +8,7 @@ setup(
     author='Chandler Squires',
     author_email='chandlersquires18@gmail.com',
     packages=['causaldag'],
+    python_requires='>3.5.0',
     zip_safe=False
 )
 

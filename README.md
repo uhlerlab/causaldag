@@ -1,3 +1,6 @@
+**This package is still very young and hence maybe be subject to future revision.
+Use at your own risk.**
+
 CausalDAG is a Python package for the creation, manipulation, and learning
 of Causal DAGs. CausalDAG requires Python 3.5+
 
@@ -17,6 +20,9 @@ cpdag = dag.cpdag()
 ```
 
 ### License
+
+Released under the 3-Clause BSD license (see LICENSE.txt):
 ```
+Copyright (C) 2018
 Chandler Squires <csquires@mit.edu>
 ```

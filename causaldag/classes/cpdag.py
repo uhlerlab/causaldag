@@ -174,13 +174,14 @@ class CPDAG:
         return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
 
     def _all_dags(self):
+        raise NotImplementedError
         sinks = self.sinks
         for sink in sinks:
             pass
 
     def all_dags(self):
         # pdag2alldags from pcalg.R
-        pass
+        raise NotImplementedError
 
 
 

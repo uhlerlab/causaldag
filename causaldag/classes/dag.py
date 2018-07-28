@@ -356,6 +356,7 @@ class DAG:
         :param j:
         :return:
         """
+        raise NotImplementedError
         pass
 
     def frontdoor(self, i, j):
