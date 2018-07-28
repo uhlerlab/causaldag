@@ -311,7 +311,6 @@ class DAG:
         return amat, node_list
 
     # === optimal interventions
-    @property
     def cpdag(self):
         from .cpdag import CPDAG
         return CPDAG(self)

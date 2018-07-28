@@ -72,12 +72,15 @@ class GaussDAG(DAG):
         super().remove_node(node)
 
     def add_arcs_from(self, arcs):
+        raise NotImplementedError
         pass
 
     def add_nodes_from(self, nodes):
+        raise NotImplementedError
         pass
 
     def reverse_arc(self, i, j, ignore_error=False):
+        raise NotImplementedError
         pass
 
     def _ensure_precision(self):
