@@ -322,7 +322,7 @@ class DAG:
     def interventional_cpdag(self, intervened_nodes, cpdag=None):
         from .cpdag import CPDAG
         if cpdag is None:
-            cpdag = self.cpdag
+            cpdag = self.cpdag()
 
         cut_edges = set()
         for node in intervened_nodes:
@@ -332,7 +332,7 @@ class DAG:
 
     def optimal_intervention(self, cpdag=None):
         if cpdag is None:
-            cpdag = self.cpdag
+            cpdag = self.cpdag()
 
         all_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) == 1 for node in self._nodes)
         nodes2num_oriented = {}

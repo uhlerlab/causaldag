@@ -14,9 +14,13 @@ $ pip3 install causaldag
 Find the CPDAG (complete partially directed acyclic graph,
 AKA the *essential graph*) corresponding to a DAG:
 ```
-import causaldag as cd
-dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
-cpdag = dag.cpdag()
+>>> import causaldag as cd
+>>> dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
+>>> cpdag = dag.cpdag()
+>>> iv = dag.optimal_intervention(cpdag=cpdag)
+>>> icpdag = dag.interventional_cpdag([iv], cpdag=cpdag)
+>>> dag.reversible_arcs()
+{(1,2), (2,3)}
 ```
 
 ### License
