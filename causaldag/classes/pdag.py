@@ -17,16 +17,30 @@ class PDAG:
         self._parents = defaultdict(set, dag_or_pdag.parents)
         self._children = defaultdict(set, dag_or_pdag.children)
         self._neighbors = defaultdict(set, dag_or_pdag.neighbors)
-        self._undirected_neighbors = defaultdict(set)
 
         from .dag import DAG
         if isinstance(dag_or_pdag, DAG):
             self._edges = set()
             self._known_arcs = dag_or_pdag.vstructs() | known_arcs
+            self._undirected_neighbors = defaultdict(set)
         elif isinstance(dag_or_pdag, PDAG):
             self._edges = set(dag_or_pdag._edges)
             self._known_arcs = dag_or_pdag._known_arcs | known_arcs
-        self._protected_arcs = set(self._known_arcs)
+            self._undirected_neighbors = defaultdict(set, dag_or_pdag.undirected_neighbors)
+
+    def __str__(self):
+        substrings = []
+        for node in self._nodes:
+            parents = self._parents[node]
+            nbrs = self._undirected_neighbors[node]
+            parents_str = ','.join(map(str, parents)) if len(parents) != 0 else ''
+            nbrs_str = ','.join(map(str, nbrs)) if len(nbrs) != 0 else ''
+
+            if len(parents) == 0 and len(nbrs) == 0:
+                substrings.append('[{node}]'.format(node=node))
+            else:
+                substrings.append('[{node}|{parents}:{nbrs}]'.format(node=node, parents=parents_str, nbrs=nbrs_str))
+        return ''.join(substrings)
 
     @property
     def nodes(self):
@@ -56,6 +70,9 @@ class PDAG:
     def undirected_neighbors(self):
         return core_utils.defdict2dict(self._undirected_neighbors, self._nodes)
 
+    def copy(self):
+        return PDAG(self)
+
     def _replace_arc_with_edge(self, arc):
         self._arcs.remove(arc)
         self._edges.add(tuple(sorted(arc)))
@@ -64,6 +81,15 @@ class PDAG:
         self._children[i].remove(j)
         self._undirected_neighbors[i].add(j)
         self._undirected_neighbors[j].add(i)
+
+    def _replace_edge_with_arc(self, arc):
+        self._edges.remove(tuple(sorted(arc)))
+        self._arcs.add(arc)
+        i, j = arc
+        self._parents[j].add(i)
+        self._children[i].add(j)
+        self._undirected_neighbors[i].remove(j)
+        self._undirected_neighbors[j].remove(i)
 
     def vstructs(self):
         vstructs = set()
@@ -80,10 +106,10 @@ class PDAG:
     def has_edge_or_arc(self, i, j):
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
-    def orient_protected_arcs(self):
+    def add_protected_orientations(self):
         pass
 
-    def unorient_unprotected_arcs(self, verbose=False):
+    def remove_unprotected_orientations(self, verbose=False):
         """
         Replace with edges those arcs whose orientations cannot be determined by either:
         - prior knowledge, or
@@ -146,8 +172,6 @@ class PDAG:
                     undecided_arcs.remove(arc)
                 if arc_flags[arc] == NOT_PROTECTED:
                     self._replace_arc_with_edge(arc)
-                if arc_flags[arc] == PROTECTED:
-                    self._protected_arcs.add(arc)
 
     def interventional_cpdag(self, dag, intervened_nodes):
         cut_edges = set()
@@ -161,7 +185,7 @@ class PDAG:
             return
         self._known_arcs.add((i, j))
         self._edges.remove(tuple(sorted((i, j))))
-        self.unorient_unprotected_arcs()
+        self.remove_unprotected_orientations()
 
     def add_known_arcs(self, arcs):
         raise NotImplementedError
@@ -185,19 +209,37 @@ class PDAG:
     def _neighbors_covered(self, node):
         return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
 
-    def _all_dags(self, curr_oriented, curr_dags):
-        raise NotImplementedError
-        sinks = self._possible_sinks()
-        for sink in sinks:
-            pass
-
     def all_dags(self):
-        # pdag2alldags from pcalg.R
-        raise NotImplementedError
         all_dags = []
-        return self._all_dags(self, all_dags)
+        _all_dags_helper(self, all_dags)
+        return all_dags
 
 
+def _all_dags_helper(curr_graph, curr_dags, sinked_nodes=None):
+    if sinked_nodes is None:
+        sinked_nodes = set()
 
+    print(curr_graph)
+    print(sinked_nodes)
+    if len(curr_graph._edges) == 0:
+        print('here')
+        curr_dags.append(curr_graph)
+        return
+
+    sinks = {node for node in curr_graph._nodes if len(curr_graph._children[node] - sinked_nodes) == 0}
+    for sink in sinks:
+        undirected_nbrs = curr_graph._undirected_neighbors[sink]
+        all_undirected_protected = all(
+            (curr_graph._neighbors[sink] - {nbr}) == (curr_graph._neighbors[nbr] - {sink})
+            for nbr in undirected_nbrs
+        )
+        if all_undirected_protected and len(undirected_nbrs) != 0:
+            sinked_nodes = set(sinked_nodes)
+            sinked_nodes.add(sink)
+
+            new_graph = curr_graph.copy()
+            for nbr in undirected_nbrs:
+                new_graph._replace_edge_with_arc((nbr, sink))
+            _all_dags_helper(new_graph, curr_dags, sinked_nodes)
 
 

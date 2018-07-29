@@ -7,6 +7,22 @@ import numpy as np
 
 
 class TestDAG(TestCase):
+    def test_copy(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        pdag = cd.PDAG(dag)
+        pdag2 = pdag.copy()
+        self.assertEqual(pdag.arcs, pdag2.arcs)
+        self.assertEqual(pdag.edges, pdag2.edges)
+        self.assertEqual(pdag.neighbors, pdag2.neighbors)
+        self.assertEqual(pdag.parents, pdag2.parents)
+        self.assertEqual(pdag.children, pdag2.children)
+
+        pdag2._replace_arc_with_edge((1, 2))
+        self.assertNotEqual(pdag.arcs, pdag2.arcs)
+        self.assertNotEqual(pdag.edges, pdag2.edges)
+        self.assertNotEqual(pdag.parents, pdag2.parents)
+        self.assertNotEqual(pdag.children, pdag2.children)
+
     def test_cpdag_confounding(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         cpdag = dag.cpdag()
@@ -87,15 +103,31 @@ class TestDAG(TestCase):
         self.assertEqual(int_cpdag.undirected_neighbors[2], {3})
         self.assertEqual(int_cpdag.undirected_neighbors[3], {2})
 
-    def test_add_known_arcs(self):
-        dag = cd.DAG(arcs={(1, 2), (2, 3)})
-        cpdag = dag.cpdag()
-        self.assertEqual(cpdag.arcs, set())
-        self.assertEqual(cpdag.edges, {(1, 2), (2, 3)})
-        cpdag.add_known_arc(1, 2)
-        self.assertEqual(cpdag.arcs, {(1, 2), (2, 3)})
-        self.assertEqual(cpdag.edges, set())
+    # def test_add_known_arcs(self):
+    #     dag = cd.DAG(arcs={(1, 2), (2, 3)})
+    #     cpdag = dag.cpdag()
+    #     self.assertEqual(cpdag.arcs, set())
+    #     self.assertEqual(cpdag.edges, {(1, 2), (2, 3)})
+    #     cpdag.add_known_arc(1, 2)
+    #     self.assertEqual(cpdag.arcs, {(1, 2), (2, 3)})
+    #     self.assertEqual(cpdag.edges, set())
 
+    def test_pdag2alldags_complete3(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        cpdag = dag.cpdag()
+        dags = cpdag.all_dags()
+        self.assertEqual(len(dags), 6)
+        for dag in dags:
+            self.assertEqual(len(dag.arcs), 3)
+        true_possible_arcs = {
+            frozenset({(1, 2), (1, 3), (2, 3)}),
+            frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
+            frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
+            frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
+            frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
+            frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
+        }
+        self.assertEqual(true_possible_arcs, {frozenset(d.arcs) for d in dags})
 
     def test_optimal_intervention(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})

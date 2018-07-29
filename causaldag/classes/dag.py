@@ -318,7 +318,7 @@ class DAG:
     def cpdag(self):
         from .pdag import PDAG
         pdag = PDAG(self)
-        pdag.unorient_unprotected_arcs()
+        pdag.remove_unprotected_orientations()
         return pdag
 
     def interventional_cpdag(self, intervened_nodes, cpdag=None):
@@ -330,7 +330,9 @@ class DAG:
         for node in intervened_nodes:
             cut_edges.update(self.incident_arcs(node))
         known_edges = cut_edges | cpdag._known_arcs
-        return PDAG(self, known_arcs=known_edges)
+        pdag = PDAG(self, known_arcs=known_edges)
+        pdag.remove_unprotected_orientations()
+        return pdag
 
     def optimal_intervention(self, cpdag=None):
         if cpdag is None:
