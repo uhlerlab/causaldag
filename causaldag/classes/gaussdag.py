@@ -1,3 +1,8 @@
+# Author: Chandler Squires
+"""
+Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with Gaussian noise).
+"""
+
 from causaldag.classes.dag import DAG
 import numpy as np
 from causaldag.utils import core_utils
@@ -28,7 +33,7 @@ class GaussDAG(DAG):
         self._covariance = None
 
     def set_arc_weight(self, i, j, val):
-        self._weight_mat[i, j] = val
+        self._weight_mat[self._node2ix[i], self._node2ix[j]] = val
         if val == 0 and (i, j) in self._arcs:
             super().remove_arc(i, j)
         if val != 0 and (i, j) not in self._arcs:
@@ -82,6 +87,60 @@ class GaussDAG(DAG):
     def reverse_arc(self, i, j, ignore_error=False):
         raise NotImplementedError
         pass
+
+    def vstructs(self):
+        return super().vstructs()
+
+    def reversible_arcs(self):
+        return super().reversible_arcs()
+
+    def topological_sort(self):
+        return super().topological_sort()
+
+    def shd(self, other):
+        return super().shd(other)
+
+    def downstream(self, node):
+        return super().downstream(node)
+
+    def upstream(self, node):
+        return super().upstream(node)
+
+    def incident_arcs(self, node):
+        return super().incident_arcs(node)
+
+    def incoming_arcs(self, node):
+        return super().incoming_arcs(node)
+
+    def outgoing_arcs(self, node):
+        return super().outgoing_arcs(node)
+
+    def outdegree(self, node):
+        return super().outdegree(node)
+
+    def indegree(self, node):
+        return super().indegree(node)
+
+    def save_gml(self, filename):
+        raise NotImplementedError
+
+    def to_amat(self):
+        raise NotImplementedError
+
+    def cpdag(self):
+        raise NotImplementedError
+
+    def optimal_intervention(self, cpdag=None):
+        return super().optimal_intervention(cpdag=cpdag)
+
+    def backdoor(self, i, j):
+        return super().backdoor(i, j)
+
+    def frontdoor(self, i, j):
+        return super().frontdoor(i, j)
+
+    def dsep(self, i, j, c=None):
+        return super().dsep(i, j, c=c)
 
     def _ensure_precision(self):
         if self._precision is None:

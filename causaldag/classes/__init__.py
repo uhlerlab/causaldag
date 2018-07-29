@@ -1,3 +1,3 @@
 from .dag import DAG
-from .cpdag import CPDAG
+from .pdag import PDAG
 from .gaussdag import GaussDAG

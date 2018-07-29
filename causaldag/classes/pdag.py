@@ -1,8 +1,6 @@
 # Author: Chandler Squires
 """
-Base class for completed partially directed acyclic graphs,
-representing the Markov (and I-Markov) equivalence class of
-DAGs
+Base class for partially directed acyclic graphs
 """
 
 from collections import defaultdict
@@ -11,23 +9,24 @@ import itertools as itr
 import numpy as np
 
 
-class CPDAG:
-    def __init__(self, dag_or_cpdag, known_edges=set()):
-        self._nodes = dag_or_cpdag.nodes
-        self._arcs = dag_or_cpdag.arcs
-        self._parents = defaultdict(set, dag_or_cpdag.parents)
-        self._children = defaultdict(set, dag_or_cpdag.children)
-        self._neighbors = defaultdict(set, dag_or_cpdag.neighbors)
-        self._edges = set()
+class PDAG:
+    def __init__(self, dag_or_pdag, known_arcs=set()):
+        self._nodes = set(dag_or_pdag._nodes)
+        self._arcs = set(dag_or_pdag._arcs)
+
+        self._parents = defaultdict(set, dag_or_pdag.parents)
+        self._children = defaultdict(set, dag_or_pdag.children)
+        self._neighbors = defaultdict(set, dag_or_pdag.neighbors)
         self._undirected_neighbors = defaultdict(set)
 
         from .dag import DAG
-        if isinstance(dag_or_cpdag, DAG):
-            self._protected = dag_or_cpdag.vstructs() | known_edges
-        elif isinstance(dag_or_cpdag, CPDAG):
-            self._protected = dag_or_cpdag._protected | known_edges
-
-        self._replace_unprotected()
+        if isinstance(dag_or_pdag, DAG):
+            self._edges = set()
+            self._known_arcs = dag_or_pdag.vstructs() | known_arcs
+        elif isinstance(dag_or_pdag, PDAG):
+            self._edges = set(dag_or_pdag._edges)
+            self._known_arcs = dag_or_pdag._known_arcs | known_arcs
+        self._protected_arcs = set(self._known_arcs)
 
     @property
     def nodes(self):
@@ -81,71 +80,91 @@ class CPDAG:
     def has_edge_or_arc(self, i, j):
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
-    def _replace_unprotected(self, verbose=False):
+    def orient_protected_arcs(self):
+        pass
+
+    def unorient_unprotected_arcs(self, verbose=False):
+        """
+        Replace with edges those arcs whose orientations cannot be determined by either:
+        - prior knowledge, or
+        - Meek's rules
+
+        =====
+        See Koller & Friedman, Algorithm 3.5
+
+        :param verbose:
+        :return:
+        """
         PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
         UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge
         NOT_PROTECTED = 'N'  # indicates no possible configuration that could protect the edge
 
-        undecided_edges = self._arcs - self._protected
-        edge_flags = {edge: PROTECTED for edge in self._protected}
-        edge_flags.update({edge: UNDECIDED for edge in undecided_edges})
+        undecided_arcs = self._arcs - self._known_arcs
+        arc_flags = {arc: PROTECTED for arc in self._known_arcs}
+        arc_flags.update({arc: UNDECIDED for arc in undecided_arcs})
 
-        while undecided_edges:
-            for edge in undecided_edges:
-                i, j = edge
+        while undecided_arcs:
+            for arc in undecided_arcs:
+                i, j = arc
                 flag = NOT_PROTECTED
 
                 # check configuration (a) -- causal chain
                 for k in self._parents[i]:
                     if not self.has_edge_or_arc(k, j):
-                        if edge_flags[(k, i)] == PROTECTED:
+                        if arc_flags[(k, i)] == PROTECTED:
                             flag = PROTECTED
                             break
                         else:
                             flag = UNDECIDED
-                        if verbose: print('{edge} marked {flag} by (a)'.format(edge=edge, flag=flag))
+                        if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
 
                 # check configuration (b) -- acyclicity
                 if flag != PROTECTED:
                     for k in self._parents[j]:
                         if i in self._parents[k]:
-                            if edge_flags[(i, k)] == PROTECTED and edge_flags[(k, j)] == PROTECTED:
+                            if arc_flags[(i, k)] == PROTECTED and arc_flags[(k, j)] == PROTECTED:
                                 flag = PROTECTED
                                 break
                             else:
                                 flag = UNDECIDED
-                            if verbose: print('{edge} marked {flag} by (b)'.format(edge=edge, flag=flag))
+                            if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
 
                 # check configuration (d)
                 if flag != PROTECTED:
                     for k1, k2 in itr.combinations(self._parents[j], 2):
                         if self.has_edge(i, k1) and self.has_edge(i, k2) and not self.has_edge_or_arc(k1, k2):
-                            if edge_flags[(k1, j)] == PROTECTED and edge_flags[(k2, j)] == PROTECTED:
+                            if arc_flags[(k1, j)] == PROTECTED and arc_flags[(k2, j)] == PROTECTED:
                                 flag = PROTECTED
                             else:
                                 flag = UNDECIDED
-                            if verbose: print('{edge} marked {flag} by (c)'.format(edge=edge, flag=flag))
+                            if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
 
-                edge_flags[edge] = flag
+                arc_flags[arc] = flag
 
-            for edge in undecided_edges.copy():
-                if edge_flags[edge] != UNDECIDED:
-                    undecided_edges.remove(edge)
-                if edge_flags[edge] == NOT_PROTECTED:
-                    self._replace_arc_with_edge(edge)
+            for arc in undecided_arcs.copy():
+                if arc_flags[arc] != UNDECIDED:
+                    undecided_arcs.remove(arc)
+                if arc_flags[arc] == NOT_PROTECTED:
+                    self._replace_arc_with_edge(arc)
+                if arc_flags[arc] == PROTECTED:
+                    self._protected_arcs.add(arc)
 
     def interventional_cpdag(self, dag, intervened_nodes):
         cut_edges = set()
         for node in intervened_nodes:
             cut_edges.update(dag.incident_arcs(node))
-        known_edges = cut_edges | self._protected
-        return CPDAG(dag, known_edges=known_edges)
+        known_edges = cut_edges | self._known_arcs
+        return PDAG(dag, known_arcs=known_edges)
 
     def add_known_arc(self, i, j):
-        return CPDAG(self, {(i, j)})
+        if (i, j) in self._known_arcs:
+            return
+        self._known_arcs.add((i, j))
+        self._edges.remove(tuple(sorted((i, j))))
+        self.unorient_unprotected_arcs()
 
-    def add_known_arcs(self, edges):
-        return CPDAG(self, edges)
+    def add_known_arcs(self, arcs):
+        raise NotImplementedError
 
     def to_amat(self, node_list=None):
         if node_list is None:
@@ -160,28 +179,23 @@ class CPDAG:
             amat[node2ix[j], node2ix[i]] = 1
         return amat, node_list
 
-    @property
-    def sources(self):
-        # TODO: check logic - maybe should be *possible* sources
-        return {node for node in self._nodes if len(self._parents) == 0}
-
-    @property
-    def sinks(self):
-        # TODO: check logic - maybe should be *possible* sinks
+    def _possible_sinks(self):
         return {node for node in self._nodes if len(self._children[node]) == 0}
 
     def _neighbors_covered(self, node):
         return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
 
-    def _all_dags(self):
+    def _all_dags(self, curr_oriented, curr_dags):
         raise NotImplementedError
-        sinks = self.sinks
+        sinks = self._possible_sinks()
         for sink in sinks:
             pass
 
     def all_dags(self):
         # pdag2alldags from pcalg.R
         raise NotImplementedError
+        all_dags = []
+        return self._all_dags(self, all_dags)
 
 
 

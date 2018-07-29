@@ -12,6 +12,13 @@ Simple Example
 >>> cpdag = dag.cpdag()
 >>> iv = dag.optimal_intervention(cpdag=cpdag)
 >>> icpdag = dag.interventional_cpdag([iv], cpdag=cpdag)
+{(1,2), (2,3)}
+
+License
+-------
+Released under the 3-Clause BSD license::
+   Copyright (C) 2018
+   Chandler Squires <chandlersquires18@gmail.com>
 """
 
 from .classes import *
