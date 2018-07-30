@@ -112,26 +112,49 @@ class TestDAG(TestCase):
     #     self.assertEqual(cpdag.arcs, {(1, 2), (2, 3)})
     #     self.assertEqual(cpdag.edges, set())
 
-    def test_pdag2alldags_complete3(self):
-        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+    # def test_pdag2alldags_complete3(self):
+    #     dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+    #     cpdag = dag.cpdag()
+    #     dags = cpdag.all_dags()
+    #     self.assertEqual(len(dags), 6)
+    #     for dag in dags:
+    #         self.assertEqual(len(dag.arcs), 3)
+    #     true_possible_arcs = {
+    #         frozenset({(1, 2), (1, 3), (2, 3)}),
+    #         frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
+    #         frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
+    #         frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
+    #         frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
+    #         frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
+    #     }
+    #     self.assertEqual(true_possible_arcs, {frozenset(d.arcs) for d in dags})
+
+    def test_pdag2alldags_chain3(self):
+        dag = cd.DAG(arcs={(1, 2), (2, 3)})
         cpdag = dag.cpdag()
-        dags = cpdag.all_dags()
-        self.assertEqual(len(dags), 6)
-        for dag in dags:
-            self.assertEqual(len(dag.arcs), 3)
+        dags = cpdag.all_dags(verbose=True)
+        print('dags', dags)
         true_possible_arcs = {
-            frozenset({(1, 2), (1, 3), (2, 3)}),
-            frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
-            frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
-            frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
-            frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
-            frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
+            frozenset({(1, 2), (2, 3)}),
+            frozenset({(2, 1), (2, 3)}),
+            frozenset({(1, 2), (3, 2)}),
         }
         self.assertEqual(true_possible_arcs, {frozenset(d.arcs) for d in dags})
 
     def test_optimal_intervention(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         self.assertEqual(dag.optimal_intervention(), 2)
+
+    def test_to_dag(self):
+        dag = cd.DAG(arcs={(1, 2), (2, 3)})
+        cpdag = dag.cpdag()
+        dag2 = cpdag.to_dag()
+        true_possible_arcs = {
+            frozenset({(1, 2), (2, 3)}),
+            frozenset({(2, 1), (2, 3)}),
+            frozenset({(1, 2), (3, 2)}),
+        }
+        self.assertIn(dag2.arcs, true_possible_arcs)
 
 
 if __name__ == '__main__':
