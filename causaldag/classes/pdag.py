@@ -28,6 +28,13 @@ class PDAG:
             self._known_arcs = dag_or_pdag._known_arcs | known_arcs
             self._undirected_neighbors = defaultdict(set, dag_or_pdag.undirected_neighbors)
 
+    def __eq__(self, other):
+        same_nodes = self._nodes == other._nodes
+        same_arcs = self._arcs == other._arcs
+        same_edges = self._edges == other._edges
+
+        return same_nodes and same_arcs and same_edges
+
     def __str__(self):
         substrings = []
         for node in self._nodes:
@@ -251,26 +258,33 @@ class PDAG:
 
     def all_dags(self, verbose=False):
         amat = self.to_amat()
-        all_dags = []
-        _all_dags_helper(amat, amat, all_dags, verbose=verbose)
+        node_list = list(amat.index)
+        all_dags = set()
+        _all_dags_helper(amat, amat, node_list, all_dags, verbose=verbose)
         return all_dags
 
 
-def _all_dags_helper(full_amat, curr_submatrix, all_dags, verbose=False):
+def _all_dags_helper(full_amat, curr_submatrix, node_list, all_dags, verbose=False):
     if curr_submatrix.sum().sum() == 0:
-        all_dags.append(full_amat)
-    print(full_amat)
-    print(curr_submatrix)
+        arcs = frozenset((node_list[i], node_list[j]) for (i, j), val in np.ndenumerate(full_amat) if val==1)
+        all_dags.add(arcs)
+        if verbose: print('=== APPENDING ===')
+        if verbose: print(arcs)
+        if verbose: print('=================')
+        return
+
+    if verbose: print(full_amat)
     nchildren = ((curr_submatrix - curr_submatrix.T) > 0).sum(axis=1)
+    if verbose: print('nchildren\n', nchildren)
     sink_ixs = (nchildren == 0).nonzero()[0]
     sinks = curr_submatrix.index[sink_ixs]
-    print('sinks', sinks)
+
+    if verbose: print(set(sinks))
     for sink in sinks:
         children_ixs = curr_submatrix.loc[sink].nonzero()[0]
-        children = set(full_amat.index[children_ixs])
+        children = set(curr_submatrix.index[children_ixs])
         parent_ixs = curr_submatrix[sink].nonzero()[0]
-        parents = set(full_amat.index[parent_ixs])
-        print(sink, children, parents)
+        parents = set(curr_submatrix.index[parent_ixs])
 
         undirected_nbrs = list(children & parents)
         sink_nbrs = children | parents
@@ -278,13 +292,12 @@ def _all_dags_helper(full_amat, curr_submatrix, all_dags, verbose=False):
 
         nbrs_of_undirected_nbrs = (get_neighbors(nbr) for nbr in undirected_nbrs)
         nbrs_of_undirected_nbrs = list(nbrs_of_undirected_nbrs)
-        print(nbrs_of_undirected_nbrs)
-        if len(undirected_nbrs) > 0 and all((sink_nbrs - {nbr}).issubset(nbrs_of_nbr) for nbr, nbrs_of_nbr in zip(undirected_nbrs, nbrs_of_undirected_nbrs)):
-            print('Removing sink node', sink)
+        if len(sink_nbrs) > 0 and all((sink_nbrs - {nbr}).issubset(nbrs_of_nbr) for nbr, nbrs_of_nbr in zip(undirected_nbrs, nbrs_of_undirected_nbrs)):
+            if verbose: print('Removing sink node', sink, 'and edges to', sink_nbrs, 'from:\n', full_amat)
             new_full_amat = full_amat.copy()
-            new_full_amat.loc[sink] = 0
-            curr_submatrix = curr_submatrix.drop(sink, axis=0).drop(sink, axis=1)
-            _all_dags_helper(new_full_amat, curr_submatrix, all_dags, verbose=verbose)
+            new_full_amat.loc[sink][sink_nbrs] = 0
+            new_submatrix = curr_submatrix.drop(sink, axis=0).drop(sink, axis=1)
+            _all_dags_helper(new_full_amat, new_submatrix, node_list, all_dags, verbose=verbose)
 
 
 

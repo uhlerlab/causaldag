@@ -4,6 +4,7 @@ import unittest
 import os
 import causaldag as cd
 import numpy as np
+import itertools as itr
 
 
 class TestDAG(TestCase):
@@ -112,34 +113,48 @@ class TestDAG(TestCase):
     #     self.assertEqual(cpdag.arcs, {(1, 2), (2, 3)})
     #     self.assertEqual(cpdag.edges, set())
 
-    # def test_pdag2alldags_complete3(self):
-    #     dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-    #     cpdag = dag.cpdag()
-    #     dags = cpdag.all_dags()
-    #     self.assertEqual(len(dags), 6)
-    #     for dag in dags:
-    #         self.assertEqual(len(dag.arcs), 3)
-    #     true_possible_arcs = {
-    #         frozenset({(1, 2), (1, 3), (2, 3)}),
-    #         frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
-    #         frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
-    #         frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
-    #         frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
-    #         frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
-    #     }
-    #     self.assertEqual(true_possible_arcs, {frozenset(d.arcs) for d in dags})
+    def test_pdag2alldags_3nodes_complete(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        cpdag = dag.cpdag()
+        dags = cpdag.all_dags(verbose=False)
+        self.assertEqual(len(dags), 6)
+        for dag in dags:
+            self.assertEqual(len(dag), 3)
+        true_possible_arcs = {
+            frozenset({(1, 2), (1, 3), (2, 3)}),
+            frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
+            frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
+            frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
+            frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
+            frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
+        }
+        self.assertEqual(true_possible_arcs, dags)
 
-    def test_pdag2alldags_chain3(self):
+    def test_pdag2alldags_3nodes_chain(self):
         dag = cd.DAG(arcs={(1, 2), (2, 3)})
         cpdag = dag.cpdag()
-        dags = cpdag.all_dags(verbose=True)
-        print('dags', dags)
+        dags = cpdag.all_dags(verbose=False)
         true_possible_arcs = {
             frozenset({(1, 2), (2, 3)}),
             frozenset({(2, 1), (2, 3)}),
-            frozenset({(1, 2), (3, 2)}),
+            frozenset({(2, 1), (3, 2)}),
         }
-        self.assertEqual(true_possible_arcs, {frozenset(d.arcs) for d in dags})
+        self.assertEqual(true_possible_arcs, dags)
+
+    def test_pdag2alldags_5nodes(self):
+        dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3), (2, 4), (2, 5), (3, 5), (4, 5)})
+        cpdag = dag.cpdag()
+        dags = cpdag.all_dags()
+        for arcs in dags:
+            dag2 = cd.DAG(arcs=set(arcs))
+            cpdag2 = dag2.cpdag()
+            self.assertEqual(cpdag, cpdag2)
+
+    def test_pdag2alldags_8nodes_complete(self):
+        dag = cd.DAG(arcs={(i, j) for i, j in itr.combinations(range(6), 2)})
+        cpdag = dag.cpdag()
+        dags = cpdag.all_dags()
+        self.assertEqual(len(dags), np.prod(range(1, 7)))
 
     def test_optimal_intervention(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
