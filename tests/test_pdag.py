@@ -171,6 +171,17 @@ class TestDAG(TestCase):
         }
         self.assertIn(dag2.arcs, true_possible_arcs)
 
+    def test_interventional_cpdag_no_obs(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+
+        icpdag1 = dag.interventional_cpdag([2])
+        self.assertEqual(icpdag1.arcs, {(1, 3), (2, 3)})
+        self.assertEqual(icpdag1.edges, set())
+
+        icpdag2 = dag.interventional_cpdag([1])
+        self.assertEqual(icpdag2.arcs, set())
+        self.assertEqual(icpdag2.edges, {(1, 2), (1, 3), (2, 3)})
+
 
 if __name__ == '__main__':
     unittest.main()

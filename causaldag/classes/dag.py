@@ -37,6 +37,9 @@ class DAG:
         self._parents = self._get_parents_dict()
         self._children = self._get_children_dict()
 
+    def copy(self):
+        return DAG(nodes=self.nodes, arcs=self.arcs)
+
     @property
     def nodes(self):
         return set(self._nodes)
@@ -323,14 +326,20 @@ class DAG:
 
     def interventional_cpdag(self, intervened_nodes, cpdag=None):
         from .pdag import PDAG
-        if cpdag is None:
-            cpdag = self.cpdag()
 
-        cut_edges = set()
-        for node in intervened_nodes:
-            cut_edges.update(self.incident_arcs(node))
-        known_edges = cut_edges | cpdag._known_arcs
-        pdag = PDAG(self, known_arcs=known_edges)
+        if cpdag is None:
+            dag_cut = self.copy()
+            for node in intervened_nodes:
+                for i, j in dag_cut.incoming_arcs(node):
+                    dag_cut.remove_arc(i, j)
+            pdag = PDAG(dag_cut)
+        else:
+            cut_edges = set()
+            for node in intervened_nodes:
+                cut_edges.update(self.incident_arcs(node))
+            known_arcs = cut_edges | cpdag._known_arcs
+            pdag = PDAG(self, known_arcs=known_arcs)
+
         pdag.remove_unprotected_orientations()
         return pdag
 

@@ -12,3 +12,6 @@ build/
 .idea/
 release.sh
 
+.mypy_cache/
+
+

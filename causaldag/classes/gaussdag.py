@@ -6,31 +6,41 @@ Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with G
 from causaldag.classes.dag import DAG
 import numpy as np
 from causaldag.utils import core_utils
+from dataclasses import dataclass
+from typing import Any, Dict, Union, Set, Tuple, List
+
+
+@dataclass
+class GaussIntervention:
+    mean: float
+    variance: float
 
 
 class GaussDAG(DAG):
-    def __init__(self, nodes=None, arcs=None, weight_mat=None, variances=None):
-        if weight_mat is None:
-            super().__init__(nodes, arcs)
-            self._node_list = list(nodes)
-            self._weight_mat = np.zeros((len(nodes), len(nodes)))
-        else:
-            self._weight_mat = weight_mat.copy()
-            nnodes = weight_mat.shape[0]
-            if nodes is None:
-                self._node_list = list(range(nnodes))
-            if variances is None:
-                self._variances = np.ones(nnodes)
+    def __init__(self, nodes: List, arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]], means=None, variances=None):
+        arcs_set = arcs if isinstance(arcs, set) else set(arcs.keys())
+        super().__init__(set(nodes), arcs_set)
 
-            arcs = set()
-            for edge, val in np.ndenumerate(weight_mat):
-                if val != 0:
-                    arcs.add(edge)
-            super().__init__(self._node_list, arcs)
-
+        self._node_list = nodes
         self._node2ix = core_utils.ix_map_from_list(self._node_list)
+
+        self._weight_mat = np.zeros((len(nodes), len(nodes)))
+        for node1, node2 in arcs:
+            w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
+            self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
+
+        self._variances = np.ones(len(nodes)) if variances is None else np.array(variances, dtype=float)
+        self._means = np.zeros((len(nodes))) if means is None else np.array(means)
+
         self._precision = None
         self._covariance = None
+
+    @classmethod
+    def from_weight_matrix(cls, weight_mat, nodes=None, means=None, variances=None):
+        nodes = nodes if nodes is not None else list(range(weight_mat.shape[0]))
+        arcs = {(i, j): w for (i, j), w in np.ndenumerate(weight_mat) if w != 0}
+        print(nodes, arcs)
+        return cls(nodes=nodes, arcs=arcs, means=means, variances=variances)
 
     def set_arc_weight(self, i, j, val):
         self._weight_mat[self._node2ix[i], self._node2ix[j]] = val
@@ -125,7 +135,7 @@ class GaussDAG(DAG):
         raise NotImplementedError
 
     def to_amat(self):
-        raise NotImplementedError
+        return self.weight_mat
 
     def cpdag(self):
         raise NotImplementedError
@@ -161,11 +171,11 @@ class GaussDAG(DAG):
             else:
                 self._covariance = id_min_a_inv.T @ np.diag(self._variances ** -1) @ id_min_a_inv
 
-    def sample(self, nsamples):
+    def sample(self, nsamples: int = 1) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
         for ix, var in enumerate(self._variances):
-            noise[:,ix] = np.random.normal(scale=var, size=nsamples)
+            noise[:, ix] = np.random.normal(scale=var, size=nsamples)
         t = self.topological_sort()
         for node in t:
             ix = self._node2ix[node]
@@ -178,17 +188,43 @@ class GaussDAG(DAG):
                 samples[:, ix] = noise[:, ix]
         return samples
 
+    def sample_interventional(self, interventions: Dict[Any, GaussIntervention], nsamples: int = 1) -> np.array:
+        samples = np.zeros((nsamples, len(self._nodes)))
+        noise = np.zeros((nsamples, len(self._nodes)))
+
+        for ix, (node, mean, var) in enumerate(zip(self._node_list, self._means, self._variances)):
+            iv = interventions.get(node)
+            if iv is not None:
+                mean = iv.mean
+                var = iv.variance
+            noise[:, ix] = np.random.normal(loc=mean, scale=var, size=nsamples)
+
+        t = self.topological_sort()
+        for node in t:
+            ix = self._node2ix[node]
+            parents = self._parents[node]
+            if node not in interventions and len(parents) != 0:
+                parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+                parent_vals = samples[:, parent_ixs]
+                samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
+            else:
+                samples[:, ix] = noise[:, ix]
+        
+        return samples
+
 
 if __name__ == '__main__':
     B = np.zeros((3, 3))
     B[0, 1] = 1
     B[0, 2] = -1
     B[1, 2] = 4
-    gdag = GaussDAG(weight_mat=B)
+    gdag = GaussDAG.from_weight_matrix(B, means=[0, 0, 0], variances=[1, 1, 1])
     s = gdag.sample(1000)
     # print(gdag.arcs)
     print(s.T @ s / 1000)
     print(gdag.covariance)
+    s2 = gdag.sample_interventional({2: GaussIntervention(mean=0, variance=5)}, 1000)
+    print(s2.T @ s2 / 1000)
 
 
 
