@@ -8,6 +8,7 @@ import numpy as np
 import itertools as itr
 from ..utils import core_utils
 import operator as op
+from typing import Set
 
 
 class CycleError(Exception):
@@ -22,23 +23,25 @@ def path2str(path):
 
 
 class DAG:
-    def __init__(self, nodes=None, arcs=None):
-        self._nodes = set()
+    def __init__(self, nodes: Set=set(), arcs: Set=set()):
+        self._nodes = nodes.copy()
         self._arcs = set()
-        if nodes is not None:
-            self._nodes = set(nodes)
-        if arcs is not None:
-            self._arcs = set(arcs)
-            for i, j in arcs:
-                self._nodes.add(i)
-                self._nodes.add(j)
+        self._neighbors = defaultdict(set)
+        self._parents = defaultdict(set)
+        self._children = defaultdict(set)
+        for i, j in arcs:
+            self._add_arc(i, j)
 
-        self._neighbors = self._get_neighbors_dict()
-        self._parents = self._get_parents_dict()
-        self._children = self._get_children_dict()
+    @classmethod
+    def from_amat(cls, amat):
+        arcs = set()
+        for (i, j), val in np.ndenumerate(amat):
+            if val != 0:
+                arcs.add((i, j))
+        return DAG(arcs=arcs)
 
     def copy(self):
-        return DAG(nodes=self.nodes, arcs=self.arcs)
+        return DAG(nodes=self._nodes, arcs=self._arcs)
 
     @property
     def nodes(self):
@@ -70,25 +73,6 @@ class DAG:
             else:
                 substrings.append('[%s]' % node)
         return ''.join(substrings)
-
-    def _get_neighbors_dict(self):
-        neighbors = defaultdict(set)
-        for i, j in self._arcs:
-            neighbors[i].add(j)
-            neighbors[j].add(i)
-        return neighbors
-
-    def _get_parents_dict(self):
-        parents = defaultdict(set)
-        for i, j in self._arcs:
-            parents[j].add(i)
-        return parents
-
-    def _get_children_dict(self):
-        children = defaultdict(set)
-        for i, j in self._arcs:
-            children[i].add(j)
-        return children
 
     # === MUTATORS
     def add_node(self, node):
@@ -320,7 +304,7 @@ class DAG:
     # === optimal interventions
     def cpdag(self):
         from .pdag import PDAG
-        pdag = PDAG(self)
+        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.vstructs())
         pdag.remove_unprotected_orientations()
         return pdag
 
@@ -329,16 +313,19 @@ class DAG:
 
         if cpdag is None:
             dag_cut = self.copy()
+            known_arcs = set()
             for node in intervened_nodes:
                 for i, j in dag_cut.incoming_arcs(node):
                     dag_cut.remove_arc(i, j)
-            pdag = PDAG(dag_cut)
+                    known_arcs.update(self.outgoing_arcs(node))
+            known_arcs.update(dag_cut.vstructs())
+            pdag = PDAG(dag_cut._nodes, dag_cut._arcs, known_arcs=known_arcs)
         else:
             cut_edges = set()
             for node in intervened_nodes:
                 cut_edges.update(self.incident_arcs(node))
             known_arcs = cut_edges | cpdag._known_arcs
-            pdag = PDAG(self, known_arcs=known_arcs)
+            pdag = PDAG(self._nodes, self._arcs, known_arcs=known_arcs)
 
         pdag.remove_unprotected_orientations()
         return pdag

@@ -7,26 +7,46 @@ from collections import defaultdict
 from ..utils import core_utils
 import itertools as itr
 import numpy as np
+from typing import Set
 
 
 class PDAG:
-    def __init__(self, dag_or_pdag, known_arcs=set()):
-        self._nodes = set(dag_or_pdag._nodes)
-        self._arcs = set(dag_or_pdag._arcs)
+    def __init__(self, nodes: Set=set(), arcs: Set=set(), edges=set(), known_arcs=set()):
+        self._nodes = nodes.copy()
+        self._arcs = set()
+        self._edges = set()
+        self._parents = defaultdict(set)
+        self._children = defaultdict(set)
+        self._neighbors = defaultdict(set)
+        self._undirected_neighbors = defaultdict(set)
+        for i, j in arcs:
+            self._add_arc(i, j)
+        for i, j in edges:
+            self._add_edge(i, j)
 
-        self._parents = defaultdict(set, dag_or_pdag.parents)
-        self._children = defaultdict(set, dag_or_pdag.children)
-        self._neighbors = defaultdict(set, dag_or_pdag.neighbors)
+        self._known_arcs = known_arcs.copy()
 
-        from .dag import DAG
-        if isinstance(dag_or_pdag, DAG):
-            self._edges = set()
-            self._known_arcs = dag_or_pdag.vstructs() | known_arcs
-            self._undirected_neighbors = defaultdict(set)
-        elif isinstance(dag_or_pdag, PDAG):
-            self._edges = set(dag_or_pdag._edges)
-            self._known_arcs = dag_or_pdag._known_arcs | known_arcs
-            self._undirected_neighbors = defaultdict(set, dag_or_pdag.undirected_neighbors)
+    def _add_arc(self, i, j):
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._arcs.add((i, j))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._children[i].add(j)
+        self._parents[j].add(i)
+
+    def _add_edge(self, i, j):
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._edges.add(tuple(sorted((i, j))))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._undirected_neighbors[i].add(j)
+        self._undirected_neighbors[j].add(i)
 
     def __eq__(self, other):
         same_nodes = self._nodes == other._nodes
@@ -95,7 +115,7 @@ class PDAG:
         return core_utils.defdict2dict(self._undirected_neighbors, self._nodes)
 
     def copy(self):
-        return PDAG(self)
+        return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
 
     def _replace_arc_with_edge(self, arc):
         self._arcs.remove(arc)
@@ -201,8 +221,8 @@ class PDAG:
         cut_edges = set()
         for node in intervened_nodes:
             cut_edges.update(dag.incident_arcs(node))
-        known_edges = cut_edges | self._known_arcs
-        return PDAG(dag, known_arcs=known_edges)
+        known_arcs = cut_edges | self._known_arcs
+        return PDAG(self._nodes, self._arcs, self._edges, known_arcs=known_arcs)
 
     def add_known_arc(self, i, j):
         if (i, j) in self._known_arcs:

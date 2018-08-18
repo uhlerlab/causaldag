@@ -9,8 +9,7 @@ import itertools as itr
 
 class TestDAG(TestCase):
     def test_copy(self):
-        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        pdag = cd.PDAG(dag)
+        pdag = cd.PDAG(arcs={(1, 2), (1, 3), (2, 3)})
         pdag2 = pdag.copy()
         self.assertEqual(pdag.arcs, pdag2.arcs)
         self.assertEqual(pdag.edges, pdag2.edges)

@@ -10,7 +10,7 @@ class TestDAG(TestCase):
         w[0, 1] = 1
         w[0, 2] = -1
         w[1, 2] = 4
-        self.gdag = cd.GaussDAG(weight_mat=w)
+        self.gdag = cd.GaussDAG.from_weight_matrix(weight_mat=w)
 
     def test_arcs(self):
         self.assertEqual(self.gdag.arcs, {(0, 1), (0, 2), (1, 2)})
