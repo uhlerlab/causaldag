@@ -26,6 +26,20 @@ class PDAG:
 
         self._known_arcs = known_arcs.copy()
 
+    @classmethod
+    def from_amat(cls, amat):
+        nrows, ncols = amat.shape
+        arcs = set()
+        edges = set()
+        for (i, j), val in np.ndenumerate(amat):
+            if val != 0:
+                if (j, i) in arcs:
+                    arcs.remove((j, i))
+                    edges.add((i, j))
+                else:
+                    arcs.add((i, j))
+        return PDAG(set(range(nrows)), arcs, edges)
+
     def _add_arc(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)

@@ -181,6 +181,16 @@ class TestDAG(TestCase):
         self.assertEqual(icpdag2.arcs, set())
         self.assertEqual(icpdag2.edges, {(1, 2), (1, 3), (2, 3)})
 
+    def test_from_amat(self):
+        amat = np.zeros([3, 3])
+        amat[0, 1] = 1
+        amat[0, 2] = 1
+        amat[1, 2] = 1
+        amat[2, 1] = 1
+        pdag = cd.PDAG.from_amat(amat)
+        self.assertEqual(pdag.arcs, {(0, 1), (0, 2)})
+        self.assertEqual(pdag.edges, {(1, 2)})
+
 
 if __name__ == '__main__':
     unittest.main()
