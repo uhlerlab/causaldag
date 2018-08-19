@@ -18,7 +18,8 @@ class GaussIntervention:
     variance: float = 1
 
     def sample(self, size):
-        return np.random.normal(loc=self.mean, scale=self.variance, size=size)
+        samples = np.random.normal(loc=self.mean, scale=self.variance, size=size)
+        return samples
 
 
 @dataclass
@@ -46,7 +47,7 @@ class MultinomialIntervention:
         choices = np.random.choice(list(range(len(self.interventions))), size=size, p=self.pvals)
         samples = np.zeros(size)
         for ix, iv in enumerate(self.interventions):
-            ixs_iv = np.where(choices == ix)
+            ixs_iv = np.where(choices == ix)[0]
             samples[ixs_iv] = iv(len(ixs_iv))
         return samples
 
@@ -258,9 +259,13 @@ class GaussDAG(DAG):
 
 
 if __name__ == '__main__':
-    iv = BinaryIntervention(
-        intervention1=ConstantIntervention(val=-1).sample,
-        intervention2=ConstantIntervention(val=1).sample
+    iv = MultinomialIntervention(
+        interventions=[
+            ConstantIntervention(val=-1).sample,
+            ConstantIntervention(val=1).sample,
+            GaussIntervention(mean=2, variance=1).sample,
+        ],
+        pvals=[.4, .4, .2]
     )
     B = np.zeros((3, 3))
     B[0, 1] = 1
