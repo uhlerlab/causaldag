@@ -93,8 +93,9 @@ class PDAG:
         for parent in self._parents[node]:
             self._children[parent].remove(node)
             self._neighbors[parent].remove(node)
-        for u_nbr in self._neighbors[node]:
+        for u_nbr in self._undirected_neighbors[node]:
             self._undirected_neighbors[u_nbr].remove(node)
+            self._neighbors[u_nbr].remove(node)
         del self._parents[node]
         del self._children[node]
         del self._neighbors[node]
@@ -277,61 +278,118 @@ class PDAG:
         arcs = set()
         while len(pdag2._edges) + len(pdag2._arcs) != 0:
             is_sink = lambda n: len(pdag2._children[n]) == 0
-            adj_check = lambda n: all(
+            no_vstructs = lambda n: all(
                 (pdag2._neighbors[n] - {u_nbr}).issubset(pdag2._neighbors[u_nbr])
                 for u_nbr in pdag2._undirected_neighbors[n]
             )
-            sink = next(n for n in pdag2._nodes if is_sink(n) and adj_check(n))
-            print(sink)
+            sink = next(n for n in pdag2._nodes if is_sink(n) and no_vstructs(n))
             if sink is None:
                 break
-            arcs.update((u_nbr, sink) for u_nbr in pdag2._undirected_neighbors[sink])
+            arcs.update((nbr, sink) for nbr in pdag2._neighbors[sink])
             pdag2.remove_node(sink)
 
         return DAG(arcs=arcs)
 
+    # def all_dags(self, verbose=False):
+    #     amat = self.to_amat()
+    #     node_list = list(amat.index)
+    #     all_dags = set()
+    #     _all_dags_helper(amat, amat, node_list, all_dags, verbose=verbose)
+    #     return all_dags
+
     def all_dags(self, verbose=False):
-        amat = self.to_amat()
-        node_list = list(amat.index)
-        all_dags = set()
-        _all_dags_helper(amat, amat, node_list, all_dags, verbose=verbose)
-        return all_dags
+        all_arcs = set()
+        dag = self.to_dag()
+        arcs = dag._arcs
+        all_arcs.add(frozenset(arcs))
+
+        reversible_arcs = dag.reversible_arcs()
+        parents_dict = dag.parents
+        children_dict = dag.children
+        _all_dags_helper(arcs, all_arcs, reversible_arcs, parents_dict, children_dict)
+        return all_arcs
 
 
-def _all_dags_helper(full_amat, curr_submatrix, node_list, all_dags, verbose=False):
-    if curr_submatrix.sum().sum() == 0:
-        arcs = frozenset((node_list[i], node_list[j]) for (i, j), val in np.ndenumerate(full_amat) if val==1)
-        all_dags.add(arcs)
-        if verbose: print('=== APPENDING ===')
-        if verbose: print(arcs)
-        if verbose: print('=================')
-        return
+def _all_dags_helper(arcs, all_arcs, reversible_arcs, parents_dict, children_dict):
+    for i, j in reversible_arcs:
+        new_arcs = frozenset({arc for arc in arcs if arc != (i, j)} | {(j, i)})
+        if new_arcs not in all_arcs:
+            all_arcs.add(new_arcs)
 
-    if verbose: print(full_amat)
-    nchildren = ((curr_submatrix - curr_submatrix.T) > 0).sum(axis=1)
-    if verbose: print('nchildren\n', nchildren)
-    sink_ixs = (nchildren == 0).nonzero()[0]
-    sinks = curr_submatrix.index[sink_ixs]
+            new_parents_dict = {}
+            new_children_dict = {}
+            for node in parents_dict.keys():
+                parents = set(parents_dict[node])
+                children = set(children_dict[node])
+                if node == i:
+                    new_parents_dict[node] = parents | {j}
+                    new_children_dict[node] = children - {j}
+                elif node == j:
+                    new_parents_dict[node] = parents - {i}
+                    new_children_dict[node] = children | {i}
+                else:
+                    new_parents_dict[node] = parents
+                    new_children_dict[node] = children
 
-    if verbose: print(set(sinks))
-    for sink in sinks:
-        children_ixs = curr_submatrix.loc[sink].nonzero()[0]
-        children = set(curr_submatrix.index[children_ixs])
-        parent_ixs = curr_submatrix[sink].nonzero()[0]
-        parents = set(curr_submatrix.index[parent_ixs])
+            new_reversible_arcs = reversible_arcs.copy()
+            for k in parents_dict[j]:
+                if (new_parents_dict[j] - {k}) == new_parents_dict[k]:
+                    new_reversible_arcs.add((k, j))
+                else:
+                    new_reversible_arcs.discard((k, j))
+            for k in children_dict[j]:
+                if new_parents_dict[j] == (new_parents_dict[k] - {j}):
+                    new_reversible_arcs.add((j, k))
+                else:
+                    new_reversible_arcs.discard((j, k))
+            for k in parents_dict[i]:
+                if (new_parents_dict[i] - {k}) == new_parents_dict[k]:
+                    new_reversible_arcs.add((k, i))
+                else:
+                    new_reversible_arcs.discard((k, i))
+            for k in children_dict[i]:
+                if new_parents_dict[i] == (new_parents_dict[k] - {i}):
+                    new_reversible_arcs.add((i, k))
+                else:
+                    new_reversible_arcs.discard((i, k))
 
-        undirected_nbrs = list(children & parents)
-        sink_nbrs = children | parents
-        get_neighbors = lambda n: set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]]) | set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]])
+            _all_dags_helper(new_arcs, all_arcs, new_reversible_arcs, new_parents_dict, new_children_dict)
 
-        nbrs_of_undirected_nbrs = (get_neighbors(nbr) for nbr in undirected_nbrs)
-        nbrs_of_undirected_nbrs = list(nbrs_of_undirected_nbrs)
-        if len(sink_nbrs) > 0 and all((sink_nbrs - {nbr}).issubset(nbrs_of_nbr) for nbr, nbrs_of_nbr in zip(undirected_nbrs, nbrs_of_undirected_nbrs)):
-            if verbose: print('Removing sink node', sink, 'and edges to', sink_nbrs, 'from:\n', full_amat)
-            new_full_amat = full_amat.copy()
-            new_full_amat.loc[sink][sink_nbrs] = 0
-            new_submatrix = curr_submatrix.drop(sink, axis=0).drop(sink, axis=1)
-            _all_dags_helper(new_full_amat, new_submatrix, node_list, all_dags, verbose=verbose)
+
+# def _all_dags_helper(full_amat, curr_submatrix, node_list, all_dags, verbose=False):
+#     if curr_submatrix.sum().sum() == 0:
+#         arcs = frozenset((node_list[i], node_list[j]) for (i, j), val in np.ndenumerate(full_amat) if val==1)
+#         all_dags.add(arcs)
+#         if verbose: print('=== APPENDING ===')
+#         if verbose: print(arcs)
+#         if verbose: print('=================')
+#         return
+#
+#     if verbose: print(full_amat)
+#     nchildren = ((curr_submatrix - curr_submatrix.T) > 0).sum(axis=1)
+#     if verbose: print('nchildren\n', nchildren)
+#     sink_ixs = (nchildren == 0).nonzero()[0]
+#     sinks = curr_submatrix.index[sink_ixs]
+#
+#     if verbose: print(set(sinks))
+#     for sink in sinks:
+#         children_ixs = curr_submatrix.loc[sink].nonzero()[0]
+#         children = set(curr_submatrix.index[children_ixs])
+#         parent_ixs = curr_submatrix[sink].nonzero()[0]
+#         parents = set(curr_submatrix.index[parent_ixs])
+#
+#         undirected_nbrs = list(children & parents)
+#         sink_nbrs = children | parents
+#         get_neighbors = lambda n: set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]]) | set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]])
+#
+#         nbrs_of_undirected_nbrs = (get_neighbors(nbr) for nbr in undirected_nbrs)
+#         nbrs_of_undirected_nbrs = list(nbrs_of_undirected_nbrs)
+#         if len(sink_nbrs) > 0 and all((sink_nbrs - {nbr}).issubset(nbrs_of_nbr) for nbr, nbrs_of_nbr in zip(undirected_nbrs, nbrs_of_undirected_nbrs)):
+#             if verbose: print('Removing sink node', sink, 'and edges to', sink_nbrs, 'from:\n', full_amat)
+#             new_full_amat = full_amat.copy()
+#             new_full_amat.loc[sink][sink_nbrs] = 0
+#             new_submatrix = curr_submatrix.drop(sink, axis=0).drop(sink, axis=1)
+#             _all_dags_helper(new_full_amat, new_submatrix, node_list, all_dags, verbose=verbose)
 
 
 

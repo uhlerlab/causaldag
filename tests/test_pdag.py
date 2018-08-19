@@ -77,7 +77,7 @@ class TestDAG(TestCase):
 
     def test_cpdag_file(self):
         curr_folder = os.path.dirname(__file__)
-        dag = cd.from_amat(np.loadtxt(os.path.join(curr_folder, './dag1.txt')).T)
+        dag = cd.DAG.from_amat(np.loadtxt(os.path.join(curr_folder, './dag1.txt')).T)
         cpdag = dag.cpdag()
 
         true_cpdag_edges = set()
@@ -147,6 +147,10 @@ class TestDAG(TestCase):
         for arcs in dags:
             dag2 = cd.DAG(arcs=set(arcs))
             cpdag2 = dag2.cpdag()
+            if cpdag2 != cpdag:
+                print(cpdag2.nodes, cpdag.nodes)
+                print(cpdag2.arcs, cpdag.arcs)
+                print(cpdag2.edges, cpdag.edges)
             self.assertEqual(cpdag, cpdag2)
 
     def test_pdag2alldags_8nodes_complete(self):
@@ -166,9 +170,23 @@ class TestDAG(TestCase):
         true_possible_arcs = {
             frozenset({(1, 2), (2, 3)}),
             frozenset({(2, 1), (2, 3)}),
-            frozenset({(1, 2), (3, 2)}),
+            frozenset({(2, 1), (3, 2)}),
         }
-        self.assertIn(dag2.arcs, true_possible_arcs)
+        self.assertIn(frozenset(dag2.arcs), true_possible_arcs)
+
+    def test_to_dag_complete3(self):
+        dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
+        cpdag = dag.cpdag()
+        dag2 = cpdag.to_dag()
+        true_possible_arcs = {
+            frozenset({(1, 2), (1, 3), (2, 3)}),
+            frozenset({(1, 2), (1, 3), (3, 2)}),  # flip 2->3
+            frozenset({(1, 2), (3, 1), (3, 2)}),  # flip 1->3
+            frozenset({(2, 1), (3, 1), (3, 2)}),  # flip 1->2
+            frozenset({(2, 1), (3, 1), (2, 3)}),  # flip 3->2
+            frozenset({(2, 1), (1, 3), (2, 3)}),  # flip 3->1
+        }
+        self.assertIn(frozenset(dag2.arcs), true_possible_arcs)
 
     def test_interventional_cpdag_no_obs(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
