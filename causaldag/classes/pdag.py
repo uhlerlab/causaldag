@@ -8,6 +8,11 @@ from ..utils import core_utils
 import itertools as itr
 import numpy as np
 from typing import Set
+from collections import namedtuple
+from queue import Queue
+
+SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
+
 
 
 class PDAG:
@@ -290,106 +295,64 @@ class PDAG:
 
         return DAG(arcs=arcs)
 
-    # def all_dags(self, verbose=False):
-    #     amat = self.to_amat()
-    #     node_list = list(amat.index)
-    #     all_dags = set()
-    #     _all_dags_helper(amat, amat, node_list, all_dags, verbose=verbose)
-    #     return all_dags
-
     def all_dags(self, verbose=False):
-        all_arcs = set()
         dag = self.to_dag()
         arcs = dag._arcs
-        all_arcs.add(frozenset(arcs))
+        all_arcs = set()
 
-        reversible_arcs = dag.reversible_arcs()
-        parents_dict = dag.parents
-        children_dict = dag.children
-        _all_dags_helper(arcs, all_arcs, reversible_arcs, parents_dict, children_dict)
+        orig_reversible_arcs = dag.reversible_arcs()
+        orig_parents_dict = dag.parents
+        orig_children_dict = dag.children
+
+        level = 0
+        q = [SmallDag(arcs, orig_reversible_arcs, orig_parents_dict, orig_children_dict, level)]
+        while q:
+            dag = q.pop()
+            all_arcs.add(frozenset(dag.arcs))
+            for i, j in dag.reversible_arcs:
+                new_arcs = frozenset({arc for arc in dag.arcs if arc != (i, j)} | {(j, i)})
+                if new_arcs not in all_arcs:
+                    new_parents_dict = {}
+                    new_children_dict = {}
+                    for node in dag.parents_dict.keys():
+                        parents = set(dag.parents_dict[node])
+                        children = set(dag.children_dict[node])
+                        if node == i:
+                            new_parents_dict[node] = parents | {j}
+                            new_children_dict[node] = children - {j}
+                        elif node == j:
+                            new_parents_dict[node] = parents - {i}
+                            new_children_dict[node] = children | {i}
+                        else:
+                            new_parents_dict[node] = parents
+                            new_children_dict[node] = children
+
+                    new_reversible_arcs = dag.reversible_arcs.copy()
+                    for k in dag.parents_dict[j]:
+                        if (new_parents_dict[j] - {k}) == new_parents_dict[k]:
+                            new_reversible_arcs.add((k, j))
+                        else:
+                            new_reversible_arcs.discard((k, j))
+                    for k in dag.children_dict[j]:
+                        if new_parents_dict[j] == (new_parents_dict[k] - {j}):
+                            new_reversible_arcs.add((j, k))
+                        else:
+                            new_reversible_arcs.discard((j, k))
+                    for k in dag.parents_dict[i]:
+                        if (new_parents_dict[i] - {k}) == new_parents_dict[k]:
+                            new_reversible_arcs.add((k, i))
+                        else:
+                            new_reversible_arcs.discard((k, i))
+                    for k in dag.children_dict[i]:
+                        if new_parents_dict[i] == (new_parents_dict[k] - {i}):
+                            new_reversible_arcs.add((i, k))
+                        else:
+                            new_reversible_arcs.discard((i, k))
+
+                    q.append(SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level+1))
+
         return all_arcs
 
-
-def _all_dags_helper(arcs, all_arcs, reversible_arcs, parents_dict, children_dict):
-    for i, j in reversible_arcs:
-        new_arcs = frozenset({arc for arc in arcs if arc != (i, j)} | {(j, i)})
-        if new_arcs not in all_arcs:
-            all_arcs.add(new_arcs)
-
-            new_parents_dict = {}
-            new_children_dict = {}
-            for node in parents_dict.keys():
-                parents = set(parents_dict[node])
-                children = set(children_dict[node])
-                if node == i:
-                    new_parents_dict[node] = parents | {j}
-                    new_children_dict[node] = children - {j}
-                elif node == j:
-                    new_parents_dict[node] = parents - {i}
-                    new_children_dict[node] = children | {i}
-                else:
-                    new_parents_dict[node] = parents
-                    new_children_dict[node] = children
-
-            new_reversible_arcs = reversible_arcs.copy()
-            for k in parents_dict[j]:
-                if (new_parents_dict[j] - {k}) == new_parents_dict[k]:
-                    new_reversible_arcs.add((k, j))
-                else:
-                    new_reversible_arcs.discard((k, j))
-            for k in children_dict[j]:
-                if new_parents_dict[j] == (new_parents_dict[k] - {j}):
-                    new_reversible_arcs.add((j, k))
-                else:
-                    new_reversible_arcs.discard((j, k))
-            for k in parents_dict[i]:
-                if (new_parents_dict[i] - {k}) == new_parents_dict[k]:
-                    new_reversible_arcs.add((k, i))
-                else:
-                    new_reversible_arcs.discard((k, i))
-            for k in children_dict[i]:
-                if new_parents_dict[i] == (new_parents_dict[k] - {i}):
-                    new_reversible_arcs.add((i, k))
-                else:
-                    new_reversible_arcs.discard((i, k))
-
-            _all_dags_helper(new_arcs, all_arcs, new_reversible_arcs, new_parents_dict, new_children_dict)
-
-
-# def _all_dags_helper(full_amat, curr_submatrix, node_list, all_dags, verbose=False):
-#     if curr_submatrix.sum().sum() == 0:
-#         arcs = frozenset((node_list[i], node_list[j]) for (i, j), val in np.ndenumerate(full_amat) if val==1)
-#         all_dags.add(arcs)
-#         if verbose: print('=== APPENDING ===')
-#         if verbose: print(arcs)
-#         if verbose: print('=================')
-#         return
-#
-#     if verbose: print(full_amat)
-#     nchildren = ((curr_submatrix - curr_submatrix.T) > 0).sum(axis=1)
-#     if verbose: print('nchildren\n', nchildren)
-#     sink_ixs = (nchildren == 0).nonzero()[0]
-#     sinks = curr_submatrix.index[sink_ixs]
-#
-#     if verbose: print(set(sinks))
-#     for sink in sinks:
-#         children_ixs = curr_submatrix.loc[sink].nonzero()[0]
-#         children = set(curr_submatrix.index[children_ixs])
-#         parent_ixs = curr_submatrix[sink].nonzero()[0]
-#         parents = set(curr_submatrix.index[parent_ixs])
-#
-#         undirected_nbrs = list(children & parents)
-#         sink_nbrs = children | parents
-#         get_neighbors = lambda n: set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]]) | set(curr_submatrix.index[curr_submatrix[n].nonzero()[0]])
-#
-#         nbrs_of_undirected_nbrs = (get_neighbors(nbr) for nbr in undirected_nbrs)
-#         nbrs_of_undirected_nbrs = list(nbrs_of_undirected_nbrs)
-#         if len(sink_nbrs) > 0 and all((sink_nbrs - {nbr}).issubset(nbrs_of_nbr) for nbr, nbrs_of_nbr in zip(undirected_nbrs, nbrs_of_undirected_nbrs)):
-#             if verbose: print('Removing sink node', sink, 'and edges to', sink_nbrs, 'from:\n', full_amat)
-#             new_full_amat = full_amat.copy()
-#             new_full_amat.loc[sink][sink_nbrs] = 0
-#             new_submatrix = curr_submatrix.drop(sink, axis=0).drop(sink, axis=1)
-#             _all_dags_helper(new_full_amat, new_submatrix, node_list, all_dags, verbose=verbose)
 
 
 
