@@ -6,18 +6,62 @@ Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with G
 from causaldag.classes.dag import DAG
 import numpy as np
 from causaldag.utils import core_utils
+from typing import Any, Dict, Union, Set, Tuple, List, NewType, Callable
 from dataclasses import dataclass
-from typing import Any, Dict, Union, Set, Tuple, List
+
+HardIntervention = NewType('HardIntervention', Callable[[int], np.array])
 
 
 @dataclass
 class GaussIntervention:
-    mean: float
-    variance: float
+    mean: float = 0
+    variance: float = 1
+
+    def sample(self, size):
+        return np.random.normal(loc=self.mean, scale=self.variance, size=size)
+
+
+@dataclass
+class BinaryIntervention:
+    intervention1: HardIntervention
+    intervention2: HardIntervention
+    p: float = .5
+
+    def sample(self, size):
+        choices = np.random.binomial(1, self.p, size=size)
+        ixs_iv1 = np.where(choices == 1)[0]
+        ixs_iv2 = np.where(choices == 0)[0]
+        samples = np.zeros(size)
+        samples[ixs_iv1] = self.intervention1(len(ixs_iv1))
+        samples[ixs_iv2] = self.intervention2(len(ixs_iv2))
+        return samples
+
+
+@dataclass
+class MultinomialIntervention:
+    pvals: List[float]
+    interventions: List[HardIntervention]
+
+    def sample(self, size):
+        choices = np.random.choice(list(range(len(self.interventions))), size=size, p=self.pvals)
+        samples = np.zeros(size)
+        for ix, iv in enumerate(self.interventions):
+            ixs_iv = np.where(choices == ix)
+            samples[ixs_iv] = iv(len(ixs_iv))
+        return samples
+
+
+@dataclass
+class ConstantIntervention:
+    val: float
+
+    def sample(self, size):
+        return np.ones(size) * self.val
 
 
 class GaussDAG(DAG):
-    def __init__(self, nodes: List, arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]], means=None, variances=None):
+    def __init__(self, nodes: List, arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]], means=None,
+                 variances=None):
         arcs_set = arcs if isinstance(arcs, set) else set(arcs.keys())
         super().__init__(set(nodes), arcs_set)
 
@@ -188,16 +232,16 @@ class GaussDAG(DAG):
                 samples[:, ix] = noise[:, ix]
         return samples
 
-    def sample_interventional(self, interventions: Dict[Any, GaussIntervention], nsamples: int = 1) -> np.array:
+    def sample_interventional(self, interventions: Dict[Any, HardIntervention], nsamples: int = 1) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
 
         for ix, (node, mean, var) in enumerate(zip(self._node_list, self._means, self._variances)):
             iv = interventions.get(node)
             if iv is not None:
-                mean = iv.mean
-                var = iv.variance
-            noise[:, ix] = np.random.normal(loc=mean, scale=var, size=nsamples)
+                noise[:, ix] = iv(nsamples)
+            else:
+                noise[:, ix] = np.random.normal(loc=mean, scale=var, size=nsamples)
 
         t = self.topological_sort()
         for node in t:
@@ -209,11 +253,15 @@ class GaussDAG(DAG):
                 samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
             else:
                 samples[:, ix] = noise[:, ix]
-        
+
         return samples
 
 
 if __name__ == '__main__':
+    iv = BinaryIntervention(
+        intervention1=ConstantIntervention(val=-1).sample,
+        intervention2=ConstantIntervention(val=1).sample
+    )
     B = np.zeros((3, 3))
     B[0, 1] = 1
     B[0, 2] = -1
@@ -223,9 +271,12 @@ if __name__ == '__main__':
     # print(gdag.arcs)
     print(s.T @ s / 1000)
     print(gdag.covariance)
-    s2 = gdag.sample_interventional({2: GaussIntervention(mean=0, variance=5)}, 1000)
+    s2 = gdag.sample_interventional({1: iv.sample}, 1000)
     print(s2.T @ s2 / 1000)
 
+    import matplotlib.pyplot as plt
 
-
-
+    plt.clf()
+    plt.ion()
+    plt.scatter(s2[:,1], s2[:,2])
+    plt.show()
