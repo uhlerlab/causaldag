@@ -34,11 +34,12 @@ class DAG:
 
     @classmethod
     def from_amat(cls, amat):
+        nodes = set(range(amat.shape[0]))
         arcs = set()
         for (i, j), val in np.ndenumerate(amat):
             if val != 0:
                 arcs.add((i, j))
-        return DAG(arcs=arcs)
+        return DAG(nodes=nodes, arcs=arcs)
 
     def copy(self):
         return DAG(nodes=self._nodes, arcs=self._arcs)

@@ -267,6 +267,11 @@ if __name__ == '__main__':
         ],
         pvals=[.4, .4, .2]
     )
+
+    iv = BinaryIntervention(
+        intervention1=ConstantIntervention(val=-1).sample,
+        intervention2=ConstantIntervention(val=1).sample
+    )
     B = np.zeros((3, 3))
     B[0, 1] = 1
     B[0, 2] = -1
