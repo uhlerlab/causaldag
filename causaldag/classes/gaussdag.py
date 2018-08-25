@@ -81,10 +81,9 @@ class GaussDAG(DAG):
         self._covariance = None
 
     @classmethod
-    def from_weight_matrix(cls, weight_mat, nodes=None, means=None, variances=None):
+    def from_amat(cls, weight_mat, nodes=None, means=None, variances=None):
         nodes = nodes if nodes is not None else list(range(weight_mat.shape[0]))
         arcs = {(i, j): w for (i, j), w in np.ndenumerate(weight_mat) if w != 0}
-        print(nodes, arcs)
         return cls(nodes=nodes, arcs=arcs, means=means, variances=variances)
 
     def set_arc_weight(self, i, j, val):
