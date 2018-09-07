@@ -253,21 +253,29 @@ class PDAG:
     def add_known_arcs(self, arcs):
         raise NotImplementedError
 
-    def to_amat(self, node_list=None):
-        import pandas as pd
-
+    def to_amat(self, node_list=None, mode='dataframe'):
         if node_list is None:
             node_list = sorted(self._nodes)
-
         node2ix = {node: i for i, node in enumerate(node_list)}
-        amat = np.zeros([len(self._nodes), len(self._nodes)], dtype=int)
+
+        shape = (len(self._nodes), len(self._nodes))
+        if mode == 'dataframe' or mode == 'numpy':
+            amat = np.zeros(shape, dtype=int)
+        else:
+            from scipy.sparse import lil_matrix
+            amat = lil_matrix(shape, dtype=int)
+
         for source, target in self._arcs:
             amat[node2ix[source], node2ix[target]] = 1
         for i, j in self._edges:
             amat[node2ix[i], node2ix[j]] = 1
             amat[node2ix[j], node2ix[i]] = 1
 
-        return pd.DataFrame(amat, index=node_list, columns=node_list)
+        if mode == 'dataframe':
+            from pandas import DataFrame
+            return DataFrame(amat, index=node_list, columns=node_list)
+        else:
+            return amat, node_list
 
     def _possible_sinks(self):
         return {node for node in self._nodes if len(self._children[node]) == 0}
@@ -353,5 +361,11 @@ class PDAG:
         return all_arcs
 
 
+if __name__ == '__main__':
+    from ..rand import directed_erdos
 
-
+    g = directed_erdos(10, .5)
+    c = g.cpdag()
+    a1 = c.to_amat()
+    a2, _ = c.to_amat(mode='numpy')
+    a3, _ = c.to_amat(mode='sparse')

@@ -294,13 +294,26 @@ class DAG:
                 f.write(newline(indent))
             f.write(']')
 
-    def to_amat(self):
-        node_list = self.topological_sort()
+    def to_amat(self, node_list=None, mode='dataframe'):
+        if not node_list:
+            node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}
-        amat = np.zeros([len(self._nodes), len(self._nodes)])
+
+        shape = (len(self._nodes), len(self._nodes))
+        if mode == 'dataframe' or mode == 'numpy':
+            amat = np.zeros(shape, dtype=int)
+        else:
+            from scipy.sparse import lil_matrix
+            amat = lil_matrix(shape, dtype=int)
+
         for source, target in self._arcs:
             amat[node2ix[source], node2ix[target]] = 1
-        return amat, node_list
+
+        if mode == 'dataframe':
+            from pandas import DataFrame
+            return DataFrame(amat, index=node_list, columns=node_list)
+        else:
+            return amat, node_list
 
     # === optimal interventions
     def cpdag(self):
