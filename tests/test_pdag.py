@@ -153,7 +153,7 @@ class TestDAG(TestCase):
                 print(cpdag2.edges, cpdag.edges)
             self.assertEqual(cpdag, cpdag2)
 
-    def test_pdag2alldags_8nodes_complete(self):
+    def test_pdag2alldags_6nodes_complete(self):
         dag = cd.DAG(arcs={(i, j) for i, j in itr.combinations(range(6), 2)})
         cpdag = dag.cpdag()
         dags = cpdag.all_dags()
@@ -168,7 +168,14 @@ class TestDAG(TestCase):
     def test_optimal_intervention_2interventions(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5)})
         best_ivs, icpdags = dag.optimal_intervention_greedy(num_interventions=2)
-        print(best_ivs)
+        self.assertEqual(best_ivs, [2, None])
+        self.assertEqual(icpdags[0].arcs, dag.arcs)
+        self.assertEqual(icpdags[1], None)
+
+    def test_fully_orienting_interventions_6nodes_complete(self):
+        dag = cd.DAG(arcs={(i, j) for i, j in itr.combinations(range(6), 2)})
+        ivs, icpdags = dag.fully_orienting_interventions()
+
 
     def test_to_dag(self):
         dag = cd.DAG(arcs={(1, 2), (2, 3)})

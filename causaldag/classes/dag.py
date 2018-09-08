@@ -352,11 +352,11 @@ class DAG:
 
         max_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) <= 1 for node in self._nodes)
         no_undirected_nbrs = lambda node: cpdag._undirected_neighbors[node] == 0
-        better_neighbor = lambda node: len(cpdag._undirected_neighbors[node]) == 1 and max_one_undirected_nbr
+        better_neighbor = lambda node: len(cpdag._undirected_neighbors[node]) == 1 and not max_one_undirected_nbr
         considered_nodes = list(filter(lambda node: not (no_undirected_nbrs(node) or better_neighbor(node)), self._nodes))
 
         nodes2icpdags = {
-            node: self.interventional_cpdag({node}, cpdag)
+            node: self.interventional_cpdag({node}, cpdag=cpdag)
             for node in considered_nodes
         }
         nodes2num_oriented = {
@@ -372,6 +372,21 @@ class DAG:
         else:
             best_ivs, icpdags = self.optimal_intervention_greedy(cpdag=icpdag, num_interventions=num_interventions-1)
             return [best_iv] + best_ivs, [icpdag] + icpdags
+
+    def fully_orienting_interventions_greedy(self, cpdag=None):
+        if cpdag is None:
+            cpdag = self.cpdag()
+        curr_cpdag = cpdag
+        ivs = []
+        icpdags = []
+        while len(curr_cpdag.edges) != 0:
+            iv, icpdag = self.optimal_intervention_greedy(cpdag=curr_cpdag)
+            iv = iv[0]
+            icpdag = icpdag[0]
+            curr_cpdag = icpdag
+            ivs.append(iv)
+            icpdags.append(icpdag)
+        return ivs, icpdags
 
     def backdoor(self, i, j):
         """
