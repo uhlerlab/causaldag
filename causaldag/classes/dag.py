@@ -348,7 +348,7 @@ class DAG:
         if cpdag is None:
             cpdag = self.cpdag()
         if len(cpdag.edges) == 0:
-            return [None]*num_interventions, [None]*num_interventions
+            return [None]*num_interventions, [cpdag]*num_interventions
 
         max_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) <= 1 for node in self._nodes)
         no_undirected_nbrs = lambda node: cpdag._undirected_neighbors[node] == 0
