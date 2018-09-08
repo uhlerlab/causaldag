@@ -344,22 +344,34 @@ class DAG:
         pdag.remove_unprotected_orientations()
         return pdag
 
-    def optimal_intervention(self, cpdag=None):
+    def optimal_intervention_greedy(self, cpdag=None, num_interventions=1):
         if cpdag is None:
             cpdag = self.cpdag()
+        if len(cpdag.edges) == 0:
+            return [None]*num_interventions, [None]*num_interventions
 
-        all_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) == 1 for node in self._nodes)
-        nodes2num_oriented = {}
-        for node in self._nodes:
-            if len(cpdag._undirected_neighbors[node]) == 0:
-                continue
-            if len(cpdag._undirected_neighbors[node]) == 0 and not all_one_undirected_nbr:
-                continue
-            icpdag = self.interventional_cpdag({node}, cpdag)
-            nodes2num_oriented[node] = len(icpdag._arcs) - len(cpdag._arcs)
-        if len(nodes2num_oriented) == 0:
-            return next(iter(self._nodes))
-        return max(nodes2num_oriented.items(), key=op.itemgetter(1))[0]
+        max_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) <= 1 for node in self._nodes)
+        no_undirected_nbrs = lambda node: cpdag._undirected_neighbors[node] == 0
+        better_neighbor = lambda node: len(cpdag._undirected_neighbors[node]) == 1 and max_one_undirected_nbr
+        considered_nodes = list(filter(lambda node: not (no_undirected_nbrs(node) or better_neighbor(node)), self._nodes))
+
+        nodes2icpdags = {
+            node: self.interventional_cpdag({node}, cpdag)
+            for node in considered_nodes
+        }
+        nodes2num_oriented = {
+            node: len(icpdag._arcs)
+            for node, icpdag in nodes2icpdags.items()
+        }
+
+        best_iv = max(nodes2num_oriented.items(), key=op.itemgetter(1))[0]
+        icpdag = nodes2icpdags[best_iv]
+
+        if num_interventions == 1:
+            return [best_iv], [icpdag]
+        else:
+            best_ivs, icpdags = self.optimal_intervention_greedy(cpdag=icpdag, num_interventions=num_interventions-1)
+            return [best_iv] + best_ivs, [icpdag] + icpdags
 
     def backdoor(self, i, j):
         """

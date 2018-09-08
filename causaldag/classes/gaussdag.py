@@ -184,8 +184,8 @@ class GaussDAG(DAG):
     def cpdag(self):
         raise NotImplementedError
 
-    def optimal_intervention(self, cpdag=None):
-        return super().optimal_intervention(cpdag=cpdag)
+    def optimal_intervention_greedy(self, cpdag=None):
+        return super().optimal_intervention_greedy(cpdag=cpdag)
 
     def backdoor(self, i, j):
         return super().backdoor(i, j)

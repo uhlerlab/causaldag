@@ -159,9 +159,16 @@ class TestDAG(TestCase):
         dags = cpdag.all_dags()
         self.assertEqual(len(dags), np.prod(range(1, 7)))
 
-    def test_optimal_intervention(self):
+    def test_optimal_intervention_1intervention(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        self.assertEqual(dag.optimal_intervention(), 2)
+        best_ivs, icpdags = dag.optimal_intervention_greedy()
+        self.assertEqual(best_ivs, [2])
+        self.assertEqual(icpdags[0].arcs, dag.arcs)
+
+    def test_optimal_intervention_2interventions(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5)})
+        best_ivs, icpdags = dag.optimal_intervention_greedy(num_interventions=2)
+        print(best_ivs)
 
     def test_to_dag(self):
         dag = cd.DAG(arcs={(1, 2), (2, 3)})

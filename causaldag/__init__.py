@@ -10,7 +10,7 @@ Simple Example
 >>> import causaldag as cd
 >>> dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
 >>> cpdag = dag.cpdag()
->>> iv = dag.optimal_intervention(cpdag=cpdag)
+>>> iv = dag.optimal_intervention_greedy(cpdag=cpdag)
 >>> icpdag = dag.interventional_cpdag([iv], cpdag=cpdag)
 {(1,2), (2,3)}
 
