@@ -159,6 +159,12 @@ class TestDAG(TestCase):
         dags = cpdag.all_dags()
         self.assertEqual(len(dags), np.prod(range(1, 7)))
 
+    def test_icpdag2alldags(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3), (4, 5)})
+        icpdag = dag.interventional_cpdag([2], cpdag=dag.cpdag())
+        dags = icpdag.all_dags()
+        self.assertEqual(len(dags), 2)
+
     def test_optimal_intervention_1intervention(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         best_ivs, icpdags = dag.optimal_intervention_greedy()
@@ -170,12 +176,18 @@ class TestDAG(TestCase):
         best_ivs, icpdags = dag.optimal_intervention_greedy(num_interventions=2)
         self.assertEqual(best_ivs, [2, None])
         self.assertEqual(icpdags[0].arcs, dag.arcs)
-        self.assertEqual(icpdags[1], None)
+        self.assertEqual(icpdags[1].arcs, dag.arcs)
+
+    def test_optimal_intervention_2interventions2(self):
+        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3), (4, 5)})
+        best_ivs, icpdags = dag.optimal_intervention_greedy(num_interventions=2)
+        self.assertEqual(best_ivs, [2, 4])
+        self.assertEqual(icpdags[0].arcs, {(1, 2), (1, 3), (2, 3)})
+        self.assertEqual(icpdags[1].arcs, {(1, 2), (1, 3), (2, 3), (4, 5)})
 
     def test_fully_orienting_interventions_6nodes_complete(self):
         dag = cd.DAG(arcs={(i, j) for i, j in itr.combinations(range(6), 2)})
-        ivs, icpdags = dag.fully_orienting_interventions()
-
+        ivs, icpdags = dag.fully_orienting_interventions_greedy()
 
     def test_to_dag(self):
         dag = cd.DAG(arcs={(1, 2), (2, 3)})

@@ -307,7 +307,7 @@ class PDAG:
         arcs = dag._arcs
         all_arcs = set()
 
-        orig_reversible_arcs = dag.reversible_arcs()
+        orig_reversible_arcs = dag.reversible_arcs() - self._known_arcs
         orig_parents_dict = dag.parents
         orig_children_dict = dag.children
 
@@ -336,22 +336,22 @@ class PDAG:
 
                     new_reversible_arcs = dag.reversible_arcs.copy()
                     for k in dag.parents_dict[j]:
-                        if (new_parents_dict[j] - {k}) == new_parents_dict[k]:
+                        if (new_parents_dict[j] - {k}) == new_parents_dict[k] and (k, j) not in self._known_arcs:
                             new_reversible_arcs.add((k, j))
                         else:
                             new_reversible_arcs.discard((k, j))
                     for k in dag.children_dict[j]:
-                        if new_parents_dict[j] == (new_parents_dict[k] - {j}):
+                        if new_parents_dict[j] == (new_parents_dict[k] - {j}) and (j, k) not in self._known_arcs:
                             new_reversible_arcs.add((j, k))
                         else:
                             new_reversible_arcs.discard((j, k))
                     for k in dag.parents_dict[i]:
-                        if (new_parents_dict[i] - {k}) == new_parents_dict[k]:
+                        if (new_parents_dict[i] - {k}) == new_parents_dict[k] and (k, i) not in self._known_arcs:
                             new_reversible_arcs.add((k, i))
                         else:
                             new_reversible_arcs.discard((k, i))
                     for k in dag.children_dict[i]:
-                        if new_parents_dict[i] == (new_parents_dict[k] - {i}):
+                        if new_parents_dict[i] == (new_parents_dict[k] - {i}) and (i, k) not in self._known_arcs:
                             new_reversible_arcs.add((i, k))
                         else:
                             new_reversible_arcs.discard((i, k))
