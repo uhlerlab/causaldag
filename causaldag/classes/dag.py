@@ -64,6 +64,9 @@ class DAG:
     def children(self):
         return core_utils.defdict2dict(self._children, self._nodes)
 
+    def has_arc(self, source, target):
+        return (source, target) in self._arcs
+
     def __str__(self):
         t = self.topological_sort()
         substrings = []

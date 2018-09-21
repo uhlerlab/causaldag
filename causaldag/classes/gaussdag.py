@@ -6,58 +6,82 @@ Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with G
 from causaldag.classes.dag import DAG
 import numpy as np
 from causaldag.utils import core_utils
-from typing import Any, Dict, Union, Set, Tuple, List, NewType, Callable
+from typing import Any, Dict, Union, Set, Tuple, List, FrozenSet, NewType
 from dataclasses import dataclass
+from scipy.linalg import ldl
+import operator as op
+from scipy.stats import norm
 
-HardIntervention = NewType('HardIntervention', Callable[[int], np.array])
+
+class InterventionalDistribution:
+    def sample(self, size: int) -> np.array:
+        raise NotImplementedError
+
+    def pdf(self, vals: np.array) -> float:
+        raise NotImplementedError
+
+
+Intervention = NewType('Intervention', Dict[Any, InterventionalDistribution])
 
 
 @dataclass
-class GaussIntervention:
+class GaussIntervention(InterventionalDistribution):
     mean: float = 0
     variance: float = 1
 
-    def sample(self, size):
+    def sample(self, size: int) -> np.array:
         samples = np.random.normal(loc=self.mean, scale=self.variance, size=size)
         return samples
 
+    def pdf(self, vals: np.array) -> float:
+        return norm.pdf(vals, loc=self.mean, scale=self.variance)
+
 
 @dataclass
-class BinaryIntervention:
-    intervention1: HardIntervention
-    intervention2: HardIntervention
+class BinaryIntervention(InterventionalDistribution):
+    intervention1: InterventionalDistribution
+    intervention2: InterventionalDistribution
     p: float = .5
 
-    def sample(self, size):
+    def sample(self, size: int) -> np.array:
         choices = np.random.binomial(1, self.p, size=size)
         ixs_iv1 = np.where(choices == 1)[0]
         ixs_iv2 = np.where(choices == 0)[0]
         samples = np.zeros(size)
-        samples[ixs_iv1] = self.intervention1(len(ixs_iv1))
-        samples[ixs_iv2] = self.intervention2(len(ixs_iv2))
+        samples[ixs_iv1] = self.intervention1.sample(len(ixs_iv1))
+        samples[ixs_iv2] = self.intervention2.sample(len(ixs_iv2))
         return samples
+
+    def pdf(self, vals: np.array) -> float:
+        return self.p * self.intervention1.pdf(vals) + (1 - self.p) * self.intervention2.pdf(vals)
 
 
 @dataclass
-class MultinomialIntervention:
+class MultinomialIntervention(InterventionalDistribution):
     pvals: List[float]
-    interventions: List[HardIntervention]
+    interventions: List[InterventionalDistribution]
 
-    def sample(self, size):
+    def sample(self, size: int) -> np.array:
         choices = np.random.choice(list(range(len(self.interventions))), size=size, p=self.pvals)
         samples = np.zeros(size)
         for ix, iv in enumerate(self.interventions):
             ixs_iv = np.where(choices == ix)[0]
-            samples[ixs_iv] = iv(len(ixs_iv))
+            samples[ixs_iv] = iv.sample(len(ixs_iv))
         return samples
+
+    def pdf(self, vals: np.array) -> float:
+        raise NotImplementedError
 
 
 @dataclass
-class ConstantIntervention:
+class ConstantIntervention(InterventionalDistribution):
     val: float
 
-    def sample(self, size):
+    def sample(self, size: int) -> np.array:
         return np.ones(size) * self.val
+
+    def pdf(self, vals: np.array) -> float:
+        return (vals == self.val).astype(bool)
 
 
 class GaussDAG(DAG):
@@ -86,6 +110,40 @@ class GaussDAG(DAG):
         arcs = {(i, j): w for (i, j), w in np.ndenumerate(weight_mat) if w != 0}
         return cls(nodes=nodes, arcs=arcs, means=means, variances=variances)
 
+    @classmethod
+    def from_precision(cls, precision_mat, node_order):
+        from sksparse.cholmod import cholesky
+        p = precision_mat.shape[0]
+
+        # === permute precision matrix into  correct order for LDL
+        precision_mat = precision_mat.copy()
+        precision_mat = precision_mat[node_order]
+        precision_mat = precision_mat[:, node_order]
+
+        # === perform ldl decomposition and correct for floating point errors
+        u, d, perm_ = ldl(precision_mat, lower=False)
+        u[np.isclose(u, 0)] = 0
+
+        # === permute back
+        inv_node_order = [i for i, j in sorted(enumerate(node_order), key=op.itemgetter(1))]
+        u = u.copy()
+        u = u[inv_node_order]
+        u = u[:, inv_node_order]
+        d = d.copy()
+        d = d[inv_node_order]
+        d = d[:, inv_node_order]
+
+        amat = np.eye(p) - u
+        variances = np.diag(d) ** -1
+
+        print(u)
+        print(amat)
+        print(d)
+        print(variances)
+
+        # adj_mat[np.isclose(adj_mat, 0)] = 0
+        return GaussDAG.from_amat(amat, variances=variances)
+
     def set_arc_weight(self, i, j, val):
         self._weight_mat[self._node2ix[i], self._node2ix[j]] = val
         if val == 0 and (i, j) in self._arcs:
@@ -95,6 +153,10 @@ class GaussDAG(DAG):
 
     def set_node_variance(self, i, var):
         self._variances[i] = var
+
+    @property
+    def arc_weights(self):
+        return {(i, j): self._weight_mat[i, j] for i, j in self._arcs}
 
     @property
     def weight_mat(self):
@@ -232,14 +294,14 @@ class GaussDAG(DAG):
                 samples[:, ix] = noise[:, ix]
         return samples
 
-    def sample_interventional(self, interventions: Dict[Any, HardIntervention], nsamples: int = 1) -> np.array:
+    def sample_interventional(self, interventions: Intervention, nsamples: int = 1) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
 
         for ix, (node, mean, var) in enumerate(zip(self._node_list, self._means, self._variances)):
             iv = interventions.get(node)
             if iv is not None:
-                noise[:, ix] = iv(nsamples)
+                noise[:, ix] = iv.sample(nsamples)
             else:
                 noise[:, ix] = np.random.normal(loc=mean, scale=var, size=nsamples)
 
@@ -255,6 +317,33 @@ class GaussDAG(DAG):
                 samples[:, ix] = noise[:, ix]
 
         return samples
+
+    def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
+        sorted_nodes = self.topological_sort()
+        nsamples = samples.shape[0]
+        log_probs = np.zeros(nsamples)
+
+        if interventions is None:
+            for node in sorted_nodes:
+                node_ix = self._node2ix[node]
+                parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+                if len(parent_ixs) != 0:
+                    parent_vals = samples[:, parent_ixs]
+                    log_probs += norm.logpdf(samples[:, node_ix] - (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1))
+                else:
+                    log_probs += norm.logpdf(samples[:, node_ix])
+        else:
+            for node in sorted_nodes:
+                node_ix = self._node2ix[node]
+                iv = interventions.get(node)
+                if iv is not None:
+                    log_probs += np.log(iv.pdf(samples[:, node_ix]))
+                else:
+                    parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+                    parent_vals = samples[:, parent_ixs]
+                    log_probs += norm.logpdf(samples[:, node_ix] - (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1))
+
+        return log_probs
 
 
 if __name__ == '__main__':
@@ -275,12 +364,12 @@ if __name__ == '__main__':
     B[0, 1] = 1
     B[0, 2] = -1
     B[1, 2] = 4
-    gdag = GaussDAG.from_weight_matrix(B, means=[0, 0, 0], variances=[1, 1, 1])
+    gdag = GaussDAG.from_amat(B, means=[0, 0, 0], variances=[1, 1, 1])
     s = gdag.sample(1000)
     # print(gdag.arcs)
     print(s.T @ s / 1000)
     print(gdag.covariance)
-    s2 = gdag.sample_interventional({1: iv.sample}, 1000)
+    s2 = gdag.sample_interventional({1: iv}, 1000)
     print(s2.T @ s2 / 1000)
 
     import matplotlib.pyplot as plt
