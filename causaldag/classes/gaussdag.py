@@ -155,6 +155,10 @@ class GaussDAG(DAG):
         self._variances[i] = var
 
     @property
+    def nodes(self):
+        return list(self._nodes)
+
+    @property
     def arc_weights(self):
         return {(i, j): self._weight_mat[i, j] for i, j in self._arcs}
 
@@ -275,7 +279,7 @@ class GaussDAG(DAG):
             if (self._variances == 1).all():
                 self._covariance = id_min_a_inv.T @ id_min_a_inv
             else:
-                self._covariance = id_min_a_inv.T @ np.diag(self._variances ** -1) @ id_min_a_inv
+                self._covariance = id_min_a_inv.T @ np.diag(self._variances) @ id_min_a_inv
 
     def sample(self, nsamples: int = 1) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
