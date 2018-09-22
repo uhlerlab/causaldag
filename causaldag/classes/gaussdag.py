@@ -333,9 +333,10 @@ class GaussDAG(DAG):
                 parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                 if len(parent_ixs) != 0:
                     parent_vals = samples[:, parent_ixs]
-                    log_probs += norm.logpdf(samples[:, node_ix] - (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1))
+                    correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
                 else:
-                    log_probs += norm.logpdf(samples[:, node_ix])
+                    correction = 0
+                log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix])
         else:
             for node in sorted_nodes:
                 node_ix = self._node2ix[node]
@@ -345,7 +346,8 @@ class GaussDAG(DAG):
                 else:
                     parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                     parent_vals = samples[:, parent_ixs]
-                    log_probs += norm.logpdf(samples[:, node_ix] - (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1))
+                    correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
+                    log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix])
 
         return log_probs
 
