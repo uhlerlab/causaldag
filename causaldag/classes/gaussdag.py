@@ -10,7 +10,7 @@ from typing import Any, Dict, Union, Set, Tuple, List, FrozenSet, NewType
 from dataclasses import dataclass
 from scipy.linalg import ldl
 import operator as op
-from scipy.stats import norm
+from scipy.stats import norm, multivariate_normal
 
 
 class InterventionalDistribution:
@@ -135,11 +135,6 @@ class GaussDAG(DAG):
 
         amat = np.eye(p) - u
         variances = np.diag(d) ** -1
-
-        print(u)
-        print(amat)
-        print(d)
-        print(variances)
 
         # adj_mat[np.isclose(adj_mat, 0)] = 0
         return GaussDAG.from_amat(amat, variances=variances)
@@ -322,6 +317,31 @@ class GaussDAG(DAG):
 
         return samples
 
+    def interventional_covariance(self, intervened_nodes: set):
+        remaining_nodes = [node for node in self._nodes if node not in intervened_nodes]
+
+        id_ = np.eye(len(self._nodes))
+        a = self._weight_mat
+        a = a[np.ix_(remaining_nodes, remaining_nodes)]
+        id_min_a_inv = np.linalg.inv(id_ - a)
+        if (self._variances == 1).all():
+            return id_min_a_inv.T @ id_min_a_inv
+        else:
+            return id_min_a_inv.T @ np.diag(self._variances) @ id_min_a_inv
+
+    # def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
+    #     self._ensure_covariance()
+    #
+    #     if interventions is None:
+    #         return multivariate_normal.logpdf(samples, mean=self._means, cov=self._covariance)
+    #     else:
+    #         intervened_nodes = set(interventions.keys())
+    #         remaining_nodes = [node for node in self._nodes if node not in intervened_nodes]
+    #         samples = samples[:, remaining_nodes]
+    #         adjusted_means = None
+    #         adjusted_cov = self.interventional_covariance(intervened_nodes)
+    #         return multivariate_normal.logpdf(samples, meabn=adjusted_means, cov=adjusted_cov)
+
     def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
         sorted_nodes = self.topological_sort()
         nsamples = samples.shape[0]
@@ -336,7 +356,7 @@ class GaussDAG(DAG):
                     correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
                 else:
                     correction = 0
-                log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix])
+                log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix]**.5)
         else:
             for node in sorted_nodes:
                 node_ix = self._node2ix[node]
@@ -347,7 +367,7 @@ class GaussDAG(DAG):
                     parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                     parent_vals = samples[:, parent_ixs]
                     correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
-                    log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix])
+                    log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix]**.5)
 
         return log_probs
 
