@@ -343,6 +343,9 @@ class GaussDAG(DAG):
     #         return multivariate_normal.logpdf(samples, meabn=adjusted_means, cov=adjusted_cov)
 
     def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
+        # TODO this is about 10x slower than using multivariate_normal.logpdf with the covariance matrix
+        # TODO can I speed this up? where is the time spent?
+
         sorted_nodes = self.topological_sort()
         nsamples = samples.shape[0]
         log_probs = np.zeros(nsamples)
