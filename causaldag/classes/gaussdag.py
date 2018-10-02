@@ -30,11 +30,11 @@ class GaussIntervention(InterventionalDistribution):
     variance: float = 1
 
     def sample(self, size: int) -> np.array:
-        samples = np.random.normal(loc=self.mean, scale=self.variance, size=size)
+        samples = np.random.normal(loc=self.mean, scale=self.variance**.5, size=size)
         return samples
 
     def pdf(self, vals: np.array) -> float:
-        return norm.pdf(vals, loc=self.mean, scale=self.variance)
+        return norm.pdf(vals, loc=self.mean, scale=self.variance**.5)
 
 
 @dataclass
@@ -378,22 +378,26 @@ class GaussDAG(DAG):
 if __name__ == '__main__':
     iv = MultinomialIntervention(
         interventions=[
-            ConstantIntervention(val=-1).sample,
-            ConstantIntervention(val=1).sample,
-            GaussIntervention(mean=2, variance=1).sample,
+            ConstantIntervention(val=-1),
+            ConstantIntervention(val=1),
+            GaussIntervention(mean=2, variance=1),
         ],
         pvals=[.4, .4, .2]
     )
 
     iv = BinaryIntervention(
-        intervention1=ConstantIntervention(val=-1).sample,
-        intervention2=ConstantIntervention(val=1).sample
+        intervention1=ConstantIntervention(val=-1),
+        intervention2=ConstantIntervention(val=1)
     )
+    import causaldag as cd
     B = np.zeros((3, 3))
     B[0, 1] = 1
     B[0, 2] = -1
     B[1, 2] = 4
-    gdag = GaussDAG.from_amat(B, means=[0, 0, 0], variances=[1, 1, 1])
+    gdag = cd.GaussDAG.from_amat(B)
+    iv = cd.GaussIntervention(mean=0, variance=.1)
+    gdag.sample_interventional({0: iv}, nsamples=100)
+
     s = gdag.sample(1000)
     # print(gdag.arcs)
     print(s.T @ s / 1000)
