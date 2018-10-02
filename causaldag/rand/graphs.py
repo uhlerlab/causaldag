@@ -1,7 +1,6 @@
 import numpy as np
 from ..classes.dag import DAG
 import itertools as itr
-from more_itertools import chunked
 
 
 def _coin(p, size=1):
@@ -14,11 +13,7 @@ def directed_erdos(n, s, size=1):
         arcs = {(i, j) for (i, j), b in zip(itr.combinations(range(n), 2), bools) if b}
         return DAG(nodes=set(range(n)), arcs=arcs)
     else:
-        all_bools = _coin(s, size=int(n*(n-1)/2)*size)
-        chunked_bools = chunked(all_bools, size)
-        possible_arcs = list(itr.combinations(range(n), 2))
-        chunked_arcs = [{(i, j) for (i, j), b in zip(possible_arcs, bools)} for bools in chunked_bools]
-        return [DAG(nodes=set(range(n)), arcs=arcs) for arcs in chunked_arcs]
+        return [directed_erdos(n, s) for _ in range(size)]
 
 
 __all__ = ['directed_erdos']

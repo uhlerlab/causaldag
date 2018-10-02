@@ -47,6 +47,18 @@ def test_create_dag_large():
         g = cd.DAG(nodes=range(nnodes_large), arcs=arcs)
 
 
-test_create_nx_large()
-test_create_dag_large()
+@timed
+def test_diff():
+    for i in range(5):
+        gs = [cd.rand.directed_erdos(200, .5) for _ in range(10)]
+
+
+@timed
+def test_all_at_once():
+    for i in range(5):
+        gs = cd.rand.directed_erdos(200, .5, 10)
+
+
+test_diff()
+test_all_at_once()
 
