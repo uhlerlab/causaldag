@@ -280,7 +280,7 @@ class GaussDAG(DAG):
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
         for ix, var in enumerate(self._variances):
-            noise[:, ix] = np.random.normal(scale=var, size=nsamples)
+            noise[:, ix] = np.random.normal(scale=var**.5, size=nsamples)
         t = self.topological_sort()
         for node in t:
             ix = self._node2ix[node]
@@ -302,7 +302,7 @@ class GaussDAG(DAG):
             if iv is not None:
                 noise[:, ix] = iv.sample(nsamples)
             else:
-                noise[:, ix] = np.random.normal(loc=mean, scale=var, size=nsamples)
+                noise[:, ix] = np.random.normal(loc=mean, scale=var**.5, size=nsamples)
 
         t = self.topological_sort()
         for node in t:
