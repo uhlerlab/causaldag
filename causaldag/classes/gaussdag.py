@@ -345,7 +345,7 @@ class GaussDAG(DAG):
     #         adjusted_cov = self.interventional_covariance(intervened_nodes)
     #         return multivariate_normal.logpdf(samples, meabn=adjusted_means, cov=adjusted_cov)
 
-    def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
+    def logpdf(self, samples: np.array, interventions: Intervention = None, exclude_intervention_prob=True) -> np.array:
         # TODO this is about 10x slower than using multivariate_normal.logpdf with the covariance matrix
         # TODO can I speed this up? where is the time spent?
 
@@ -368,10 +368,12 @@ class GaussDAG(DAG):
                 node_ix = self._node2ix[node]
                 iv = interventions.get(node)
                 if iv is not None:
-                    if isinstance(iv, GaussIntervention):
-                        log_probs += iv.logpdf(samples[:, node_ix])
-                    else:
-                        log_probs += np.log(iv.pdf(samples[:, node_ix]))
+                    if not exclude_intervention_prob:
+                        print('HERRRREEEE')
+                        if isinstance(iv, GaussIntervention):
+                            log_probs += iv.logpdf(samples[:, node_ix])
+                        else:
+                            log_probs += np.log(iv.pdf(samples[:, node_ix]))
                 else:
                     parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                     parent_vals = samples[:, parent_ixs]
