@@ -36,6 +36,9 @@ class GaussIntervention(InterventionalDistribution):
     def pdf(self, vals: np.array) -> float:
         return norm.pdf(vals, loc=self.mean, scale=self.variance**.5)
 
+    def logpdf(self, vals: np.array) -> float:
+        return norm.logpdf(vals, loc=self.mean, scale=self.variance**.5)
+
 
 @dataclass
 class BinaryIntervention(InterventionalDistribution):
@@ -365,7 +368,10 @@ class GaussDAG(DAG):
                 node_ix = self._node2ix[node]
                 iv = interventions.get(node)
                 if iv is not None:
-                    log_probs += np.log(iv.pdf(samples[:, node_ix]))
+                    if isinstance(iv, GaussIntervention):
+                        log_probs += iv.logpdf(samples[:, node_ix])
+                    else:
+                        log_probs += np.log(iv.pdf(samples[:, node_ix]))
                 else:
                     parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                     parent_vals = samples[:, parent_ixs]
