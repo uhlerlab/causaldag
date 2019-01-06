@@ -1,11 +1,10 @@
-from typing import Dict, FrozenSet, NewType, Union
+from typing import Dict, FrozenSet, NewType, Any
 import numpy as np
 from ...classes.dag import DAG
 import itertools as itr
-from pyrsistent import pvector
 
 
-def perm2dag(suffstat: np.ndarray, perm: list, ci_test, ind_test, alpha=.05):
+def perm2dag(suffstat: Any, perm: list, ci_test, ind_test, alpha=.05):
     """
     Given observational data and a node ordering, returns a minimal I-map for the distribution.
     The arrow perm[i] -> perm[j] is present iff i < j and j and i are not dependent given all other predecessors of j.
@@ -46,9 +45,9 @@ def _reverse_arc(dag, covered_arcs, i, j, samples, ci_test, ind_test, alpha):
                 new_dag.remove_arc(parent, i)
 
             if len(rest) == 0:
-                p_j = ind_test(samples[:, j], samples[:, parent])[2]
+                p_j = ind_test(j, parent)[2]
             else:
-                p_j = ci_test(samples[:, i], samples[:, parent], samples[:, list(rest)])[2]
+                p_j = ci_test(j, parent, [*rest])[2]
             if p_j > alpha:
                 new_dag.remove_arc(parent, j)
 
@@ -68,7 +67,7 @@ def gsp(suffstat: np.ndarray, starting_perm: list, ci_test, ind_test, alpha: flo
     DAG.
 
     :param samples:
-    :param starting_perm:
+    :param starting_perm: Permutation with which to begin the search algorithm.
     :param ci_test: Conditional independence test.
     :param ind_test: Unconditional independence test.
     :param alpha: Significance level for independence tests.
@@ -121,7 +120,7 @@ def igsp(samples: Dict[FrozenSet, np.ndarray], starting_perm: list):
     pass
 
 
-def is_icovered(samples: Dict[FrozenSet, np.ndarray], i: int, j: int, ci_test, alpha: float=0.05):
+def is_icovered(samples: Dict[FrozenSet, np.ndarray], i: int, j: int, invariance_ci_test, alpha: float=0.05):
     """
     Tell if an edge i->j is I-covered.
 
@@ -131,7 +130,7 @@ def is_icovered(samples: Dict[FrozenSet, np.ndarray], i: int, j: int, ci_test, a
     :param samples:
     :param i: Source of arrow.
     :param j: Target of arrow.
-    :param ci_test: Conditional independence test
+    :param invariance_ci_test: Conditional independence test
     :param alpha: Significance level used for conditional independence test
     :return:
     """
@@ -147,7 +146,7 @@ def is_icovered(samples: Dict[FrozenSet, np.ndarray], i: int, j: int, ci_test, a
             j_vec = np.concatenate((iv_samples[:, j], obs_samples[:, j]))
             labels = np.concatenate((np.zeros(num_obs_samples), np.ones(num_iv_samples)))
 
-            _, _, p = ci_test(i_vec, j_vec, labels)
+            _, _, p = invariance_ci_test(i_vec, j_vec, labels)
 
             if p < alpha:
                 is_icov = False
@@ -160,15 +159,31 @@ def unknown_target_igsp(
         starting_perm: list,
         ci_test,
         ind_test,
+        invariance_ci_test,
         alpha: float=0.05,
         depth: int=4,
         verbose: bool=False
 ):
+    """
+    Use the Unknown Target Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the data-generating
+    DAG.
+
+    :param samples:
+    :param starting_perm: Permutation with which to begin the algorithm.
+    :param ci_test: Conditional independence test
+    :param ind_test: Independence test
+    :param invariance_ci_test: Conditional independence test used for determining
+    invariance of conditional distributions to interventions.
+    :param alpha: Significance level
+    :param depth: Maximum depth of search.
+    :param verbose:
+    :return:
+    """
     # === STARTING VALUES
     current_dag = perm2dag(samples[frozenset()], starting_perm, ci_test, ind_test, alpha=alpha)
     if verbose: print("=== STARTING DAG:", current_dag)
     current_covered_arcs = current_dag.reversible_arcs()
-    current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if is_icovered(samples, i, j, ci_test)]
+    current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if is_icovered(samples, i, j, invariance_ci_test)]
     if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
 
     # === RECORDS FOR DEPTH-FIRST SEARCH
