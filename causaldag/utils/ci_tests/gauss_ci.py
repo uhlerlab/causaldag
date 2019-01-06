@@ -3,7 +3,7 @@ from typing import Dict
 from scipy.stats import norm
 
 
-def gauss_ci_test(suffstat: Dict, i, j, alpha=0.05, cond_set=None):
+def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.05):
     """
     Test the null hypothesis that i and j are conditionally independent given cond_set via Fisher's z-transform.
 

@@ -73,9 +73,24 @@ class TestKCI(TestCase):
         n_samples = 500
         alpha = 0.05
         for i in range(num_tests):
-            samples = np.random.multivariate_normal([0, 0], np.eye(2), n_samples).round(4)
+            samples = np.random.multivariate_normal([1, 3], np.eye(2), n_samples).round(4)
             corr = np.corrcoef(samples, rowvar=False)
             results = cd.utils.ci_tests.gauss_ci_test(dict(n=n_samples, C=corr), 0, 1, alpha=alpha)
+            if results['reject']:
+                false_positives += 1
+
+        print("Expected number of false positives:", alpha*num_tests)
+        print("Number of false positives:", false_positives)
+
+    def test_gauss_ci(self):
+        false_positives = 0
+        num_tests = 100
+        n_samples = 500
+        alpha = 0.05
+        d = cd.GaussDAG([0, 1, 2], arcs={(0, 1), (0, 2)})
+        for i in range(num_tests):
+            corr = np.corrcoef(d.sample(n_samples), rowvar=False)
+            results = cd.utils.ci_tests.gauss_ci_test(dict(n=n_samples, C=corr), 1, 2, cond_set=[0], alpha=alpha)
             if results['reject']:
                 false_positives += 1
 
