@@ -25,3 +25,4 @@ from .classes import *
 from .loaders import *
 from . import rand
 from . import inference
+from . import utils

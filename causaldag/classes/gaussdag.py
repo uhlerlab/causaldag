@@ -369,7 +369,6 @@ class GaussDAG(DAG):
                 iv = interventions.get(node)
                 if iv is not None:
                     if not exclude_intervention_prob:
-                        print('HERRRREEEE')
                         if isinstance(iv, GaussIntervention):
                             log_probs += iv.logpdf(samples[:, node_ix])
                         else:

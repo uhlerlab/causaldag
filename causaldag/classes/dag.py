@@ -64,6 +64,12 @@ class DAG:
     def children(self):
         return core_utils.defdict2dict(self._children, self._nodes)
 
+    def parents_of(self, node):
+        return self._parents[node].copy()
+
+    def children_of(self, node):
+        return self._children[node].copy()
+
     def has_arc(self, source, target):
         return (source, target) in self._arcs
 
