@@ -218,6 +218,12 @@ class DAG:
         if isinstance(other, DAG):
             return len(other.arcs - self.arcs) + len(self.arcs - other.arcs)
 
+    def shd_skeleton(self, other) -> int:
+        if isinstance(other, DAG):
+            self_undirected = {(min(i, j), max(i, j)) for (i, j) in self.arcs}
+            other_undirected = {(min(i, j), max(i, j)) for (i, j) in other.arcs}
+            return len(other_undirected - self_undirected) + len(self_undirected - other_undirected)
+
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
         for child in self._children[node]:

@@ -3,24 +3,31 @@ from sklearn.preprocessing import scale
 from sklearn.metrics.pairwise import euclidean_distances
 import itertools as itr
 from scipy.stats import gamma
-from typing import Tuple, Dict
+from typing import Dict, Union, List, Optional
 
 
 def rbf_kernel(mat, precision):
     return np.exp(-precision/2 * euclidean_distances(mat, squared=True))
 
 
+def delta_kernel(vec):
+    if vec.ndim == 1:
+        vec = vec.reshape(len(vec), 1)
+    return (vec == vec.T).astype(int)
+
+
 def ki_test_vector(
-        Y: np.array,
-        X: np.array,
-        widthX: float=0.,
-        widthY: float=0.,
+        Y: np.ndarray,
+        X: np.ndarray,
+        width_x: float=0.,
+        width_y: float=0.,
         alpha: float=0.05,
         gamma_approx: bool=True,
         n_draws: int=500,
         lam: float=1e-3,
         thresh: float=1e-5,
-        num_eig: int=0
+        num_eig: int=0,
+        catgorical_x: bool=False
 ):
     """
     Test the null hypothesis that Y and X are independent
@@ -42,29 +49,33 @@ def ki_test_vector(
         X = X.reshape((len(X), 1))
     if Y.ndim == 1:
         Y = Y.reshape((len(Y), 1))
-    n, _ = X.shape
+    n = X.shape[0]
     if Y.shape[0] != n:
         raise ValueError("Y should have the same number of samples as X")
-    if widthX == 0:
-        widthX = np.median(euclidean_distances(X))
-    if widthY == 0:
-        widthY = np.median(euclidean_distances(Y))
-    Y = scale(Y)
-    X = scale(X)
-    kernel_precisionX = 1/(widthX**2)  # TODO: CHECK
-    kernel_precisionY = 1/(widthY**2)  # TODO: CHECK
 
     # === CREATE KERNEL MATRICES ===
+    if catgorical_x:
+        kx = delta_kernel(X)
+    else:
+        if width_x == 0:
+            width_x = np.median(euclidean_distances(X))
+        X = scale(X)
+        kernel_precision_x = 1 / (width_x ** 2)  # TODO: CHECK
+        kx = rbf_kernel(X, kernel_precision_x)
+    if width_y == 0:
+        width_y = np.median(euclidean_distances(Y))
+    Y = scale(Y)
+    kernel_precision_y = 1/(width_y ** 2)  # TODO: CHECK
+
     H = np.eye(n) - np.ones([n, n])/n
-
-    kx = rbf_kernel(X, kernel_precisionX)
     kx = H @ kx @ H
-
-    ky = rbf_kernel(Y, kernel_precisionY)
+    ky = rbf_kernel(Y, kernel_precision_y)
     ky = H @ ky @ H
 
+    # === COMPUTE STATISTIC ====
     statistic = np.sum(kx * ky.T)
 
+    # === COMPUTE NULL DISTRIBUTION ====
     if not gamma_approx:
         raise NotImplementedError
     else:
@@ -91,6 +102,7 @@ def kci_test_vector(
         lam: float=1e-3,
         thresh: float=1e-5,
         num_eig: int=0,
+        catgorical_e: bool=False
 ) -> Dict:
     """
     Test the null hypothesis that Y and E are independent given X.
@@ -123,29 +135,33 @@ def kci_test_vector(
 
     Y = scale(Y)
     X = scale(X)
-    E = scale(E)
     if width == 0:
         if n <= 200:
-            width = .8
+            width = 0.8
         elif n < 1200:
-            width = .5
+            width = 0.5
         else:
-            width = .3
+            width = 0.3
     if num_eig == 0:
         num_eig = n
     kernel_precision = 1/(width**2 * d)
+
+    if catgorical_e:
+        ke = delta_kernel(E)
+    else:
+        E = scale(E)
+        ke = rbf_kernel(E, kernel_precision)
 
     # === CREATE KERNEL MATRICES ===
     H = np.eye(n) - np.ones([n, n])/n
 
     kyx = rbf_kernel(np.concatenate((Y, X/2), axis=1), kernel_precision)
-    kyx = H @ kyx @ H
+    kyx = H @ kyx @ H  # Centralize Kyx
 
-    ke = rbf_kernel(E, kernel_precision)
-    ke = H @ ke @ H
+    ke = H @ ke @ H  # Centralize Ke
 
     kx = rbf_kernel(X, kernel_precision)
-    kx = H @ kx @ H
+    kx = H @ kx @ H  # Centralize Kx
 
     rx = np.eye(n) - kx @ np.linalg.inv(kx + lam * np.eye(n))
     kyx = rx @ kyx @ rx.T  # Equation (11)
@@ -202,7 +218,7 @@ def kci_test(
         suffstat: np.array,
         i,
         j,
-        cond_set: list=None,
+        cond_set: Union[List[int], int]=None,
         width: float=0.,
         alpha: float=0.05,
         unbiased: bool=False,
@@ -212,12 +228,14 @@ def kci_test(
         thresh: float=1e-5,
         num_eig: int=0,
 ) -> Dict:
+    if cond_set is not None and isinstance(cond_set, int):
+        cond_set = [cond_set]
     if cond_set is None or len(cond_set) == 0:
         return ki_test_vector(
             suffstat[:, i],
             suffstat[:, j],
-            widthX=width,
-            widthY=width,
+            width_x=width,
+            width_y=width,
             alpha=alpha,
             gamma_approx=gamma_approx,
             n_draws=n_draws,
@@ -241,6 +259,55 @@ def kci_test(
         )
 
 
+def kci_invariance_test(
+        samples1: np.ndarray,
+        samples2: np.ndarray,
+        i: int,
+        cond_set: Optional[Union[List[int], int]]=None,
+        width: float=0,
+        alpha: float=0.05,
+        unbiased: bool=False,
+        gamma_approx: bool=True,
+        n_draws: int=500,
+        lam: float=1e-3,
+        thresh: float=1e-5,
+        num_eig: int=0,
+):
+    if cond_set is not None and isinstance(cond_set, int):
+        cond_set = [cond_set]
+
+    i_values = np.concatenate((samples1[:, i], samples2[:, i]))
+    labels = np.concatenate((np.zeros(samples1.shape[0]), np.ones(samples2.shape[0])))
+    if cond_set is None or len(cond_set) == 0:
+        return ki_test_vector(
+            i_values,
+            labels,
+            width_x=width,
+            width_y=width,
+            alpha=alpha,
+            gamma_approx=gamma_approx,
+            n_draws=n_draws,
+            lam=lam,
+            thresh=thresh,
+            num_eig=num_eig,
+            catgorical_x=True
+        )
+    else:
+        cond_set_values = np.concatenate((samples1[:, cond_set], samples2[:, cond_set]))
+        return kci_test_vector(
+            i_values,
+            labels,
+            cond_set_values,
+            width=width,
+            alpha=alpha,
+            unbiased=unbiased,
+            gamma_approx=gamma_approx,
+            n_draws=n_draws,
+            lam=lam,
+            thresh=thresh,
+            num_eig=num_eig,
+            catgorical_e=True
+        )
 
 
 

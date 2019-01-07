@@ -1,8 +1,9 @@
-from typing import Dict, FrozenSet, NewType, Any
+from typing import Dict, FrozenSet, Optional, Any
 import numpy as np
 from ...classes.dag import DAG
 import itertools as itr
-from ...utils.ci_tests import CI_Test
+from ...utils.ci_tests import CI_Test, InvarianceTest
+import random
 
 
 def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
@@ -20,8 +21,8 @@ def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
         rest = perm[:j]
         del rest[i]
-        p = ci_test(suffstat, pi_i, pi_j, cond_set=rest if len(rest) != 0 else None, alpha=alpha)['p_value']
-        if p < alpha:
+        test_results = ci_test(suffstat, pi_i, pi_j, cond_set=rest if len(rest) != 0 else None, alpha=alpha)
+        if test_results['reject']:  # add arc if we reject the hypothesis that the nodes are conditionally independent
             d.add_arc(pi_i, pi_j)
     return d
 
@@ -41,11 +42,11 @@ def _reverse_arc_gsp(dag, covered_arcs, i, j, suffstat, ci_test, alpha):
     if parents:
         for parent in parents:
             rest = parents - {parent}
-            p_i = ci_test(i, parent, [*rest, j])[2]
+            p_i = ci_test(suffstat, i, parent, [*rest, j], alpha=alpha)['p_value']
             if p_i > alpha:
                 new_dag.remove_arc(parent, i)
 
-            p_j = ci_test(suffstat, j, parent, cond_set=[*rest] if len(rest) != 0 else None, alpha=alpha)[2]
+            p_j = ci_test(suffstat, j, parent, cond_set=[*rest] if len(rest) != 0 else None, alpha=alpha)['p_value']
             if p_j > alpha:
                 new_dag.remove_arc(parent, j)
 
@@ -59,7 +60,15 @@ def _reverse_arc_gsp(dag, covered_arcs, i, j, suffstat, ci_test, alpha):
     return new_dag, new_covered_arcs
 
 
-def gsp(suffstat: Dict, starting_perm: list, ci_test: CI_Test, alpha: float=0.05, depth: int=4, verbose=False):
+def gsp(
+        suffstat: Dict,
+        nnodes: int,
+        ci_test: CI_Test,
+        alpha: float=0.01,
+        depth: Optional[int]=4,
+        nruns: int=5,
+        verbose=False
+) -> DAG:
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
     DAG.
@@ -68,84 +77,94 @@ def gsp(suffstat: Dict, starting_perm: list, ci_test: CI_Test, alpha: float=0.05
     :param starting_perm: Permutation with which to begin the search algorithm.
     :param ci_test: Conditional independence test.
     :param alpha: Significance level for independence tests.
-    :param depth: Maximum depth in depth-first search.
+    :param depth: Maximum depth in depth-first search. Use None for infinite search depth.
     :param verbose:
     :return:
     """
-    # === STARTING VALUES
-    current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
-    if verbose: print("=== STARTING DAG:", current_dag)
-    current_covered_arcs = current_dag.reversible_arcs()
-    next_dags = [
-        _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
-        for i, j in current_covered_arcs
-    ]
+    min_dag = None
+    for r in range(nruns):
+        # === STARTING VALUES
+        starting_perm = random.sample(list(range(nnodes)), nnodes)
+        current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
+        if verbose: print("=== STARTING DAG:", current_dag)
+        current_covered_arcs = current_dag.reversible_arcs()
+        next_dags = [
+            _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
+            for i, j in current_covered_arcs
+        ]
 
-    # === RECORDS FOR DEPTH-FIRST SEARCH
-    all_visited_dags = set()
-    trace = []
+        # === RECORDS FOR DEPTH-FIRST SEARCH
+        all_visited_dags = set()
+        trace = []
 
-    # === SEARCH!
-    while True:
-        all_visited_dags.add(frozenset(current_dag.arcs))
-        lower_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if len(d.arcs) < len(current_dag.arcs)]
+        # === SEARCH!
+        while True:
+            all_visited_dags.add(frozenset(current_dag.arcs))
+            lower_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if len(d.arcs) < len(current_dag.arcs)]
 
-        if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
-            if len(lower_dags) > 0:  # start over at lower DAG
-                all_visited_dags = set()
-                trace = []
-                current_dag, current_covered_arcs = lower_dags.pop()
-                if verbose: print("=== FOUND DAG WITH FEWER ARCS:", current_dag)
+            if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
+                if len(lower_dags) > 0:  # start over at lower DAG
+                    all_visited_dags = set()
+                    trace = []
+                    current_dag, current_covered_arcs = lower_dags.pop()
+                    if verbose: print("=== FOUND DAG WITH FEWER ARCS:", current_dag)
+                else:
+                    trace.append((current_dag, current_covered_arcs, next_dags))
+                    current_dag, current_covered_arcs = next_dags.pop()
+                next_dags = [
+                    _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
+                    for i, j in current_covered_arcs
+                ]
+                next_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
             else:
-                trace.append((current_dag, current_covered_arcs, next_dags))
-                current_dag, current_covered_arcs = next_dags.pop()
-            next_dags = [
-                _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
-                for i, j in current_covered_arcs
-            ]
-            next_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
-        else:
-            if len(trace) == 0:  # reached minimum within search depth
-                break
-            else:  # backtrack
-                current_dag, current_covered_arcs, next_dags = trace.pop()
+                if len(trace) == 0:  # reached minimum within search depth
+                    break
+                else:  # backtrack
+                    current_dag, current_covered_arcs, next_dags = trace.pop()
 
-    return current_dag
+        if min_dag is None or len(current_dag.arcs) < len(min_dag.arcs):
+            min_dag = current_dag
+
+    return min_dag
 
 
 def igsp(samples: Dict[FrozenSet, np.ndarray], starting_perm: list):
     pass
 
 
-def is_icovered(samples: Dict[FrozenSet, np.ndarray], i: int, j: int, invariance_ci_test: CI_Test, alpha: float=0.05):
+def is_icovered(
+        samples: Dict[FrozenSet, np.ndarray],
+        i: int,
+        j: int,
+        dag: DAG,
+        invariance_test: InvarianceTest,
+        alpha: float=0.05
+):
     """
     Tell if an edge i->j is I-covered.
 
-    True if, for all I s.t. i \in I, the interventional distribution of j given i is equal to the observational
-    distribution of j given i.
+    True if, for all I s.t. i \in I, the distribution of j given its parents varies between the observational and
+    interventional data.
 
     :param samples:
     :param i: Source of arrow.
     :param j: Target of arrow.
-    :param invariance_ci_test: Conditional independence test
-    :param alpha: Significance level used for conditional independence test
+    :param dag: DAG
+    :param invariance_test: Invariance test for conditional distributions.
+    :param alpha: Significance level used for invariance test. Note: this does NOT control the false negative rate for
+    this test.
     :return:
     """
     obs_samples = samples[frozenset()]
-    num_obs_samples = obs_samples.shape[0]
+    parents_j = list(dag.parents_of(j))
 
     is_icov = True
     for iv_nodes, iv_samples in samples.items():
-        # print(iv_nodes, iv_samples)
         if i in iv_nodes:
-            num_iv_samples = iv_samples.shape[0]
-            i_vec = np.concatenate((iv_samples[:, i], obs_samples[:, i]))
-            j_vec = np.concatenate((iv_samples[:, j], obs_samples[:, j]))
-            labels = np.concatenate((np.zeros(num_obs_samples), np.ones(num_iv_samples)))
+            test_results = invariance_test(obs_samples, iv_samples, j, cond_set=parents_j, alpha=alpha)
 
-            _, _, p = invariance_ci_test(i_vec, j_vec, labels)
-
-            if p < alpha:
+            # can't reject the null hypothesis that the conditional distribution is invariant
+            if test_results['p_value'] > alpha:
                 is_icov = False
 
     return is_icov
@@ -157,9 +176,11 @@ def unknown_target_igsp(
         ci_test: CI_Test,
         invariance_ci_test: CI_Test,
         alpha: float=0.05,
-        depth: int=4,
+        alpha_invariance: float=0.05,
+        depth: Optional[int]=4,
+        nruns: int=5,
         verbose: bool=False
-):
+) -> DAG:
     """
     Use the Unknown Target Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the data-generating
     DAG.
@@ -170,7 +191,7 @@ def unknown_target_igsp(
     :param invariance_ci_test: Conditional independence test used for determining
     invariance of conditional distributions to interventions.
     :param alpha: Significance level
-    :param depth: Maximum depth of search.
+    :param depth: Maximum depth of search. Use None for infinite search depth.
     :param verbose:
     :return:
     """
@@ -178,7 +199,10 @@ def unknown_target_igsp(
     current_dag = perm2dag(samples[frozenset()], starting_perm, ci_test, alpha=alpha)
     if verbose: print("=== STARTING DAG:", current_dag)
     current_covered_arcs = current_dag.reversible_arcs()
-    current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if is_icovered(samples, i, j, invariance_ci_test)]
+    current_i_covered_arcs = [
+        (i, j) for i, j in current_covered_arcs
+        if is_icovered(samples, i, j, current_dag, invariance_ci_test, alpha=alpha_invariance)]
+
     if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
 
     # === RECORDS FOR DEPTH-FIRST SEARCH
