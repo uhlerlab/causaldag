@@ -1,10 +1,15 @@
 import numpy as np
 from ..classes.dag import DAG
+from ..classes.gaussdag import GaussDAG
 import itertools as itr
 
 
 def _coin(p, size=1):
     return np.random.binomial(1, p, size=size)
+
+
+def unif_away_zero(low=.25, high=1, size=1):
+    return (_coin(.5, size) - .5)*2 * np.random.uniform(low, high)
 
 
 def directed_erdos(n, s, size=1):
@@ -16,7 +21,12 @@ def directed_erdos(n, s, size=1):
         return [directed_erdos(n, s) for _ in range(size)]
 
 
-__all__ = ['directed_erdos']
+def rand_weights(dag, rand_weight_fn=unif_away_zero):
+    weights = rand_weight_fn(size=len(dag.arcs))
+    return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))
+
+
+__all__ = ['directed_erdos', 'rand_weights', 'unif_away_zero']
 
 
 

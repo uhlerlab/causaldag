@@ -68,7 +68,7 @@ class TestKCI(TestCase):
     #     self.assertTrue(pval > .05)
 
     def test_gauss_ci_independent(self):
-        false_positives = 0
+        false_negatives = 0
         num_tests = 100
         n_samples = 500
         alpha = 0.05
@@ -77,13 +77,13 @@ class TestKCI(TestCase):
             corr = np.corrcoef(samples, rowvar=False)
             results = cd.utils.ci_tests.gauss_ci_test(dict(n=n_samples, C=corr), 0, 1, alpha=alpha)
             if results['reject']:
-                false_positives += 1
+                false_negatives += 1
 
-        print("Expected number of false positives:", alpha*num_tests)
-        print("Number of false positives:", false_positives)
+        print("Expected number of false negatives:", alpha*num_tests)
+        print("Number of false negatives:", false_negatives)
 
     def test_gauss_ci(self):
-        false_positives = 0
+        false_negatives = 0
         num_tests = 100
         n_samples = 500
         alpha = 0.05
@@ -92,10 +92,19 @@ class TestKCI(TestCase):
             corr = np.corrcoef(d.sample(n_samples), rowvar=False)
             results = cd.utils.ci_tests.gauss_ci_test(dict(n=n_samples, C=corr), 1, 2, cond_set=[0], alpha=alpha)
             if results['reject']:
+                false_negatives += 1
+
+        false_positives = 0
+        for i in range(num_tests):
+            corr = np.corrcoef(d.sample(n_samples), rowvar=False)
+            results = cd.utils.ci_tests.gauss_ci_test(dict(n=n_samples, C=corr), 1, 2, alpha=alpha)
+            if not results['reject']:
                 false_positives += 1
 
-        print("Expected number of false positives:", alpha*num_tests)
-        print("Number of false positives:", false_positives)
+        print("Expected number of false negatives:", alpha*num_tests)
+        print("Number of false negatives:", false_negatives)
+
+        print("Number of false positives (should be low):", false_positives)
 
 
 if __name__ == '__main__':

@@ -10,15 +10,15 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.05):
     :param suffstat: dictionary containing 'n': number of samples, and 'C': correlation matrix
     :param i: position of first variable in correlation matrix.
     :param j: position of second variable in correlation matrix.
-    :param alpha: Significance level.
     :param cond_set: positions of conditioning set in correlation matrix.
+    :param alpha: Significance level.
     :return: dictionary containing statistic, crit_val, p_value, and reject.
     """
     n = suffstat['n']
     C = suffstat['C']
     n_cond = 0 if cond_set is None else len(cond_set)
 
-    if cond_set is None:
+    if cond_set is None or len(cond_set) == 0:
         r = C[i, j]
     else:
         theta = np.linalg.inv(C[np.ix_([i, j, *cond_set], [i, j, *cond_set])])

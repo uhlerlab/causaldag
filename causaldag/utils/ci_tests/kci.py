@@ -3,24 +3,24 @@ from sklearn.preprocessing import scale
 from sklearn.metrics.pairwise import euclidean_distances
 import itertools as itr
 from scipy.stats import gamma
-from typing import Tuple
+from typing import Tuple, Dict
 
 
 def rbf_kernel(mat, precision):
     return np.exp(-precision/2 * euclidean_distances(mat, squared=True))
 
 
-def ki_test(
+def ki_test_vector(
         Y: np.array,
         X: np.array,
-        widthX:float=0.,
-        widthY:float=0.,
-        alpha:float=0.05,
-        gamma_approx:bool=True,
-        n_draws:int=500,
-        lam:float=1e-3,
-        thresh:float=1e-5,
-        num_eig:int=0
+        widthX: float=0.,
+        widthY: float=0.,
+        alpha: float=0.05,
+        gamma_approx: bool=True,
+        n_draws: int=500,
+        lam: float=1e-3,
+        thresh: float=1e-5,
+        num_eig: int=0
 ):
     """
     Test the null hypothesis that Y and X are independent
@@ -75,22 +75,23 @@ def ki_test(
 
         critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
         pval = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
-    return statistic, critval, pval
+
+    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic>critval)
 
 
-def kci_test(
+def kci_test_vector(
         Y: np.array,
         E: np.array,
         X: np.array,
-        width:float=0.,
-        alpha:float=0.05,
-        unbiased:bool=False,
-        gamma_approx:bool=True,
-        n_draws:int=500,
-        lam:float=1e-3,
-        thresh:float=1e-5,
-        num_eig:int=0,
-) -> Tuple[float, float, float]:
+        width: float=0.,
+        alpha: float=0.05,
+        unbiased: bool=False,
+        gamma_approx: bool=True,
+        n_draws: int=500,
+        lam: float=1e-3,
+        thresh: float=1e-5,
+        num_eig: int=0,
+) -> Dict:
     """
     Test the null hypothesis that Y and E are independent given X.
 
@@ -194,7 +195,51 @@ def kci_test(
         critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
         pval = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
 
-    return statistic, critval, pval
+    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic>critval)
+
+
+def kci_test(
+        suffstat: np.array,
+        i,
+        j,
+        cond_set: list=None,
+        width: float=0.,
+        alpha: float=0.05,
+        unbiased: bool=False,
+        gamma_approx: bool=True,
+        n_draws: int=500,
+        lam: float=1e-3,
+        thresh: float=1e-5,
+        num_eig: int=0,
+) -> Dict:
+    if cond_set is None or len(cond_set) == 0:
+        return ki_test_vector(
+            suffstat[:, i],
+            suffstat[:, j],
+            widthX=width,
+            widthY=width,
+            alpha=alpha,
+            gamma_approx=gamma_approx,
+            n_draws=n_draws,
+            lam=lam,
+            thresh=thresh,
+            num_eig=num_eig
+        )
+    else:
+        return kci_test_vector(
+            suffstat[:, i],
+            suffstat[:, j],
+            suffstat[:, cond_set],
+            width=width,
+            alpha=alpha,
+            unbiased=unbiased,
+            gamma_approx=gamma_approx,
+            n_draws=n_draws,
+            lam=lam,
+            thresh=thresh,
+            num_eig=num_eig
+        )
+
 
 
 

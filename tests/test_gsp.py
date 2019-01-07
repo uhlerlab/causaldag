@@ -3,15 +3,22 @@ import unittest
 import numpy as np
 import causaldag as cd
 from causaldag.inference.structural import gsp, perm2dag, is_icovered
-from causaldag.utils.ci_tests import kci_test, ki_test
+from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, gauss_ci_test
+import random
 
 
 class TestDAG(TestCase):
     def test_gsp(self):
-        gdag = cd.GaussDAG([0, 1, 2, 3], arcs={(0, 1), (1, 2), (1, 3)})
-        samples = gdag.sample(600)
-        est_dag = gsp(samples, [0, 2, 1, 3], kci_test, ki_test, verbose=True)
-        print(est_dag)
+        ndags = 100
+        nnodes = 8
+        nsamples = 1000
+        nneighbors_list = list(range(1, 8))
+        for nneighbors in nneighbors_list:
+            dags = cd.rand.directed_erdos(nnodes, nneighbors/(nnodes-1), ndags)
+            gdags = [cd.rand.rand_weights(dag) for dag in dags]
+            samples_by_dag = [gdag.sample(nsamples) for gdag in gdags]
+            corr_by_dag = [np.corrcoef(samples, rowvar=False) for samples in samples_by_dag]
+            est_dags = [gsp(dict(C=corr, n=nsamples), random.sample(list(range(nnodes)), nnodes), gauss_ci_test) for corr in corr_by_dag]
 
     # def test_perm2dag(self):
     #     gdag = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 5, (0, 2): 5})
