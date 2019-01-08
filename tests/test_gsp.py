@@ -2,7 +2,7 @@ from unittest import TestCase
 import unittest
 import numpy as np
 import causaldag as cd
-from causaldag.inference.structural import gsp, perm2dag, is_icovered
+from causaldag.inference.structural import gsp, perm2dag, is_icovered, unknown_target_igsp
 from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, gauss_ci_test, kci_invariance_test
 import random
 
@@ -43,7 +43,7 @@ class TestDAG(TestCase):
         ndags = 100
         nnodes = 8
         nsamples = 500
-        nneighbors_list = list(range(1, 8))
+        nneighbors_list = list(range(1, 2))
 
         mean_shds = []
         percent_consistent = []
@@ -63,10 +63,10 @@ class TestDAG(TestCase):
                 })
             print("computing correlation matrices")
             corr_by_dag = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_by_dag]
-            print("running GSP")
+            print("running UTIGSP")
             est_dags = [
-                gsp(dict(C=corr, n=nsamples), nnodes, gauss_ci_test, depth=4, nruns=10, alpha=.01)
-                for corr in corr_by_dag
+                unknown_target_igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_invariance_test, depth=4, nruns=10)
+                for samples, corr in zip(samples_by_dag, corr_by_dag)
             ]
             # print([str(d) for d in est_dags])
             shd_by_dag = np.array([est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)])

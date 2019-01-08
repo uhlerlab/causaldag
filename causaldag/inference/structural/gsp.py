@@ -182,7 +182,7 @@ def unknown_target_igsp(
         nnodes: int,
         ci_test: CI_Test,
         invariance_test: InvarianceTest,
-        alpha: float=0.05,
+        alpha: float=0.01,
         alpha_invariance: float=0.05,
         depth: Optional[int]=4,
         nruns: int=5,
@@ -194,6 +194,7 @@ def unknown_target_igsp(
 
     :param samples:
     :param suffstat:
+    :param nnodes:
     :param ci_test: Conditional independence test
     :param invariance_test: Conditional independence test used for determining
     invariance of conditional distributions to interventions.
@@ -285,14 +286,15 @@ def unknown_target_igsp(
     for r in range(nruns):
         # === STARTING VALUES
         starting_perm = random.sample(list(range(nnodes)), nnodes)
-        current_dag = perm2dag(samples[frozenset()], starting_perm, ci_test, alpha=alpha)
+        current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
         current_score = len(current_dag.arcs) + _get_num_variant(current_dag)
         if verbose: print("=== STARTING DAG:", current_dag, "== SCORE:", current_score)
 
         current_covered_arcs = current_dag.reversible_arcs()
         current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j, current_dag)]
         if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
-        next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j)for i, j in current_i_covered_arcs]
+        next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
+        next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
         all_visited_dags = set()
@@ -300,6 +302,8 @@ def unknown_target_igsp(
 
         # === SEARCH!
         while True:
+            # print("current score: ", current_score)
+            # print("next dags:", [str(d[0]) for d in next_dags])
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score < current_score]
 
@@ -311,9 +315,10 @@ def unknown_target_igsp(
                     if verbose: print("FOUND DAG WITH LOWER SCORE:", current_dag, "== SCORE:", current_score)
                 else:
                     trace.append((current_dag, current_i_covered_arcs, next_dags))
-                    current_dag = next_dags.pop()
+                    current_dag, current_i_covered_arcs, current_score = next_dags.pop()
                 next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j)for i, j in current_i_covered_arcs]
-                next_dags = [(d, i_cov_arcs) for d, i_cov_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
+                next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
+                next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if frozenset(d.arcs) not in all_visited_dags]
             # === DEAD END ===
             else:
                 if len(trace) == 0:  # reached minimum within search depth
@@ -324,6 +329,7 @@ def unknown_target_igsp(
         if min_dag is None or current_score < min_score:
             min_dag = current_dag
             min_score = current_score
+        if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
 
     return min_dag
 
