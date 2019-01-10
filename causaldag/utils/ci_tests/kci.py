@@ -4,16 +4,8 @@ from sklearn.metrics.pairwise import euclidean_distances
 import itertools as itr
 from scipy.stats import gamma
 from typing import Dict, Union, List, Optional
-
-
-def rbf_kernel(mat, precision):
-    return np.exp(-precision/2 * euclidean_distances(mat, squared=True))
-
-
-def delta_kernel(vec):
-    if vec.ndim == 1:
-        vec = vec.reshape(len(vec), 1)
-    return (vec == vec.T).astype(int)
+from . import kernels
+import pygam
 
 
 def ki_test_vector(
@@ -34,7 +26,8 @@ def ki_test_vector(
 
     :param Y: (n*_) matrix
     :param X: (n*_) matrix
-    :param width: Kernel width. If 0, chosen automatically.
+    :param width_x: Kernel width. If 0, chosen automatically.
+    :param width_y: Kernel width. If 0, chosen automatically.
     :param alpha: Significance level
     :param gamma_approx: If True, approximate the null distribution by a Gamma distribution. Otherwise, use a Monte
         Carlo approximation.
@@ -55,13 +48,13 @@ def ki_test_vector(
 
     # === CREATE KERNEL MATRICES ===
     if catgorical_x:
-        kx = delta_kernel(X)
+        kx = kernels.delta_kernel(X)
     else:
         if width_x == 0:
             width_x = np.median(euclidean_distances(X))
         X = scale(X)
         kernel_precision_x = 1 / (width_x ** 2)  # TODO: CHECK
-        kx = rbf_kernel(X, kernel_precision_x)
+        kx = kernels.rbf_kernel(X, kernel_precision_x)
     if width_y == 0:
         width_y = np.median(euclidean_distances(Y))
     Y = scale(Y)
@@ -69,7 +62,7 @@ def ki_test_vector(
 
     H = np.eye(n) - np.ones([n, n])/n
     kx = H @ kx @ H
-    ky = rbf_kernel(Y, kernel_precision_y)
+    ky = kernels.rbf_kernel(Y, kernel_precision_y)
     ky = H @ ky @ H
 
     # === COMPUTE STATISTIC ====
@@ -147,20 +140,20 @@ def kci_test_vector(
     kernel_precision = 1/(width**2 * d)
 
     if catgorical_e:
-        ke = delta_kernel(E)
+        ke = kernels.delta_kernel(E)
     else:
         E = scale(E)
-        ke = rbf_kernel(E, kernel_precision)
+        ke = kernels.rbf_kernel(E, kernel_precision)
 
     # === CREATE KERNEL MATRICES ===
     H = np.eye(n) - np.ones([n, n])/n
 
-    kyx = rbf_kernel(np.concatenate((Y, X/2), axis=1), kernel_precision)
+    kyx = kernels.rbf_kernel(np.concatenate((Y, X/2), axis=1), kernel_precision)
     kyx = H @ kyx @ H  # Centralize Kyx
 
     ke = H @ ke @ H  # Centralize Ke
 
-    kx = rbf_kernel(X, kernel_precision)
+    kx = kernels.rbf_kernel(X, kernel_precision)
     kx = H @ kx @ H  # Centralize Kx
 
     rx = np.eye(n) - kx @ np.linalg.inv(kx + lam * np.eye(n))
@@ -223,6 +216,7 @@ def kci_test(
         alpha: float=0.05,
         unbiased: bool=False,
         gamma_approx: bool=True,
+        regress: bool=True,
         n_draws: int=500,
         lam: float=1e-3,
         thresh: float=1e-5,
@@ -244,19 +238,38 @@ def kci_test(
             num_eig=num_eig
         )
     else:
-        return kci_test_vector(
-            suffstat[:, i],
-            suffstat[:, j],
-            suffstat[:, cond_set],
-            width=width,
-            alpha=alpha,
-            unbiased=unbiased,
-            gamma_approx=gamma_approx,
-            n_draws=n_draws,
-            lam=lam,
-            thresh=thresh,
-            num_eig=num_eig
-        )
+        if regress:
+            g = pygam.GAM()
+            g.fit(suffstat[:, cond_set], suffstat[:, i])
+            residuals_i = g.deviance_residuals(suffstat[:, cond_set], suffstat[:, i])
+            g.fit(suffstat[:, cond_set], suffstat[:, j])
+            residuals_j = g.deviance_residuals(suffstat[:, cond_set], suffstat[:, j])
+            return ki_test_vector(
+                residuals_i,
+                residuals_j,
+                width_x=width,
+                width_y=width,
+                alpha=alpha,
+                gamma_approx=gamma_approx,
+                n_draws=n_draws,
+                lam=lam,
+                thresh=thresh,
+                num_eig=num_eig
+            )
+        else:
+            return kci_test_vector(
+                suffstat[:, i],
+                suffstat[:, j],
+                suffstat[:, cond_set],
+                width=width,
+                alpha=alpha,
+                unbiased=unbiased,
+                gamma_approx=gamma_approx,
+                n_draws=n_draws,
+                lam=lam,
+                thresh=thresh,
+                num_eig=num_eig
+            )
 
 
 def kci_invariance_test(
@@ -267,6 +280,7 @@ def kci_invariance_test(
         width: float=0,
         alpha: float=0.05,
         unbiased: bool=False,
+        regress: bool=True,
         gamma_approx: bool=True,
         n_draws: int=500,
         lam: float=1e-3,
@@ -275,39 +289,64 @@ def kci_invariance_test(
 ):
     if cond_set is not None and isinstance(cond_set, int):
         cond_set = [cond_set]
+    if cond_set is None:
+        cond_set = []
 
-    i_values = np.concatenate((samples1[:, i], samples2[:, i]))
-    labels = np.concatenate((np.zeros(samples1.shape[0]), np.ones(samples2.shape[0])))
-    if cond_set is None or len(cond_set) == 0:
-        return ki_test_vector(
-            i_values,
-            labels,
-            width_x=width,
-            width_y=width,
-            alpha=alpha,
-            gamma_approx=gamma_approx,
-            n_draws=n_draws,
-            lam=lam,
-            thresh=thresh,
-            num_eig=num_eig,
-            catgorical_x=True
-        )
-    else:
-        cond_set_values = np.concatenate((samples1[:, cond_set], samples2[:, cond_set]))
-        return kci_test_vector(
-            i_values,
-            labels,
-            cond_set_values,
-            width=width,
-            alpha=alpha,
-            unbiased=unbiased,
-            gamma_approx=gamma_approx,
-            n_draws=n_draws,
-            lam=lam,
-            thresh=thresh,
-            num_eig=num_eig,
-            catgorical_e=True
-        )
+    nsamples1 = samples1.shape[0]
+    nsamples2 = samples2.shape[0]
+    mat = np.zeros([nsamples1 + nsamples2, 2 + len(cond_set)])
+    mat[:nsamples1, 0] = samples1[:, i]
+    mat[nsamples1:, 0] = samples2[:, i]
+    mat[:nsamples1, 1] = np.zeros(nsamples1)
+    mat[nsamples1:, 1] = np.ones(nsamples1)
+    if len(cond_set) != 0:
+        mat[:nsamples1, 2:] = samples1[:, cond_set]
+        mat[nsamples1:, 2:] = samples2[:, cond_set]
+    return kci_test(
+        mat, 0, 1, list(range(2, 2+len(cond_set))),
+        width=width,
+        alpha=alpha,
+        unbiased=unbiased,
+        gamma_approx=gamma_approx,
+        regress=regress,
+        n_draws=n_draws,
+        lam=lam,
+        thresh=thresh,
+        num_eig=num_eig,
+
+    )
+    # i_values = np.concatenate((samples1[:, i], samples2[:, i]))
+    # labels = np.concatenate((np.zeros(samples1.shape[0]), np.ones(samples2.shape[0])))
+    # if cond_set is None or len(cond_set) == 0:
+    #     return ki_test_vector(
+    #         i_values,
+    #         labels,
+    #         width_x=width,
+    #         width_y=width,
+    #         alpha=alpha,
+    #         gamma_approx=gamma_approx,
+    #         n_draws=n_draws,
+    #         lam=lam,
+    #         thresh=thresh,
+    #         num_eig=num_eig,
+    #         catgorical_x=True
+    #     )
+    # else:
+    #     cond_set_values = np.concatenate((samples1[:, cond_set], samples2[:, cond_set]))
+    #     return kci_test_vector(
+    #         i_values,
+    #         labels,
+    #         cond_set_values,
+    #         width=width,
+    #         alpha=alpha,
+    #         unbiased=unbiased,
+    #         gamma_approx=gamma_approx,
+    #         n_draws=n_draws,
+    #         lam=lam,
+    #         thresh=thresh,
+    #         num_eig=num_eig,
+    #         catgorical_e=True
+    #     )
 
 
 

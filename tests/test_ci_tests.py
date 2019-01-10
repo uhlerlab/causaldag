@@ -18,24 +18,24 @@ class TestKCI(TestCase):
     #
     #     self.assertTrue(pval < .05)
 
-    def test_independent(self):
-        num_trials = 100
-        nsamples = 200
-
-        alpha = .05
-        false_negatives = 0
-        for _ in range(num_trials):
-            Y = np.random.multivariate_normal([0, 0], np.eye(2), nsamples).round(4)
-            X = np.random.multivariate_normal([0, 0], np.eye(2), nsamples).round(4)
-            np.savetxt(os.path.expanduser('~/Desktop/Y.txt'), Y)
-            np.savetxt(os.path.expanduser('~/Desktop/X.txt'), X)
-            test_results = cd.utils.ci_tests.kci_invariance_test(Y, X, 0, alpha=alpha)
-
-            if test_results['p_value'] < alpha:
-                false_negatives += 1
-
-        print("Expected number of false negatives:", alpha*num_trials)
-        print("Actual number of false negatives:", false_negatives)
+    # def test_independent(self):
+    #     num_trials = 100
+    #     nsamples = 200
+    #
+    #     alpha = .05
+    #     false_negatives = 0
+    #     for _ in range(num_trials):
+    #         Y = np.random.multivariate_normal([0, 0], np.eye(2), nsamples).round(4)
+    #         X = np.random.multivariate_normal([0, 0], np.eye(2), nsamples).round(4)
+    #         np.savetxt(os.path.expanduser('~/Desktop/Y.txt'), Y)
+    #         np.savetxt(os.path.expanduser('~/Desktop/X.txt'), X)
+    #         test_results = cd.utils.ci_tests.kci_invariance_test(Y, X, 0, alpha=alpha)
+    #
+    #         if test_results['p_value'] < alpha:
+    #             false_negatives += 1
+    #
+    #     print("Expected number of false negatives:", alpha*num_trials)
+    #     print("Actual number of false negatives:", false_negatives)
 
     # def test_ki_independent(self):
     #     false_negatives = 0
@@ -61,20 +61,18 @@ class TestKCI(TestCase):
     #         if pval > .05:
     #             false_positives += 1
     #     print("Number of false positives:", false_positives)
-    #
-    # def test_kci_conditionally_independent(self):
-    #     X = np.random.multivariate_normal([0], np.eye(1), 500).round(4)
-    #     Y = np.random.multivariate_normal([0, 0], np.eye(2), 500).round(4)
-    #     Y = (Y + X**2)**2
-    #     E = np.random.multivariate_normal([0, 0], np.eye(2), 500).round(4)
-    #     E = (E**2 + X**2)**.5
-    #     np.savetxt(os.path.expanduser('~/Desktop/Y.txt'), Y)
-    #     np.savetxt(os.path.expanduser('~/Desktop/E.txt'), E)
-    #     np.savetxt(os.path.expanduser('~/Desktop/X.txt'), X)
-    #     statistic, critval, pval = cd.utils.ci_tests.kci_test(Y, E, X)
-    #     print(statistic, critval, pval)
-    #
-    #     self.assertTrue(pval > .05)
+
+    def test_kci_conditionally_independent(self):
+        ntrials = 100
+        alpha = .05
+        g = cd.GaussDAG([0, 1, 2], arcs={(0, 1), (0, 2)})
+
+        false_negatives = 0
+        for i in range(ntrials):
+            samples = g.sample(500)
+            test_results = cd.utils.ci_tests.kci_test(samples, 1, 2, 0, alpha=alpha)
+            if test_results['reject']: false_negatives += 1
+        print(false_negatives)
 
     # def test_gauss_ci_independent(self):
     #     false_negatives = 0

@@ -5,6 +5,10 @@ import causaldag as cd
 from causaldag.inference.structural import gsp, perm2dag, is_icovered, unknown_target_igsp
 from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, gauss_ci_test, kci_invariance_test
 import random
+from tqdm import tqdm
+import random
+np.random.seed(1729)
+random.seed(1729)
 
 
 class TestDAG(TestCase):
@@ -40,9 +44,9 @@ class TestDAG(TestCase):
     #     print("Percent consistent:", percent_consistent)
 
     def test_utigsp(self):
-        ndags = 100
+        ndags = 50
         nnodes = 8
-        nsamples = 500
+        nsamples = 300
         nneighbors_list = list(range(1, 2))
 
         mean_shds = []
@@ -59,15 +63,25 @@ class TestDAG(TestCase):
                 iv_nodes = frozenset({random.randint(0, nnodes)})
                 samples_by_dag.append({
                     frozenset(): gdag.sample(nsamples),
-                    iv_nodes: gdag.sample_interventional({iv_nodes: cd.GaussIntervention(0, 2)})
+                    iv_nodes: gdag.sample_interventional({iv_nodes: cd.GaussIntervention(0, 2)}, nsamples)
                 })
             print("computing correlation matrices")
-            corr_by_dag = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_by_dag]
+            corr_by_dag = list(tqdm((np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_by_dag), total=ndags))
             print("running UTIGSP")
-            est_dags = [
-                unknown_target_igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_invariance_test, depth=4, nruns=10)
+            est_dags = list(tqdm((
+                unknown_target_igsp(
+                    samples,
+                    dict(C=corr, n=nsamples),
+                    nnodes,
+                    gauss_ci_test,
+                    kci_invariance_test,
+                    depth=4,
+                    nruns=10,
+                    alpha=.01,
+                    alpha_invariance=.05
+                )
                 for samples, corr in zip(samples_by_dag, corr_by_dag)
-            ]
+            ), total=ndags))
             # print([str(d) for d in est_dags])
             shd_by_dag = np.array([est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)])
             match_by_dag = np.sum(shd_by_dag == 0)
