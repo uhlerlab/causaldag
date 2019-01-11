@@ -298,7 +298,7 @@ def kci_invariance_test(
     mat[:nsamples1, 0] = samples1[:, i]
     mat[nsamples1:, 0] = samples2[:, i]
     mat[:nsamples1, 1] = np.zeros(nsamples1)
-    mat[nsamples1:, 1] = np.ones(nsamples1)
+    mat[nsamples1:, 1] = np.ones(nsamples2)
     if len(cond_set) != 0:
         mat[:nsamples1, 2:] = samples1[:, cond_set]
         mat[nsamples1:, 2:] = samples2[:, cond_set]

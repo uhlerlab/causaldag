@@ -134,8 +134,102 @@ def gsp(
     return min_dag
 
 
-def igsp(samples: Dict[FrozenSet, np.ndarray], starting_perm: list):
-    pass
+def igsp(
+        samples: Dict[FrozenSet, np.ndarray],
+        suffstat,
+        nnodes: Any,
+        ci_test: CI_Test,
+        invariance_test: InvarianceTest,
+        alpha: float = 0.01,
+        alpha_invariance: float = 0.05,
+        depth: Optional[int] = 4,
+        nruns: int = 5,
+        verbose: bool = False
+):
+    is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
+    obs_samples = samples[frozenset()]
+
+    # === HELPER FUNCTIONS
+    def _get_is_variant(iv_nodes, i):
+        is_variant = is_variant_dict[iv_nodes].get(i)
+        if is_variant is None:
+            is_variant = invariance_test(obs_samples, samples[iv_nodes], i, alpha=alpha_invariance)['reject']
+            is_variant_dict[iv_nodes][i] = is_variant
+        return is_variant
+
+    def _is_icovered(i, j):
+        if frozenset({i}) in samples:
+            if _get_is_variant(frozenset({i}), j):
+                return False
+        for iv_nodes in samples.keys():
+            if j in iv_nodes and i not in iv_nodes:
+                if not _get_is_variant(iv_nodes, i):
+                    return False
+        return True
+
+    def _reverse_arc(dag, i, j):
+        new_dag = dag.copy()
+        parents = dag.parents_of(i)
+
+        new_dag.reverse_arc(i, j)
+        if parents:
+            for parent in parents:
+                rest = parents - {parent}
+                if not ci_test(suffstat, i, parent, [*rest, j], alpha=alpha)['reject']:
+                    new_dag.remove_arc(parent, i)
+                if not ci_test(suffstat, j, parent, cond_set=[*rest], alpha=alpha)['reject']:
+                    new_dag.remove_arc(parent, j)
+
+        new_covered_arcs = new_dag.reversible_arcs()
+        new_icovered_arcs = [(i, j) for i, j in new_covered_arcs if _is_icovered(i, j)]
+
+        return new_dag, new_icovered_arcs
+
+    # === MINIMUM DAG AND SCORE FOUND BY ANY RUN
+    min_dag = None
+
+    # === DO MULTIPLE RUNS
+    for r in range(nruns):
+        # === STARTING VALUES
+        starting_perm = random.sample(list(range(nnodes)), nnodes)
+        current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
+        if verbose: print("=== STARTING DAG FOR RUN %s/%s: %s (%s arcs)" % (r+1, nruns, current_dag, len(current_dag.arcs)))
+        current_covered_arcs = current_dag.reversible_arcs()
+        current_icovered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j)]
+        if verbose: print("STARTING I-COVERED ARCS:", current_icovered_arcs)
+        next_dags = [_reverse_arc(current_dag, i, j) for i, j in current_icovered_arcs]
+
+        # === RECORDS FOR DEPTH-FIRST SEARCH
+        all_visited_dags = set()
+        trace = []
+
+        # === SEARCH
+        while True:
+            all_visited_dags.add(frozenset(current_dag.arcs))
+            lower_dags = [(d, icovered_arcs) for d, icovered_arcs in next_dags if len(d.arcs) < len(current_dag.arcs)]
+            if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
+                if len(lower_dags) > 0:  # restart at a lower DAG
+                    all_visited_dags = set()
+                    trace = []
+                    current_dag, current_icovered_arcs = lower_dags.pop()
+                    if verbose: print("FOUND DAG WITH FEWER ARCS:", current_dag, "(# ARCS: %s)" % len(current_dag.arcs))
+                else:
+                    trace.append((current_dag, current_icovered_arcs))
+                    current_dag, current_icovered_arcs = next_dags.pop()
+                next_dags = [_reverse_arc(current_dag, i, j) for i, j in current_icovered_arcs]
+                next_dags = [(d, icovered_arcs) for d, icovered_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
+            # === DEAD END
+            else:
+                if len(trace) == 0 or len(next_dags) == 0:
+                    break
+                else:  # len(lower_dags) == 0, len(next_dags) > 0, len(trace) == depth
+                    current_dag, current_icovered_arcs = trace.pop()
+
+        if min_dag is None or len(current_dag.arcs) < len(min_dag.arcs):
+            min_dag = current_dag
+        if verbose: print("FINISHED RUN %s/%s with DAG %s" % (r+1, nruns, current_dag))
+
+    return min_dag
 
 
 def is_icovered(
@@ -207,7 +301,7 @@ def unknown_target_igsp(
     :return:
     """
     # === DICTIONARY CACHING RESULTS OF ALL INVARIANCE TESTS SO FAR
-    is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset}
+    is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
     obs_samples = samples[frozenset()]
 
     # === HELPER METHODS
@@ -228,12 +322,11 @@ def unknown_target_igsp(
         Check if the edge i->j is I-covered in the DAG dag
         """
         parents_j = frozenset(dag.parents_of(j))
-        is_icov = True
         for iv_nodes, iv_samples in samples.items():
             if i in iv_nodes:
                 if not _get_is_variant(iv_nodes, j, parents_j):
-                    is_icov = False
-        return is_icov
+                    return False
+        return True
 
     def _get_num_variant(dag):
         """

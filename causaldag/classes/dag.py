@@ -224,6 +224,14 @@ class DAG:
             other_undirected = {(min(i, j), max(i, j)) for (i, j) in other.arcs}
             return len(other_undirected - self_undirected) + len(self_undirected - other_undirected)
 
+    def markov_equivalent(self, other, iv_nodes=None) -> bool:
+        if iv_nodes is None:
+            return self.cpdag() == other.cpdag()
+        else:
+            self_icpdag = self.interventional_cpdag(iv_nodes, cpdag=self.cpdag())
+            other_icpdag = other.interventional_cpdag(iv_nodes, cpdag=other.cpdag())
+            return self_icpdag == other_icpdag
+
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
         for child in self._children[node]:
