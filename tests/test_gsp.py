@@ -9,6 +9,8 @@ from tqdm import tqdm
 import random
 np.random.seed(1729)
 random.seed(1729)
+from functools import partial
+kci_no_regress = partial(kci_invariance_test, regress=False)
 
 
 class TestDAG(TestCase):
@@ -43,57 +45,69 @@ class TestDAG(TestCase):
     #     print("Mean SHDs:", mean_shds)
     #     print("Percent consistent:", percent_consistent)
 
-    def test_igsp_two_nodes(self):
-        ndags = 50
-        nsamples = 1000
-        dag = cd.DAG(arcs={(0, 1)})
-        gdags = [cd.rand.rand_weights(dag) for i in range(ndags)]
-        samples_list = [{
-            frozenset(): gdag.sample(nsamples),
-            frozenset({1}): gdag.sample_interventional({frozenset({1}): cd.GaussIntervention(0, 2)}, nsamples)
-        } for gdag in gdags]
-        corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
-        est_dags = [
-            igsp(samples, dict(C=corr, n=nsamples), 2, gauss_ci_test, kci_invariance_test)
-            for samples, corr in zip(samples_list, corrs)
-        ]
-
-        for est_dag in est_dags:
-            print(est_dag.markov_equivalent(dag, {1}))
+    # def test_igsp_two_nodes(self):
+    #     ndags = 3
+    #     nsamples = 500
+    #     dag = cd.DAG(arcs={(0, 1)})
+    #     gdags = [cd.rand.rand_weights(dag) for i in range(ndags)]
+    #     samples_list = [{
+    #         frozenset(): gdag.sample(nsamples),
+    #         frozenset({1}): gdag.sample_interventional({frozenset({1}): cd.GaussIntervention(0, 2)}, nsamples)
+    #     } for gdag in gdags]
+    #     corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
+    #     est_dags = [
+    #         igsp(samples, dict(C=corr, n=nsamples), 2, gauss_ci_test, kci_invariance_test, verbose=True)
+    #         for samples, corr in zip(samples_list, corrs)
+    #     ]
+    #
+    #     for est_dag in est_dags:
+    #         print(est_dag.markov_equivalent(dag, {1}))
 
     def test_igsp_ten_nodes(self):
-        ndags = 50
+        ndags = 10
         nsamples = 500
-        nnodes = 10
-        nsettings_list = [1, 2, 4, 6, 8, 10]
-        dags = cd.rand.directed_erdos(nnodes, 1.5/9, ndags)
+        nnodes = 3
+        nsettings_list = [nnodes]
+        dags = cd.rand.directed_erdos(nnodes, 2/(nnodes-1), ndags)
         gdags = [cd.rand.rand_weights(dag) for dag in dags]
 
         avg_shds_skel = []
         avg_shds = []
+        percent_meq = []
+        percent_imeq = []
+        percent_consistent = []
         for nsettings in nsettings_list:
-            samples_list = []
+            print('====')
             iv_nodes_list = [random.sample(list(range(nnodes)), nsettings) for _ in gdags]
+            samples_list = []
             for gdag, iv_nodes in zip(gdags, iv_nodes_list):
                 samples = {frozenset(): gdag.sample(nsamples)}
                 for iv_node in iv_nodes:
-                    samples[frozenset({iv_node})] = gdag.sample_interventional({frozenset({iv_node}): cd.ConstantIntervention(0)}, nsamples)
+                    samples[frozenset({iv_node})] = gdag.sample_interventional({iv_node: cd.ConstantIntervention(5)}, nsamples)
                 samples_list.append(samples)
             corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
-            est_dags = [
-                igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_invariance_test)
-                for samples, corr in zip(samples_list, corrs)
-            ]
+            est_dags = []
+            for dag, gdag, samples, corr in tqdm(zip(dags, gdags, samples_list, corrs), total=ndags):
+                est_dag = igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_no_regress, nruns=10, alpha=1e-4, alpha_invariance=1e-4, verbose=True)
+                est_dags.append(est_dag)
+                print(dag.shd(est_dag))
             shds_skel = [est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)]
             shds = [est_dag.shd(dag) for est_dag, dag in zip(est_dags, dags)]
             markov_equiv = [est_dag.markov_equivalent(dag) for est_dag, dag in zip(est_dags, dags)]
-            print(sum(markov_equiv))
             imarkov_equiv = [est_dag.markov_equivalent(dag, iv_nodes) for est_dag, dag, iv_nodes in zip(est_dags, dags, iv_nodes_list)]
-            print(sum(imarkov_equiv))
+            consistent = [est_dag == dag for est_dag, dag in zip(est_dags, dags)]
+
             avg_shds_skel.append(np.mean(shds_skel))
             avg_shds.append(np.mean(shds))
-        print(avg_shds)
-        print(avg_shds_skel)
+            percent_meq.append(np.mean(markov_equiv))
+            percent_imeq.append(np.mean(imarkov_equiv))
+            percent_consistent.append(np.mean(consistent))
+
+        print("Average SHD", avg_shds)
+        print("Average SHD skel", avg_shds_skel)
+        print("Percent correct MEC", percent_meq)
+        print("Percent correct I-MEC", percent_imeq)
+        print("Percent consistent", percent_consistent)
 
     # def test_igsp(self):
     #     ndags = 50

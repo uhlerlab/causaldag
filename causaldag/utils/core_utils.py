@@ -1,3 +1,6 @@
+import itertools as itr
+
+
 def ix_map_from_list(l):
     return {e: i for i, e in enumerate(l)}
 
@@ -10,4 +13,7 @@ def defdict2dict(defdict, keys):
             d[k] = factory()
     return d
 
+
+def powerset(s):
+    return itr.chain(*(itr.combinations(s, r) for r in range(len(s)+1)))
 

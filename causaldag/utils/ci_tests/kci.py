@@ -66,14 +66,15 @@ def ki_test_vector(
     ky = H @ ky @ H
 
     # === COMPUTE STATISTIC ====
-    statistic = np.sum(kx * ky.T)
+    statistic = np.sum(kx * ky.T)/n  # same as trace of product
 
     # === COMPUTE NULL DISTRIBUTION ====
     if not gamma_approx:
         raise NotImplementedError
     else:
-        mean_approx = 1/n * np.trace(kx) * np.trace(ky)
-        var_approx = 2/n**2 * np.trace(kx @ kx) * np.trace(ky @ ky)  # TODO: faster trace?
+        mean_approx = 1/n**2 * np.trace(kx) * np.trace(ky)
+        var_approx = 2/n**4 * np.sum(kx * kx) * np.sum(ky * ky)
+        # k is shape, theta is scale
         k_approx = mean_approx**2/var_approx
         prec_approx = var_approx/mean_approx
 
@@ -221,6 +222,7 @@ def kci_test(
         lam: float=1e-3,
         thresh: float=1e-5,
         num_eig: int=0,
+        categorical_e: bool=False
 ) -> Dict:
     if cond_set is not None and isinstance(cond_set, int):
         cond_set = [cond_set]
@@ -235,7 +237,8 @@ def kci_test(
             n_draws=n_draws,
             lam=lam,
             thresh=thresh,
-            num_eig=num_eig
+            num_eig=num_eig,
+            catgorical_x=categorical_e
         )
     else:
         if regress:
@@ -254,7 +257,8 @@ def kci_test(
                 n_draws=n_draws,
                 lam=lam,
                 thresh=thresh,
-                num_eig=num_eig
+                num_eig=num_eig,
+                catgorical_x=categorical_e
             )
         else:
             return kci_test_vector(
@@ -268,7 +272,8 @@ def kci_test(
                 n_draws=n_draws,
                 lam=lam,
                 thresh=thresh,
-                num_eig=num_eig
+                num_eig=num_eig,
+                catgorical_e=categorical_e
             )
 
 
@@ -295,10 +300,13 @@ def kci_invariance_test(
     nsamples1 = samples1.shape[0]
     nsamples2 = samples2.shape[0]
     mat = np.zeros([nsamples1 + nsamples2, 2 + len(cond_set)])
+    # === FILL FIRST COLUMN WITH SAMPLE VALUES
     mat[:nsamples1, 0] = samples1[:, i]
     mat[nsamples1:, 0] = samples2[:, i]
+    # === FILL SECOND COLUMN WITH 0/1 FOR SETTING
     mat[:nsamples1, 1] = np.zeros(nsamples1)
     mat[nsamples1:, 1] = np.ones(nsamples2)
+    # === FILL REMAINING COLUMNS WITH VALUES OF CONDITIONING SET
     if len(cond_set) != 0:
         mat[:nsamples1, 2:] = samples1[:, cond_set]
         mat[nsamples1:, 2:] = samples2[:, cond_set]
@@ -313,7 +321,6 @@ def kci_invariance_test(
         lam=lam,
         thresh=thresh,
         num_eig=num_eig,
-
     )
     # i_values = np.concatenate((samples1[:, i], samples2[:, i]))
     # labels = np.concatenate((np.zeros(samples1.shape[0]), np.ones(samples2.shape[0])))

@@ -70,6 +70,9 @@ class DAG:
     def children_of(self, node):
         return self._children[node].copy()
 
+    def neighbors_of(self, node):
+        return self._neighbors[node].copy()
+
     def has_arc(self, source, target):
         return (source, target) in self._arcs
 
@@ -83,6 +86,9 @@ class DAG:
             else:
                 substrings.append('[%s]' % node)
         return ''.join(substrings)
+
+    def __repr__(self):
+        return str(self)
 
     # === MUTATORS
     def add_node(self, node):

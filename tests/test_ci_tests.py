@@ -3,6 +3,9 @@ import unittest
 import numpy as np
 import causaldag as cd
 import os
+import random
+np.random.seed(1729)
+random.seed(1729)
 
 
 class TestKCI(TestCase):
@@ -49,30 +52,61 @@ class TestKCI(TestCase):
     #             false_negatives += 1
     #     self.assertTrue(0 < false_negatives < num_tests*alpha*2)
 
-    # def test_ki_dependent(self):
+    def test_kci_invariance_no_cond_set_false_negatives(self):
+        false_negatives = 0
+        alpha = .05
+        num_tests = 100
+        nsamples = 10
+        for i in range(num_tests):
+            d = cd.GaussDAG(nodes=[0, 1], arcs={(0, 1)})
+            samples = d.sample(nsamples)
+            iv_samples = d.sample_interventional({0: cd.GaussIntervention(mean=10, variance=1)}, nsamples=nsamples)
+            test_results = cd.utils.ci_tests.kci_invariance_test(samples, iv_samples, 0)
+            print(test_results)
+            if not test_results['reject']:  # should be rejecting the hypothesis of invariance
+                false_negatives += 1
+        print("Number of false negatives:", false_negatives)
+
+    # def test_ki_invariance_no_cond_set_false_positives(self):
     #     false_positives = 0
     #     alpha = .05
     #     num_tests = 100
+    #     nsamples = 500
     #     for i in range(num_tests):
-    #         E = np.random.multivariate_normal([0, 0], np.eye(2), 500)
-    #         X = np.random.multivariate_normal([0, 0], np.eye(2), 500).round(4) + E
-    #         Y = np.random.multivariate_normal([0, 0], np.eye(2), 500).round(4) + E
-    #         statistic, critval, pval = cd.utils.ci_tests.ki_test(X, Y)
-    #         if pval > .05:
+    #         d = cd.GaussDAG(nodes=[0, 1], arcs={(0, 1)})
+    #         samples = d.sample(nsamples)
+    #         iv_samples = d.sample_interventional({frozenset({1}): cd.GaussIntervention(10, 1)}, nsamples=nsamples)
+    #         test_results = cd.utils.ci_tests.kci_invariance_test(samples, iv_samples, 0)
+    #         print(test_results)
+    #         if test_results['reject']:
     #             false_positives += 1
     #     print("Number of false positives:", false_positives)
+    #
+    # def test_kci_no_cond_set_false_negatives(self):
+    #     false_negatives = 0
+    #     alpha = .05
+    #     num_tests = 100
+    #     nsamples = 500
+    #     for i in range(num_tests):
+    #         d = cd.GaussDAG(nodes=[0, 1], arcs={(0, 1)})
+    #         samples = d.sample(nsamples)
+    #         test_results = cd.utils.ci_tests.kci_test(samples, 0, 1)
+    #         print(test_results)
+    #         if not test_results['reject']:
+    #             false_negatives += 1
+    #     print("Number of false negatives:", false_negatives)
 
-    def test_kci_conditionally_independent(self):
-        ntrials = 100
-        alpha = .05
-        g = cd.GaussDAG([0, 1, 2], arcs={(0, 1), (0, 2)})
-
-        false_negatives = 0
-        for i in range(ntrials):
-            samples = g.sample(500)
-            test_results = cd.utils.ci_tests.kci_test(samples, 1, 2, 0, alpha=alpha)
-            if test_results['reject']: false_negatives += 1
-        print(false_negatives)
+    # def test_kci_conditionally_independent(self):
+    #     ntrials = 100
+    #     alpha = .05
+    #     g = cd.GaussDAG([0, 1, 2], arcs={(0, 1), (0, 2)})
+    #
+    #     false_negatives = 0
+    #     for i in range(ntrials):
+    #         samples = g.sample(500)
+    #         test_results = cd.utils.ci_tests.kci_test(samples, 1, 2, 0, alpha=alpha)
+    #         if test_results['reject']: false_negatives += 1
+    #     print(false_negatives)
 
     # def test_gauss_ci_independent(self):
     #     false_negatives = 0
