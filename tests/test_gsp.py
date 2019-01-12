@@ -2,6 +2,7 @@ from unittest import TestCase
 import unittest
 import numpy as np
 import causaldag as cd
+import causaldag.classes.interventions
 from causaldag.inference.structural import gsp, perm2dag, is_icovered, unknown_target_igsp, igsp
 from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, gauss_ci_test, kci_invariance_test
 import random
@@ -64,11 +65,11 @@ class TestDAG(TestCase):
     #         print(est_dag.markov_equivalent(dag, {1}))
 
     def test_igsp_ten_nodes(self):
-        ndags = 10
+        ndags = 50
         nsamples = 500
-        nnodes = 3
+        nnodes = 20
         nsettings_list = [nnodes]
-        dags = cd.rand.directed_erdos(nnodes, 2/(nnodes-1), ndags)
+        dags = cd.rand.directed_erdos(nnodes, 1.5/(nnodes-1), ndags)
         gdags = [cd.rand.rand_weights(dag) for dag in dags]
 
         avg_shds_skel = []
@@ -83,12 +84,12 @@ class TestDAG(TestCase):
             for gdag, iv_nodes in zip(gdags, iv_nodes_list):
                 samples = {frozenset(): gdag.sample(nsamples)}
                 for iv_node in iv_nodes:
-                    samples[frozenset({iv_node})] = gdag.sample_interventional({iv_node: cd.ConstantIntervention(5)}, nsamples)
+                    samples[frozenset({iv_node})] = gdag.sample_interventional_perfect({iv_node: causaldag.classes.interventions.ConstantIntervention(5)}, nsamples)
                 samples_list.append(samples)
             corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
             est_dags = []
             for dag, gdag, samples, corr in tqdm(zip(dags, gdags, samples_list, corrs), total=ndags):
-                est_dag = igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_no_regress, nruns=10, alpha=1e-4, alpha_invariance=1e-4, verbose=True)
+                est_dag = igsp(samples, dict(C=corr, n=nsamples), nnodes, gauss_ci_test, kci_no_regress, nruns=10, alpha=1e-5, alpha_invariance=1e-5)
                 est_dags.append(est_dag)
                 print(dag.shd(est_dag))
             shds_skel = [est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)]

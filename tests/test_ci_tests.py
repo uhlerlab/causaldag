@@ -4,6 +4,9 @@ import numpy as np
 import causaldag as cd
 import os
 import random
+
+import causaldag.classes.interventions
+
 np.random.seed(1729)
 random.seed(1729)
 
@@ -60,7 +63,7 @@ class TestKCI(TestCase):
         for i in range(num_tests):
             d = cd.GaussDAG(nodes=[0, 1], arcs={(0, 1)})
             samples = d.sample(nsamples)
-            iv_samples = d.sample_interventional({0: cd.GaussIntervention(mean=10, variance=1)}, nsamples=nsamples)
+            iv_samples = d.sample_interventional_perfect({0: causaldag.classes.interventions.GaussIntervention(mean=10, variance=1)}, nsamples=nsamples)
             test_results = cd.utils.ci_tests.kci_invariance_test(samples, iv_samples, 0)
             print(test_results)
             if not test_results['reject']:  # should be rejecting the hypothesis of invariance

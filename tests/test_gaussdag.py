@@ -5,7 +5,7 @@ import causaldag as cd
 from scipy.stats import multivariate_normal
 
 
-class TestDAG(TestCase):
+class TestGaussDAG(TestCase):
     def setUp(self):
         w = np.zeros((3, 3))
         w[0, 1] = 1
@@ -49,50 +49,6 @@ class TestDAG(TestCase):
         logpdf_gdag = gdag.logpdf(samples)
         logpdf_scipy = multivariate_normal.logpdf(samples, cov=gdag.covariance)
         self.assertTrue(all(np.isclose(logpdf_gdag, logpdf_scipy)))
-
-    def test_logpdf_interventional_constant(self):
-        amat = np.array([
-            [0, 2, 3],
-            [0, 0, 5],
-            [0, 0, 0]
-        ])
-        gdag = cd.GaussDAG.from_amat(amat)
-        iv = {0: cd.ConstantIntervention(val=0)}
-        samples1 = gdag.sample_interventional(iv, 100)
-        logpdf_gdag = gdag.logpdf(samples1, interventions=iv)
-
-        amat_iv = np.array([
-            [0, 5],
-            [0, 0]
-        ])
-        gdag_iv = cd.GaussDAG.from_amat(amat_iv)
-        logpdf_gdag_iv = gdag_iv.logpdf(samples1[:, [1, 2]])
-
-        self.assertTrue(all(np.isclose(logpdf_gdag, logpdf_gdag_iv)))
-
-    def test_logpdf_interventional_binary_constant(self):
-        amat = np.array([
-            [0, 2, 3],
-            [0, 0, 5],
-            [0, 0, 0]
-        ])
-        gdag = cd.GaussDAG.from_amat(amat)
-        iv = {0: cd.BinaryIntervention(intervention1=cd.ConstantIntervention(val=-2), intervention2=cd.ConstantIntervention(val=2))}
-        samples1 = gdag.sample_interventional(iv, 10)
-        logpdf_gdag = gdag.logpdf(samples1, interventions=iv)
-
-        amat_iv = np.array([
-            [0, 5],
-            [0, 0]
-        ])
-        gdag_iv = cd.GaussDAG.from_amat(amat_iv)
-        logpdf_iv1 = multivariate_normal.logpdf(samples1[:, [1, 2]] - np.array([4, 26]), cov=gdag_iv.covariance)
-        logpdf_iv2 = multivariate_normal.logpdf(samples1[:, [1, 2]] - np.array([-4, -26]), cov=gdag_iv.covariance)
-        logpdf_scipy = np.log(.5 * np.exp(logpdf_iv1) + .5 * np.exp(logpdf_iv2))
-
-        self.assertTrue(all(np.isclose(logpdf_gdag, logpdf_scipy)))
-
-
 
 
 if __name__ == '__main__':

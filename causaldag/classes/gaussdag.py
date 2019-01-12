@@ -2,89 +2,16 @@
 """
 Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with Gaussian noise).
 """
-
-from causaldag.classes.dag import DAG
-import numpy as np
-from causaldag.utils import core_utils
-from typing import Any, Dict, Union, Set, Tuple, List, FrozenSet, NewType
-from dataclasses import dataclass
-from scipy.linalg import ldl
 import operator as op
-from scipy.stats import norm, multivariate_normal
+from typing import Any, Dict, Union, Set, Tuple, List
 
+import numpy as np
+from scipy.linalg import ldl
+from scipy.stats import norm
 
-class InterventionalDistribution:
-    def sample(self, size: int) -> np.array:
-        raise NotImplementedError
-
-    def pdf(self, vals: np.array) -> float:
-        raise NotImplementedError
-
-
-Intervention = NewType('Intervention', Dict[Any, InterventionalDistribution])
-
-
-@dataclass
-class GaussIntervention(InterventionalDistribution):
-    mean: float = 0
-    variance: float = 1
-
-    def sample(self, size: int) -> np.array:
-        samples = np.random.normal(loc=self.mean, scale=self.variance**.5, size=size)
-        return samples
-
-    def pdf(self, vals: np.array) -> float:
-        return norm.pdf(vals, loc=self.mean, scale=self.variance**.5)
-
-    def logpdf(self, vals: np.array) -> float:
-        return norm.logpdf(vals, loc=self.mean, scale=self.variance**.5)
-
-
-@dataclass
-class BinaryIntervention(InterventionalDistribution):
-    intervention1: InterventionalDistribution
-    intervention2: InterventionalDistribution
-    p: float = .5
-
-    def sample(self, size: int) -> np.array:
-        choices = np.random.binomial(1, self.p, size=size)
-        ixs_iv1 = np.where(choices == 1)[0]
-        ixs_iv2 = np.where(choices == 0)[0]
-        samples = np.zeros(size)
-        samples[ixs_iv1] = self.intervention1.sample(len(ixs_iv1))
-        samples[ixs_iv2] = self.intervention2.sample(len(ixs_iv2))
-        return samples
-
-    def pdf(self, vals: np.array) -> float:
-        return self.p * self.intervention1.pdf(vals) + (1 - self.p) * self.intervention2.pdf(vals)
-
-
-@dataclass
-class MultinomialIntervention(InterventionalDistribution):
-    pvals: List[float]
-    interventions: List[InterventionalDistribution]
-
-    def sample(self, size: int) -> np.array:
-        choices = np.random.choice(list(range(len(self.interventions))), size=size, p=self.pvals)
-        samples = np.zeros(size)
-        for ix, iv in enumerate(self.interventions):
-            ixs_iv = np.where(choices == ix)[0]
-            samples[ixs_iv] = iv.sample(len(ixs_iv))
-        return samples
-
-    def pdf(self, vals: np.array) -> float:
-        raise NotImplementedError
-
-
-@dataclass
-class ConstantIntervention(InterventionalDistribution):
-    val: float
-
-    def sample(self, size: int) -> np.array:
-        return np.ones(size) * self.val
-
-    def pdf(self, vals: np.array) -> float:
-        return (vals == self.val).astype(bool)
+from .dag import DAG
+from .interventions import PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
+from ..utils import core_utils
 
 
 class GaussDAG(DAG):
@@ -115,7 +42,6 @@ class GaussDAG(DAG):
 
     @classmethod
     def from_precision(cls, precision_mat, node_order):
-        from sksparse.cholmod import cholesky
         p = precision_mat.shape[0]
 
         # === permute precision matrix into  correct order for LDL
@@ -296,14 +222,14 @@ class GaussDAG(DAG):
                 samples[:, ix] = noise[:, ix]
         return samples
 
-    def sample_interventional(self, interventions: Intervention, nsamples: int = 1) -> np.array:
+    def sample_interventional_perfect(self, interventions: PerfectIntervention, nsamples: int = 1) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
 
         for ix, (node, mean, var) in enumerate(zip(self._node_list, self._means, self._variances)):
-            iv = interventions.get(node)
-            if iv is not None:
-                noise[:, ix] = iv.sample(nsamples)
+            interventional_dist = interventions.get(node)
+            if interventional_dist is not None:
+                noise[:, ix] = interventional_dist.sample(nsamples)
             else:
                 noise[:, ix] = np.random.normal(loc=mean, scale=var**.5, size=nsamples)
 
@@ -314,6 +240,32 @@ class GaussDAG(DAG):
             if node not in interventions and len(parents) != 0:
                 parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                 parent_vals = samples[:, parent_ixs]
+                samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
+            else:
+                samples[:, ix] = noise[:, ix]
+
+        return samples
+
+    def sample_interventional_soft(self, intervention: SoftIntervention, nsamples: int = 1) -> np.array:
+        samples = np.zeros((nsamples, len(self._nodes)))
+        noise = np.zeros((nsamples, len(self._nodes)))
+        for ix, var in enumerate(self._variances):
+            noise[:, ix] = np.random.normal(scale=var ** .5, size=nsamples)
+
+        t = self.topological_sort()
+        for node in t:
+            ix = self._node2ix[node]
+            parents = self._parents[node]
+            if len(parents) != 0:
+                parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+                parent_vals = samples[:, parent_ixs]
+            else:
+                parent_vals = None
+
+            interventional_dist = intervention.get(node)
+            if interventional_dist is not None:
+                samples[:, ix] = interventional_dist.sample(parent_vals, self, node)
+            elif parent_vals is not None:
                 samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
             else:
                 samples[:, ix] = noise[:, ix]
@@ -345,7 +297,7 @@ class GaussDAG(DAG):
     #         adjusted_cov = self.interventional_covariance(intervened_nodes)
     #         return multivariate_normal.logpdf(samples, meabn=adjusted_means, cov=adjusted_cov)
 
-    def logpdf(self, samples: np.array, interventions: Intervention = None, exclude_intervention_prob=True) -> np.array:
+    def logpdf(self, samples: np.array, interventions: PerfectIntervention = None, exclude_intervention_prob=True) -> np.array:
         # TODO this is about 10x slower than using multivariate_normal.logpdf with the covariance matrix
         # TODO can I speed this up? where is the time spent?
 
@@ -402,14 +354,14 @@ if __name__ == '__main__':
     B[0, 2] = -1
     B[1, 2] = 4
     gdag = cd.GaussDAG.from_amat(B)
-    iv = cd.GaussIntervention(mean=0, variance=.1)
-    gdag.sample_interventional({0: iv}, nsamples=100)
+    iv = causaldag.classes.interventions.GaussIntervention(mean=0, variance=.1)
+    gdag.sample_interventional_perfect({0: iv}, nsamples=100)
 
     s = gdag.sample(1000)
     # print(gdag.arcs)
     print(s.T @ s / 1000)
     print(gdag.covariance)
-    s2 = gdag.sample_interventional({1: iv}, 1000)
+    s2 = gdag.sample_interventional_perfect({1: iv}, 1000)
     print(s2.T @ s2 / 1000)
 
     import matplotlib.pyplot as plt
