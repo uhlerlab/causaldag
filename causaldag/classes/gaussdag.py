@@ -255,17 +255,13 @@ class GaussDAG(DAG):
         t = self.topological_sort()
         for node in t:
             ix = self._node2ix[node]
-            parents = self._parents[node]
-            if len(parents) != 0:
-                parent_ixs = [self._node2ix[p] for p in self._parents[node]]
-                parent_vals = samples[:, parent_ixs]
-            else:
-                parent_vals = None
+            parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+            parent_vals = samples[:, parent_ixs]
 
             interventional_dist = intervention.get(node)
             if interventional_dist is not None:
-                samples[:, ix] = interventional_dist.sample(parent_vals, self, node)
-            elif parent_vals is not None:
+                samples[:, ix] = interventional_dist.sample(parent_vals, self)
+            elif len(parent_ixs) == 0:
                 samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
             else:
                 samples[:, ix] = noise[:, ix]

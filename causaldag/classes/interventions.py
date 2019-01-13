@@ -1,4 +1,4 @@
-from typing import NewType, Dict, Any, List
+from typing import NewType, Dict, Any, List, Union, Optional
 import numpy as np
 from dataclasses import dataclass
 from scipy.stats import norm
@@ -20,6 +20,7 @@ class SoftInterventionalDistribution:
         raise NotImplementedError
 
 
+InterventionalDistribution = NewType('InterventionalDistribution', Union[PerfectInterventionalDistribution, SoftInterventionalDistribution])
 PerfectIntervention = NewType('Intervention', Dict[Any, PerfectInterventionalDistribution])
 SoftIntervention = NewType('Intervention', Dict[Any, SoftInterventionalDistribution])
 
@@ -28,12 +29,15 @@ SoftIntervention = NewType('Intervention', Dict[Any, SoftInterventionalDistribut
 class ScalingIntervention(SoftInterventionalDistribution):
     factor: float = 1
 
-    def sample(self, parent_values: np.ndarray, dag, node) -> np.ndarray:
+    def sample(self, parent_values: Optional[np.ndarray], dag, node) -> np.ndarray:
         nsamples = parent_values.shape[0]
         node_ix = dag._node2ix[node]
         noise = np.random.normal(scale=dag._variances[node_ix], size=nsamples)
         parent_ixs = [dag._node2ix[p] for p in dag._parents[node]]
-        return np.sum(parent_values * dag._weight_mat[parent_ixs, node]*self.factor, axis=1) + noise
+        if len(parent_ixs) != 0:
+            return np.sum(parent_values * dag._weight_mat[parent_ixs, node]*self.factor, axis=1) + noise
+        else:
+            return noise
 
     def pdf(self, vals: np.ndarray, parent_values: np.ndarray, dag, node) -> float:
         pass
