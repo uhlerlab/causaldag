@@ -27,6 +27,7 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
     else:
         theta = np.linalg.inv(C[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
         r = -theta[0, 1]/np.sqrt(theta[0, 0] * theta[1, 1])
+    # print(r)
 
     statistic = np.sqrt(n - n_cond - 3) * np.abs(.5 * np.log1p(2*r/(1 - r)))
     # NOTE: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0

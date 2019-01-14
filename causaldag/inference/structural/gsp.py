@@ -168,8 +168,10 @@ def igsp(
 
     def _is_icovered(i, j):
         """
-        i -> j is I-covered if f^i(j) = f(j) and for all I s.t. j \in I and i \not\in I,
-        f^I(i) \neq f^I(i)
+        i -> j is I-covered if:
+        1) if {i} is an intervention, then f^{i}(j) = f(j)
+        and
+        2) for all I s.t. j \in I and i \not\in I, f^I(i) \neq f^I(i)
         """
         if frozenset({i}) in samples and _get_is_variant(frozenset({i}), j, None):
             return False
@@ -291,7 +293,7 @@ def igsp(
 
     min_dag = min(finishing_dags, key=lambda dag_n: (len(dag_n[0].arcs), len(dag_n[1])))
     # print(min_dag)
-    # print(p_value_dict)
+    print(p_value_dict)
     return min_dag[0]
 
 

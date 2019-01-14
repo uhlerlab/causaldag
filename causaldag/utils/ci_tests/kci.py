@@ -6,6 +6,7 @@ from scipy.stats import gamma
 from typing import Dict, Union, List, Optional
 from . import kernels
 import pygam
+from ._utils import residuals, combined_mat
 
 
 def ki_test_vector(
@@ -224,7 +225,7 @@ def kci_test(
         num_eig: int=0,
         categorical_e: bool=False
 ) -> Dict:
-    if cond_set is not None and isinstance(cond_set, int):
+    if isinstance(cond_set, int):
         cond_set = [cond_set]
     if cond_set is None or len(cond_set) == 0:
         return ki_test_vector(
@@ -242,11 +243,7 @@ def kci_test(
         )
     else:
         if regress:
-            g = pygam.GAM()
-            g.fit(suffstat[:, cond_set], suffstat[:, i])
-            residuals_i = g.deviance_residuals(suffstat[:, cond_set], suffstat[:, i])
-            g.fit(suffstat[:, cond_set], suffstat[:, j])
-            residuals_j = g.deviance_residuals(suffstat[:, cond_set], suffstat[:, j])
+            residuals_i, residuals_j = residuals(suffstat, i, j, cond_set)
             return ki_test_vector(
                 residuals_i,
                 residuals_j,
@@ -292,24 +289,12 @@ def kci_invariance_test(
         thresh: float=1e-5,
         num_eig: int=0,
 ):
-    if cond_set is not None and isinstance(cond_set, int):
+    if isinstance(cond_set, int):
         cond_set = [cond_set]
     if cond_set is None:
         cond_set = []
 
-    nsamples1 = samples1.shape[0]
-    nsamples2 = samples2.shape[0]
-    mat = np.zeros([nsamples1 + nsamples2, 2 + len(cond_set)])
-    # === FILL FIRST COLUMN WITH SAMPLE VALUES
-    mat[:nsamples1, 0] = samples1[:, i]
-    mat[nsamples1:, 0] = samples2[:, i]
-    # === FILL SECOND COLUMN WITH 0/1 FOR SETTING
-    mat[:nsamples1, 1] = np.zeros(nsamples1)
-    mat[nsamples1:, 1] = np.ones(nsamples2)
-    # === FILL REMAINING COLUMNS WITH VALUES OF CONDITIONING SET
-    if len(cond_set) != 0:
-        mat[:nsamples1, 2:] = samples1[:, cond_set]
-        mat[nsamples1:, 2:] = samples2[:, cond_set]
+    mat = combined_mat(samples1, samples2, i, cond_set)
     return kci_test(
         mat, 0, 1, list(range(2, 2+len(cond_set))),
         width=width,

@@ -34,6 +34,9 @@ class GaussDAG(DAG):
         self._precision = None
         self._covariance = None
 
+    def to_dag(self):
+        return DAG(nodes=set(self._node_list), arcs=self.arcs)
+
     @classmethod
     def from_amat(cls, weight_mat, nodes=None, means=None, variances=None):
         nodes = nodes if nodes is not None else list(range(weight_mat.shape[0]))
@@ -103,6 +106,18 @@ class GaussDAG(DAG):
     def covariance(self):
         self._ensure_covariance()
         return self._covariance.copy()
+
+    @property
+    def correlation(self):
+        self._ensure_covariance()
+        return self._covariance/np.sqrt(np.diag(self._covariance))/np.sqrt(np.diag(self._covariance)).reshape([-1, 1])
+
+    def partial_correlation(self, i, j, cond_set):
+        if len(cond_set) == 0:
+            return self.correlation[i, j]
+        else:
+            theta = np.linalg.inv(self.correlation[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
+            return -theta[0, 1] / np.sqrt(theta[0, 0] * theta[1, 1])
 
     def add_arc(self, i, j):
         self.set_arc_weight(i, j, 1)
@@ -260,8 +275,8 @@ class GaussDAG(DAG):
 
             interventional_dist = intervention.get(node)
             if interventional_dist is not None:
-                samples[:, ix] = interventional_dist.sample(parent_vals, self)
-            elif len(parent_ixs) == 0:
+                samples[:, ix] = interventional_dist.sample(parent_vals, self, node)
+            elif len(parent_ixs) != 0:
                 samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
             else:
                 samples[:, ix] = noise[:, ix]

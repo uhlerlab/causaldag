@@ -30,11 +30,11 @@ class ScalingIntervention(SoftInterventionalDistribution):
     factor: float = 1
 
     def sample(self, parent_values: Optional[np.ndarray], dag, node) -> np.ndarray:
-        nsamples = parent_values.shape[0]
+        nsamples, nparents = parent_values.shape
         node_ix = dag._node2ix[node]
         noise = np.random.normal(scale=dag._variances[node_ix], size=nsamples)
         parent_ixs = [dag._node2ix[p] for p in dag._parents[node]]
-        if len(parent_ixs) != 0:
+        if nparents != 0:
             return np.sum(parent_values * dag._weight_mat[parent_ixs, node]*self.factor, axis=1) + noise
         else:
             return noise

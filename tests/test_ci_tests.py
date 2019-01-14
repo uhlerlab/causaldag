@@ -2,13 +2,12 @@ from unittest import TestCase
 import unittest
 import numpy as np
 import causaldag as cd
+from causaldag import GaussIntervention
 import os
 import random
 
-import causaldag.classes.interventions
-
-np.random.seed(1729)
-random.seed(1729)
+np.random.seed(1728)
+random.seed(1728)
 
 
 class TestKCI(TestCase):
@@ -55,16 +54,34 @@ class TestKCI(TestCase):
     #             false_negatives += 1
     #     self.assertTrue(0 < false_negatives < num_tests*alpha*2)
 
-    def test_kci_invariance_no_cond_set_false_negatives(self):
+    # def test_kci_invariance_no_cond_set_false_negatives(self):
+    #     false_negatives = 0
+    #     alpha = .05
+    #     num_tests = 100
+    #     nsamples = 100
+    #     for i in range(num_tests):
+    #         d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
+    #         samples = d.sample(nsamples)
+    #         iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)}, nsamples=nsamples)
+    #         print(np.cov(samples.T), np.cov(iv_samples.T))
+    #         test_results = cd.utils.ci_tests.kci_invariance_test(samples, iv_samples, 2, alpha=alpha)
+    #         print(test_results)
+    #         if not test_results['reject']:  # should be rejecting the hypothesis of invariance
+    #             false_negatives += 1
+    #     print("Number of false negatives:", false_negatives)
+
+    def test_hsic_invariance_no_cond_set_false_negatives(self):
         false_negatives = 0
         alpha = .05
         num_tests = 100
-        nsamples = 10
+        nsamples = 200
         for i in range(num_tests):
-            d = cd.GaussDAG(nodes=[0, 1], arcs={(0, 1)})
+            d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
             samples = d.sample(nsamples)
-            iv_samples = d.sample_interventional_perfect({0: causaldag.classes.interventions.GaussIntervention(mean=10, variance=1)}, nsamples=nsamples)
-            test_results = cd.utils.ci_tests.kci_invariance_test(samples, iv_samples, 0)
+            iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)},
+                                                         nsamples=nsamples)
+            # print(np.cov(samples.T), np.cov(iv_samples.T))
+            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 2, alpha=alpha)
             print(test_results)
             if not test_results['reject']:  # should be rejecting the hypothesis of invariance
                 false_negatives += 1
