@@ -175,10 +175,10 @@ def igsp(
         """
         if frozenset({i}) in samples and _get_is_variant(frozenset({i}), j, None):
             return False
-        for iv_nodes in samples.keys():
-            if j in iv_nodes and i not in iv_nodes:
-                if not _get_is_variant(iv_nodes, i, None):
-                    return False
+        # for iv_nodes in samples.keys():
+        #     if j in iv_nodes and i not in iv_nodes:
+        #         if not _get_is_variant(iv_nodes, i, None):
+        #             return False
         return True
 
     def _reverse_arc(dag, i, j):
@@ -293,7 +293,7 @@ def igsp(
 
     min_dag = min(finishing_dags, key=lambda dag_n: (len(dag_n[0].arcs), len(dag_n[1])))
     # print(min_dag)
-    print(p_value_dict)
+    # print(p_value_dict)
     return min_dag[0]
 
 

@@ -14,7 +14,7 @@ from functools import partial
 kci_no_regress = partial(kci_invariance_test, regress=False)
 
 
-class TestDAG(TestCase):
+class TestGSP(TestCase):
     # def test_gsp(self):
     #     ndags = 10
     #     nnodes = 8
@@ -90,11 +90,10 @@ class TestDAG(TestCase):
             frozenset(): gdag.sample(nsamples),
             frozenset({1}): gdag.sample_interventional_perfect({1: cd.GaussIntervention(0, 1)}, nsamples)
         } for i in range(ndags)]
-        print(samples_list)
         corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
-        print(corrs)
+        ALPHA = 1e-1
         est_dags = [
-            igsp(samples, dict(C=corr, n=nsamples), 3, gauss_ci_test, hsic_invariance_test, alpha=.05, alpha_invariance=1e-1)
+            igsp(samples, dict(C=corr, n=nsamples), 3, gauss_ci_test, hsic_invariance_test, alpha=ALPHA, alpha_invariance=ALPHA)
             for samples, corr in zip(samples_list, corrs)
         ]
         print(est_dags)

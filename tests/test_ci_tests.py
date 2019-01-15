@@ -6,8 +6,8 @@ from causaldag import GaussIntervention
 import os
 import random
 
-np.random.seed(1728)
-random.seed(1728)
+# np.random.seed(1728)
+# random.seed(1728)
 
 
 class TestKCI(TestCase):
@@ -70,8 +70,25 @@ class TestKCI(TestCase):
     #             false_negatives += 1
     #     print("Number of false negatives:", false_negatives)
 
-    def test_hsic_invariance_no_cond_set_false_negatives(self):
-        false_negatives = 0
+    # def test_hsic_invariance_no_cond_set_false_negatives(self):
+    #     false_negatives = 0
+    #     alpha = .05
+    #     num_tests = 100
+    #     nsamples = 200
+    #     for i in range(num_tests):
+    #         d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
+    #         samples = d.sample(nsamples)
+    #         iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)},
+    #                                                      nsamples=nsamples)
+    #         # print(np.cov(samples.T), np.cov(iv_samples.T))
+    #         test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 2, alpha=alpha)
+    #         print(test_results)
+    #         if not test_results['reject']:  # should be rejecting the hypothesis of invariance
+    #             false_negatives += 1
+    #     print("Number of false negatives:", false_negatives)
+
+    def test_hsic_invariance_no_cond_set_false_positives(self):
+        false_positives = 0
         alpha = .05
         num_tests = 100
         nsamples = 200
@@ -81,11 +98,12 @@ class TestKCI(TestCase):
             iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)},
                                                          nsamples=nsamples)
             # print(np.cov(samples.T), np.cov(iv_samples.T))
-            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 2, alpha=alpha)
+            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 0, alpha=alpha)
             print(test_results)
-            if not test_results['reject']:  # should be rejecting the hypothesis of invariance
-                false_negatives += 1
-        print("Number of false negatives:", false_negatives)
+            if test_results['reject']:  # should be accepting the hypothesis of invariance
+                false_positives += 1
+        print("Number of false positives:", false_positives)
+        print("Expected number of false positives:", alpha*num_tests)
 
     # def test_ki_invariance_no_cond_set_false_positives(self):
     #     false_positives = 0
