@@ -2,7 +2,7 @@ from unittest import TestCase
 import unittest
 import numpy as np
 import causaldag as cd
-from causaldag import GaussIntervention
+from causaldag import GaussIntervention, ScalingIntervention
 import os
 import random
 
@@ -87,7 +87,25 @@ class TestKCI(TestCase):
     #             false_negatives += 1
     #     print("Number of false negatives:", false_negatives)
 
-    def test_hsic_invariance_no_cond_set_false_positives(self):
+    # def test_hsic_invariance_no_cond_set_false_positives(self):
+    #     false_positives = 0
+    #     alpha = .05
+    #     num_tests = 100
+    #     nsamples = 200
+    #     for i in range(num_tests):
+    #         d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
+    #         samples = d.sample(nsamples)
+    #         iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)},
+    #                                                      nsamples=nsamples)
+    #         # print(np.cov(samples.T), np.cov(iv_samples.T))
+    #         test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 0, alpha=alpha)
+    #         print(test_results)
+    #         if test_results['reject']:  # should be accepting the hypothesis of invariance
+    #             false_positives += 1
+    #     print("Number of false positives:", false_positives)
+    #     print("Expected number of false positives:", alpha*num_tests)
+
+    def test_hsic_invariance_cond_set_false_positives(self):
         false_positives = 0
         alpha = .05
         num_tests = 100
@@ -95,15 +113,28 @@ class TestKCI(TestCase):
         for i in range(num_tests):
             d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
             samples = d.sample(nsamples)
-            iv_samples = d.sample_interventional_perfect({1: GaussIntervention(mean=0, variance=1)},
+            iv_samples = d.sample_interventional_soft({1: ScalingIntervention(0)},
                                                          nsamples=nsamples)
-            # print(np.cov(samples.T), np.cov(iv_samples.T))
-            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 0, alpha=alpha)
-            print(test_results)
+            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 2, cond_set=[0,1], alpha=alpha)
             if test_results['reject']:  # should be accepting the hypothesis of invariance
                 false_positives += 1
         print("Number of false positives:", false_positives)
-        print("Expected number of false positives:", alpha*num_tests)
+        print("Expected number of false positives:", alpha * num_tests)
+
+    def test_hsic_invariance_cond_set_false_negatives(self):
+        false_negatives = 0
+        alpha = .05
+        num_tests = 100
+        nsamples = 200
+        for i in range(num_tests):
+            d = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1), (0, 2), (1, 2)})
+            samples = d.sample(nsamples)
+            iv_samples = d.sample_interventional_soft({1: ScalingIntervention(0)}, nsamples=nsamples)
+            test_results = cd.utils.ci_tests.hsic_invariance_test(samples, iv_samples, 0, cond_set=[1],
+                                                                  alpha=alpha)
+            if not test_results['reject']:  # should be rejecting the hypothesis of invariance
+                false_negatives += 1
+        print("Number of false negatives:", false_negatives)
 
     # def test_ki_invariance_no_cond_set_false_positives(self):
     #     false_positives = 0

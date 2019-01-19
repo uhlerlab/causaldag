@@ -1,10 +1,11 @@
-from typing import Dict, FrozenSet, Optional, Any
+from typing import Dict, FrozenSet, Optional, Any, List
 import numpy as np
 from ...classes.dag import DAG
 import itertools as itr
 from ...utils.ci_tests import CI_Test, InvarianceTest
 from ...utils.core_utils import powerset
 import random
+from pprint import pprint
 
 
 def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
@@ -28,35 +29,14 @@ def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
     return d
 
 
-def _reverse_arc_gsp(dag, covered_arcs, i, j, suffstat, ci_test, alpha):
-    """
-    Given a minimal I-map and its covered arcs, reverse the arc i->j and find the new minimal I-map using conditional
-    independence test.
-    """
-    # only change what comes before i and j so only effect set of arcs going into i and j
-    # anything that's not a parent can't become a parent
-    new_dag = dag.copy()
-    parents = dag.parents_of(i)
-
-    new_dag.reverse_arc(i, j)
-    if parents:
-        for parent in parents:
-            rest = parents - {parent}
-            p_i = ci_test(suffstat, i, parent, [*rest, j], alpha=alpha)['p_value']
-            if p_i > alpha:
-                new_dag.remove_arc(parent, i)
-
-            p_j = ci_test(suffstat, j, parent, cond_set=[*rest] if len(rest) != 0 else None, alpha=alpha)['p_value']
-            if p_j > alpha:
-                new_dag.remove_arc(parent, j)
-
-    # TODO: I DON'T THINK THIS IS MUCH FASTER THAN JUST RECOMPUTING THE COVERED ARCS
-    new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
-    for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
-        if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
-            new_covered_arcs.add((k, l))
-
-    return new_dag, new_covered_arcs
+def _perm2dag(perm, _is_ci):
+    d = DAG(nodes=set(range(len(perm))))
+    for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
+        rest = perm[:j]
+        del rest[i]
+        if not _is_ci(pi_i, pi_j, rest):
+            d.add_arc(pi_i, pi_j)
+    return d
 
 
 def gsp(
@@ -67,7 +47,7 @@ def gsp(
         depth: Optional[int]=4,
         nruns: int=5,
         verbose=False
-) -> DAG:
+) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
     DAG.
@@ -82,15 +62,47 @@ def gsp(
     :param verbose:
     :return:
     """
+    is_ci_dict = dict()
+
+    def _is_ci(i, j, S):
+        i, j = sorted((i, j))  # standardize order
+        is_ci = is_ci_dict.get((i, j, frozenset(S)))
+        if is_ci is not None:
+            return is_ci
+        is_ci = not ci_test(suffstat, i, j, cond_set=S, alpha=alpha)['reject']
+        is_ci_dict[(i, j, frozenset(S))] = is_ci
+        return is_ci
+
+    def _reverse_arc(dag, covered_arcs, i, j):
+        new_dag = dag.copy()
+        parents = dag.parents_of(i)
+
+        new_dag.reverse_arc(i, j)
+        if parents:
+            for parent in parents:
+                rest = parents - {parent}
+                if _is_ci(i, parent, [*rest, j]):
+                    new_dag.remove_arc(parent, i)
+                if _is_ci(j, parent, [*rest]):
+                    new_dag.remove_arc(parent, j)
+
+        new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
+        for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
+            if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
+                new_covered_arcs.add((k, l))
+        return new_dag, new_covered_arcs
+
+    summaries = []
     min_dag = None
     for r in range(nruns):
+        summary = []
         # === STARTING VALUES
         starting_perm = random.sample(list(range(nnodes)), nnodes)
-        current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
+        current_dag = _perm2dag(starting_perm, _is_ci)
         if verbose: print("=== STARTING DAG:", current_dag)
         current_covered_arcs = current_dag.reversible_arcs()
         next_dags = [
-            _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
+            _reverse_arc(current_dag, current_covered_arcs, i, j)
             for i, j in current_covered_arcs
         ]
 
@@ -100,6 +112,7 @@ def gsp(
 
         # === SEARCH!
         while True:
+            summary.append({'dag': current_dag, 'depth': len(trace), 'num_arcs': len(current_dag.arcs)})
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if len(d.arcs) < len(current_dag.arcs)]
 
@@ -119,7 +132,7 @@ def gsp(
                 #     raise Exception
 
                 next_dags = [
-                    _reverse_arc_gsp(current_dag, current_covered_arcs, i, j, suffstat, ci_test, alpha=alpha)
+                    _reverse_arc(current_dag, current_covered_arcs, i, j)
                     for i, j in current_covered_arcs
                 ]
                 next_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
@@ -129,10 +142,12 @@ def gsp(
                 else:  # backtrack
                     current_dag, current_covered_arcs, next_dags = trace.pop()
 
+        # === END OF RUN
+        summaries.append(summary)
         if min_dag is None or len(current_dag.arcs) < len(min_dag.arcs):
             min_dag = current_dag
 
-    return min_dag
+    return min_dag, summaries
 
 
 def igsp(
@@ -147,6 +162,7 @@ def igsp(
         nruns: int = 5,
         verbose: bool = False
 ):
+    only_single_node = all(len(iv_nodes) <= 1 for iv_nodes in samples.keys())
     is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
     p_value_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
     obs_samples = samples[frozenset()]
@@ -170,8 +186,6 @@ def igsp(
         """
         i -> j is I-covered if:
         1) if {i} is an intervention, then f^{i}(j) = f(j)
-        and
-        2) for all I s.t. j \in I and i \not\in I, f^I(i) \neq f^I(i)
         """
         if frozenset({i}) in samples and _get_is_variant(frozenset({i}), j, None):
             return False
@@ -207,21 +221,33 @@ def igsp(
             containing i but not j
         2) there exists I with j \in I but i \not\in I, s.t. f^I(i|S) \not\eq f(i|S) for all subsets S
             of the neighbors of i besides j
-        """
-        # === TEST CONDITION 1
-        neighbors_j = dag.neighbors_of(j) - {i}
-        for s in powerset(neighbors_j):
-            for iv_nodes in samples.keys():
-                if i in iv_nodes and j not in iv_nodes:
-                    if not _get_is_variant(iv_nodes, j, s):
-                        return True
 
-        neighbors_i = dag.neighbors_of(i) - {j}
-        for iv_nodes in samples.keys():
-            if j in iv_nodes and i not in iv_nodes:
-                i_always_varies = all(_get_is_variant(iv_nodes, i, s) for s in powerset(neighbors_i))
-                if i_always_varies: return True
-        return False
+        If there are only single node interventions, this condition becomes:
+        1) {i} \in I and f^{i}(j) = f(j)
+        or
+        2) {j} \in I and f^{j}(i) \neq f(i)
+        """
+        if only_single_node:
+            if frozenset({i}) in samples and not _get_is_variant(frozenset({i}), j, None):
+                return True
+            if frozenset({j}) in samples and _get_is_variant(frozenset({j}), i, None):
+                return True
+            return False
+        else:
+            # === TEST CONDITION 1
+            neighbors_j = dag.neighbors_of(j) - {i}
+            for s in powerset(neighbors_j):
+                for iv_nodes in samples.keys():
+                    if i in iv_nodes and j not in iv_nodes:
+                        if not _get_is_variant(iv_nodes, j, s):
+                            return True
+
+            neighbors_i = dag.neighbors_of(i) - {j}
+            for iv_nodes in samples.keys():
+                if j in iv_nodes and i not in iv_nodes:
+                    i_always_varies = all(_get_is_variant(iv_nodes, i, s) for s in powerset(neighbors_i))
+                    if i_always_varies: return True
+            return False
 
     def _get_contradicting_arcs(dag):
         """
@@ -230,11 +256,13 @@ def igsp(
         contradicting_arcs = {(i, j) for i, j in dag.arcs if _is_icovered(i, j) and _is_i_contradicting(i, j, dag)}
         return contradicting_arcs
 
+    summaries = []
     # === LIST OF DAGS FOUND BY EACH RUN
     finishing_dags = []
 
     # === DO MULTIPLE RUNS
     for r in range(nruns):
+        summary = []
         # === STARTING VALUES
         starting_perm = random.sample(list(range(nnodes)), nnodes)
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
@@ -251,6 +279,11 @@ def igsp(
 
         # === SEARCH
         while True:
+            summary.append({
+                'dag': current_dag,
+                'num_arcs': len(current_dag.arcs),
+                'num_contradicting': len(current_contradicting)
+            })
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [
                 (d, icovered_arcs, contradicting_arcs)
@@ -289,6 +322,8 @@ def igsp(
                 else:  # len(lower_dags) == 0, len(next_dags) > 0, len(trace) == depth
                     current_dag, current_icovered_arcs, current_contradicting = trace.pop()
 
+        # === END OF RUN
+        summaries.append(summary)
         finishing_dags.append(min_dag_run)
 
     min_dag = min(finishing_dags, key=lambda dag_n: (len(dag_n[0].arcs), len(dag_n[1])))
@@ -336,7 +371,8 @@ def is_icovered(
 
 
 def unknown_target_igsp(
-        samples: Dict[FrozenSet, np.ndarray],
+        obs_samples: np.ndarry,
+        setting_list: List[Dict],
         suffstat: Any,
         nnodes: int,
         ci_test: CI_Test,
@@ -365,46 +401,57 @@ def unknown_target_igsp(
     :param verbose:
     :return:
     """
+    n_settings = len(setting_list)
     # === DICTIONARY CACHING RESULTS OF ALL INVARIANCE TESTS SO FAR
-    is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
-    obs_samples = samples[frozenset()]
+    is_variant_dict = [dict() for _ in range(n_settings)]
+    pvalue_dict = [dict() for _ in range(n_settings)]
 
     # === HELPER METHODS
-    def _get_is_variant(iv_nodes, j, cond_set):
+    def _get_is_variant(setting_num, j, cond_set):
         """
         Check if in the intervention on iv_nodes, the conditional distribution of j given cond_set is the same as
         the observational distribution. Cache through is_variant_dict.
         """
-        is_variant = is_variant_dict[iv_nodes].get((j, cond_set))
+        is_variant = is_variant_dict[setting_num].get((j, cond_set))
+        pvalue = pvalue_dict[setting_num].get((j, cond_set))
         if is_variant is None:
-            is_variant = invariance_test(
-                obs_samples, samples[iv_nodes], j, cond_set=list(cond_set), alpha=alpha_invariance)['reject']
-            is_variant_dict[iv_nodes][(j, cond_set)] = is_variant
-        return is_variant
+            test_results = invariance_test(
+                obs_samples, setting_list[setting_num], j, cond_set=list(cond_set), alpha=alpha_invariance)
+            is_variant = test_results['reject']
+            pvalue = test_results['p_value']
+            is_variant_dict[setting_num][(j, cond_set)] = is_variant
+            pvalue_dict[setting_num][(j, cond_set)] = pvalue
+        return is_variant, pvalue
 
     def _is_icovered(i, j, dag):
         """
         Check if the edge i->j is I-covered in the DAG dag
         """
         parents_j = frozenset(dag.parents_of(j))
-        for iv_nodes, iv_samples in samples.items():
-            if i in iv_nodes:
-                if not _get_is_variant(iv_nodes, j, parents_j):
+        for setting_num, setting in enumerate(setting_list):
+            if i in setting['known_interventions']:
+                if not _get_is_variant(setting_num, j, parents_j)[0]:
                     return False
         return True
 
-    def _get_num_variant(dag):
+    def _get_variants(dag):
         """
         Count the number of variances for the DAG dag
         """
-        num_variant = 0
+        variants = set()
+        pvalues = {}
+
         for i in dag.nodes:
             parents_i = frozenset(dag.parents_of(i))
-            for iv_nodes, iv_samples in samples.items():
-                if iv_nodes != frozenset():
-                    if _get_is_variant(iv_nodes, i, parents_i): num_variant += 1
+            for setting_num, setting in enumerate(setting_list):
+                is_variant, pvalue = _get_is_variant(setting_num, i, parents_i)
+                pvalues[(setting_num, i, parents_i)] = pvalue
+                if is_variant:
+                    variants.add((setting_num, i, parents_i))
 
-        return num_variant
+        # print(dag, variants)
+        # print(pvalues)
+        return variants
 
     def _reverse_arc_igsp(dag, i_covered_arcs, i, j):
         """
@@ -431,8 +478,8 @@ def unknown_target_igsp(
         #         new_i_covered_arcs.add((k, l))
 
         new_covered_arcs = new_dag.reversible_arcs()
-        new_i_covered_arcs = [(i, j) for i, j in new_covered_arcs if _is_icovered(i, j, current_dag)]
-        new_score = len(new_dag.arcs) + _get_num_variant(dag)
+        new_i_covered_arcs = [(i, j) for i, j in new_covered_arcs if _is_icovered(i, j, new_dag)]
+        new_score = len(new_dag.arcs) + len(_get_variants(new_dag))
 
         return new_dag, new_i_covered_arcs, new_score
 
@@ -445,7 +492,7 @@ def unknown_target_igsp(
         # === STARTING VALUES
         starting_perm = random.sample(list(range(nnodes)), nnodes)
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
-        current_score = len(current_dag.arcs) + _get_num_variant(current_dag)
+        current_score = len(current_dag.arcs) + len(_get_variants(current_dag))
         if verbose: print("=== STARTING DAG:", current_dag, "== SCORE:", current_score)
 
         current_covered_arcs = current_dag.reversible_arcs()
@@ -460,8 +507,10 @@ def unknown_target_igsp(
 
         # === SEARCH!
         while True:
-            # print("current score: ", current_score)
-            # print("next dags:", [str(d[0]) for d in next_dags])
+            if verbose:
+                print('-'*len(trace))
+                print("current DAG:", current_dag, "variants:", _get_variants(current_dag))
+                print("next dags:", next_dags)
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score < current_score]
 
@@ -489,6 +538,9 @@ def unknown_target_igsp(
             min_score = current_score
         if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
 
+    if verbose:
+        print('P_values of tested invariances')
+        pprint(pvalue_dict)
     return min_dag
 
 

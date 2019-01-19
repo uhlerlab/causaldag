@@ -15,36 +15,37 @@ kci_no_regress = partial(kci_invariance_test, regress=False)
 
 
 class TestGSP(TestCase):
-    # def test_gsp(self):
-    #     ndags = 10
-    #     nnodes = 8
-    #     nsamples = 500
-    #     nneighbors_list = list(range(1, 8))
-    #
-    #     mean_shds = []
-    #     percent_consistent = []
-    #     for nneighbors in nneighbors_list:
-    #         print('=== nneighbors = %s ===' % nneighbors)
-    #         print("generating DAGs")
-    #         dags = cd.rand.directed_erdos(nnodes, nneighbors/(nnodes-1), ndags)
-    #         print("generating weights")
-    #         gdags = [cd.rand.rand_weights(dag) for dag in dags]
-    #         print("generating samples")
-    #         samples_by_dag = [gdag.sample(nsamples) for gdag in gdags]
-    #         print("computing correlation matrices")
-    #         corr_by_dag = [np.corrcoef(samples, rowvar=False) for samples in samples_by_dag]
-    #         print("running GSP")
-    #         est_dags = [
-    #             gsp(dict(C=corr, n=nsamples), nnodes, gauss_ci_test, depth=4, nruns=10, alpha=.01)
-    #             for corr in corr_by_dag
-    #         ]
-    #         # print([str(d) for d in est_dags])
-    #         shd_by_dag = np.array([est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)])
-    #         match_by_dag = np.sum(shd_by_dag == 0)
-    #         mean_shds.append(shd_by_dag.mean())
-    #         percent_consistent.append(match_by_dag/ndags)
-    #     print("Mean SHDs:", mean_shds)
-    #     print("Percent consistent:", percent_consistent)
+    def test_gsp(self):
+        ndags = 10
+        nnodes = 8
+        nsamples = 500
+        nneighbors_list = list(range(1, 3))
+
+        mean_shds = []
+        percent_consistent = []
+        for nneighbors in nneighbors_list:
+            print('=== nneighbors = %s ===' % nneighbors)
+            print("generating DAGs")
+            dags = cd.rand.directed_erdos(nnodes, nneighbors/(nnodes-1), ndags)
+            print("generating weights")
+            gdags = [cd.rand.rand_weights(dag) for dag in dags]
+            print("generating samples")
+            samples_by_dag = [gdag.sample(nsamples) for gdag in gdags]
+            print("computing correlation matrices")
+            corr_by_dag = [np.corrcoef(samples, rowvar=False) for samples in samples_by_dag]
+            print("running GSP")
+            est_dags_and_summaries = [
+                gsp(dict(C=corr, n=nsamples), nnodes, gauss_ci_test, depth=4, nruns=10, alpha=.01)
+                for corr in corr_by_dag
+            ]
+            est_dags, summaries = zip(*est_dags_and_summaries)
+            # print([str(d) for d in est_dags])
+            shd_by_dag = np.array([est_dag.shd_skeleton(dag) for est_dag, dag in zip(est_dags, dags)])
+            match_by_dag = np.sum(shd_by_dag == 0)
+            mean_shds.append(shd_by_dag.mean())
+            percent_consistent.append(match_by_dag/ndags)
+        print("Mean SHDs:", mean_shds)
+        print("Percent consistent:", percent_consistent)
 
     # def test_igsp_two_nodes(self):
     #     ndags = 50
@@ -82,23 +83,63 @@ class TestGSP(TestCase):
     #     is_mec = [est_dag.markov_equivalent(dag, {1}) for est_dag in est_dags]
     #     print(sum(is_mec))
 
-    def test_igsp_three_nodes_complete(self):
-        ndags = 30
-        nsamples = 100
-        gdag = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5})
-        samples_list = [{
-            frozenset(): gdag.sample(nsamples),
-            frozenset({1}): gdag.sample_interventional_perfect({1: cd.GaussIntervention(0, 1)}, nsamples)
-        } for i in range(ndags)]
-        corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
-        ALPHA = 1e-1
-        est_dags = [
-            igsp(samples, dict(C=corr, n=nsamples), 3, gauss_ci_test, hsic_invariance_test, alpha=ALPHA, alpha_invariance=ALPHA)
-            for samples, corr in zip(samples_list, corrs)
-        ]
-        print(est_dags)
-        is_mec = [est_dag.markov_equivalent(gdag.to_dag(), {1}) for est_dag in est_dags]
-        print(sum(is_mec))
+    # def test_igsp_line(self):
+    #     ndags = 10
+    #     nsamples = 200
+    #     dag = cd.DAG(arcs={(0, 1), (1, 2), (2, 3), (3, 4)})
+    #     gdags = [cd.GaussDAG(nodes=[0, 1, 2, 3, 4], arcs=dag.arcs) for i in range(ndags)]
+    #     # gdags = [cd.rand.rand_weights(dag) for i in range(ndags)]
+    #     samples_list = [{
+    #         frozenset(): gdag.sample(nsamples),
+    #         frozenset({0}): gdag.sample_interventional_soft({0: cd.ScalingIntervention(.1, .2)}, nsamples)
+    #     } for gdag in gdags]
+    #     corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
+    #     est_dags = [
+    #         igsp(samples, dict(C=corr, n=nsamples), 5, gauss_ci_test, hsic_invariance_test, nruns=10, alpha_invariance=1e-2)
+    #         for samples, corr in zip(samples_list, corrs)
+    #     ]
+    #     shds = [dag.shd(est_dag) for est_dag in est_dags]
+    #     print(est_dags)
+    #     print(shds)
+    #     print(np.mean(shds))
+
+    # def test_utigsp_line(self):
+    #     ndags = 30
+    #     nsamples = 500
+    #     dag = cd.DAG(arcs={(0, 1), (1, 2), (2, 3), (3, 4)})
+    #     gdags = [cd.GaussDAG(nodes=list(range(5)), arcs=dag.arcs) for i in range(ndags)]
+    #     # gdags = [cd.rand.rand_weights(dag) for i in range(ndags)]
+    #     samples_list = [{
+    #         frozenset(): gdag.sample(nsamples),
+    #         frozenset({4}): gdag.sample_interventional_soft({0: cd.ScalingIntervention(.1, .01), 4: cd.ScalingIntervention(.1, .01)}, nsamples)
+    #     } for gdag in gdags]
+    #     corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
+    #     est_dags = [
+    #         unknown_target_igsp(samples, dict(C=corr, n=nsamples), 5, gauss_ci_test, hsic_invariance_test, nruns=10, alpha_invariance=1e-5)
+    #         for samples, corr in zip(samples_list, corrs)
+    #     ]
+    #     shds = [dag.shd(est_dag) for est_dag in est_dags]
+    #     print(est_dags)
+    #     print(shds)
+    #     print(np.mean(shds))
+
+    # def test_igsp_three_nodes_complete(self):
+    #     ndags = 30
+    #     nsamples = 100
+    #     gdag = cd.GaussDAG(nodes=[0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5})
+    #     samples_list = [{
+    #         frozenset(): gdag.sample(nsamples),
+    #         frozenset({1}): gdag.sample_interventional_perfect({1: cd.GaussIntervention(0, 1)}, nsamples)
+    #     } for i in range(ndags)]
+    #     corrs = [np.corrcoef(samples[frozenset()], rowvar=False) for samples in samples_list]
+    #     ALPHA = 1e-5
+    #     est_dags = [
+    #         igsp(samples, dict(C=corr, n=nsamples), 3, gauss_ci_test, hsic_invariance_test, nruns=10, alpha=1e-5, alpha_invariance=ALPHA)
+    #         for samples, corr in zip(samples_list, corrs)
+    #     ]
+    #     print(est_dags)
+    #     is_mec = [est_dag.markov_equivalent(gdag.to_dag(), {1}) for est_dag in est_dags]
+    #     print(sum(is_mec))
 
     # def test_igsp_ten_nodes(self):
     #     ndags = 50

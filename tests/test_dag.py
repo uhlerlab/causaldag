@@ -78,13 +78,13 @@ class TestDAG(TestCase):
     # def test_shd(self):
     #     pass
 
-    def test_amat(self):
-        amat, nodes = self.d.to_amat()
-        for (i, j), val in np.ndenumerate(amat):
-            if val == 1:
-                self.assertTrue((nodes[i], nodes[j]) in self.d.arcs)
-            elif val == 0:
-                self.assertTrue((nodes[i], nodes[j]) not in self.d.arcs)
+    # def test_amat(self):
+    #     amat, nodes = self.d.to_amat()
+    #     for (i, j), val in np.ndenumerate(amat):
+    #         if val == 1:
+    #             self.assertTrue((nodes[i], nodes[j]) in self.d.arcs)
+    #         elif val == 0:
+    #             self.assertTrue((nodes[i], nodes[j]) not in self.d.arcs)
 
     def test_incident_arcs(self):
         self.assertEqual(self.d.incident_arcs(1), {(1, 2), (1, 3)})
@@ -92,6 +92,22 @@ class TestDAG(TestCase):
         self.assertEqual(self.d.incident_arcs(3), {(1, 3), (3, 4), (3, 5)})
         self.assertEqual(self.d.incident_arcs(4), {(2, 4), (3, 4)})
         self.assertEqual(self.d.incident_arcs(5), {(3, 5)})
+
+    def test_shd(self):
+        d1 = cd.DAG(arcs={(0, 1), (0, 2)})
+        d2 = cd.DAG(arcs={(1, 0), (1, 2)})
+        self.assertEqual(d1.shd(d2), 3)
+        self.assertEqual(d2.shd(d1), 3)
+
+        d1 = cd.DAG()
+        d2 = cd.DAG(arcs={(0, 1), (1, 2)})
+        self.assertEqual(d1.shd(d2), 2)
+        self.assertEqual(d2.shd(d1), 2)
+
+        d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        d2 = cd.DAG(arcs={(0, 1), (2, 1)})
+        self.assertEqual(d1.shd(d2), 1)
+        self.assertEqual(d2.shd(d1), 1)
 
     # def test_vstructs(self):
     #     pass

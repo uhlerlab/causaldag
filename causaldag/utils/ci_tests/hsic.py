@@ -5,7 +5,7 @@ from scipy.stats import gamma
 from ._utils import residuals, combined_mat
 
 
-def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1, ncol=100, alpha=0.05):
+def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alpha=0.05):
     if x.ndim == 1:
         x = x.reshape((len(x), 1))
     if y.ndim == 1:
@@ -38,7 +38,7 @@ def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1, ncol=100, alpha
     critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
     p_value = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
 
-    return dict(statistic=statistic, critval=critval, p_value=p_value, reject=statistic > critval)
+    return dict(statistic=statistic, critval=critval, p_value=p_value, reject=statistic > critval, mean_approx=mean_approx, var_approx=var_approx)
 
 
 def hsic_test(

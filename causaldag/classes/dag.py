@@ -222,7 +222,13 @@ class DAG:
     # === COMPARISON
     def shd(self, other) -> int:
         if isinstance(other, DAG):
-            return len(other.arcs - self.arcs) + len(self.arcs - other.arcs)
+            self_arcs_reversed = {(j, i) for i, j in self._arcs}
+            other_arcs_reversed = {(j, i) for i, j in other._arcs}
+
+            additions = other._arcs - self._arcs - self_arcs_reversed
+            deletions = self._arcs - other._arcs - other_arcs_reversed
+            reversals = self.arcs & other_arcs_reversed
+            return len(additions) + len(deletions) + len(reversals)
 
     def shd_skeleton(self, other) -> int:
         if isinstance(other, DAG):
@@ -230,13 +236,16 @@ class DAG:
             other_undirected = {(min(i, j), max(i, j)) for (i, j) in other.arcs}
             return len(other_undirected - self_undirected) + len(self_undirected - other_undirected)
 
-    def markov_equivalent(self, other, iv_nodes=None) -> bool:
-        if iv_nodes is None:
+    def markov_equivalent(self, other, interventions=None) -> bool:
+        if interventions is None:
             return self.cpdag() == other.cpdag()
         else:
-            self_icpdag = self.interventional_cpdag(iv_nodes, cpdag=self.cpdag())
-            other_icpdag = other.interventional_cpdag(iv_nodes, cpdag=other.cpdag())
-            return self_icpdag == other_icpdag
+            self_cpdag = self.cpdag()
+            other_cpdag = other.cpdag()
+            for iv_nodes in interventions:
+                self_cpdag = self.interventional_cpdag(iv_nodes, cpdag=self_cpdag)
+                other_cpdag = other.interventional_cpdag(iv_nodes, cpdag=other_cpdag)
+            return self_cpdag == other_cpdag
 
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
