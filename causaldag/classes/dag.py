@@ -241,12 +241,7 @@ class DAG:
         if interventions is None:
             return self.cpdag() == other.cpdag()
         else:
-            self_cpdag = self.cpdag()
-            other_cpdag = other.cpdag()
-            for iv_nodes in interventions:
-                self_cpdag = self.interventional_cpdag(iv_nodes, cpdag=self_cpdag)
-                other_cpdag = other.interventional_cpdag(iv_nodes, cpdag=other_cpdag)
-            return self_cpdag == other_cpdag
+            return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
 
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
@@ -361,22 +356,23 @@ class DAG:
         pdag.remove_unprotected_orientations()
         return pdag
 
-    def interventional_cpdag(self, intervened_nodes, cpdag=None):
+    def interventional_cpdag(self, interventions, cpdag=None):
         from .pdag import PDAG
 
         if cpdag is None:
-            dag_cut = self.copy()
-            known_arcs = set()
-            for node in intervened_nodes:
-                for i, j in dag_cut.incoming_arcs(node):
-                    dag_cut.remove_arc(i, j)
-                    known_arcs.update(self.outgoing_arcs(node))
-            known_arcs.update(dag_cut.vstructs())
-            pdag = PDAG(dag_cut._nodes, dag_cut._arcs, known_arcs=known_arcs)
+            raise ValueError('Need the CPDAG')
+            # dag_cut = self.copy()
+            # known_arcs = set()
+            # for node in intervened_nodes:
+            #     for i, j in dag_cut.incoming_arcs(node):
+            #         dag_cut.remove_arc(i, j)
+            #         known_arcs.update(self.outgoing_arcs(node))
+            # known_arcs.update(dag_cut.vstructs())
+            # pdag = PDAG(dag_cut._nodes, dag_cut._arcs, known_arcs=known_arcs)
         else:
             cut_edges = set()
-            for node in intervened_nodes:
-                cut_edges.update(self.incident_arcs(node))
+            for iv_nodes in interventions:
+                cut_edges.update({(i, j) for i, j in self._arcs if len({i, j} & set(iv_nodes)) == 1})
             known_arcs = cut_edges | cpdag._known_arcs
             pdag = PDAG(self._nodes, self._arcs, known_arcs=known_arcs)
 
@@ -395,7 +391,7 @@ class DAG:
         considered_nodes = list(filter(lambda node: not (no_undirected_nbrs(node) or better_neighbor(node)), self._nodes))
 
         nodes2icpdags = {
-            node: self.interventional_cpdag({node}, cpdag=cpdag)
+            node: self.interventional_cpdag([{node}], cpdag=cpdag)
             for node in considered_nodes
         }
         nodes2num_oriented = {

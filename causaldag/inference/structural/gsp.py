@@ -1,4 +1,4 @@
-from typing import Dict, FrozenSet, Optional, Any, List
+from typing import Dict, FrozenSet, Optional, Any, List, Set
 import numpy as np
 from ...classes.dag import DAG
 import itertools as itr
@@ -390,7 +390,7 @@ def unknown_target_igsp(
         nruns: int=5,
         verbose: bool=False,
         starting_permutations = None
-) -> DAG:
+) -> (DAG, List[Set[int]]):
     """
     Use the Unknown Target Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the data-generating
     DAG.
@@ -487,13 +487,18 @@ def unknown_target_igsp(
 
         new_covered_arcs = new_dag.reversible_arcs()
         new_i_covered_arcs = [(i, j) for i, j in new_covered_arcs if _is_icovered(i, j, new_dag)]
-        new_score = len(new_dag.arcs) + len(_get_variants(new_dag))
+        variants = _get_variants(new_dag)
+        new_score = len(new_dag.arcs) + len(variants)
+        intervention_targets = [set() for _ in range(len(setting_list))]
+        for setting_num, i, parents_i in variants:
+            intervention_targets[setting_num].add(i)
 
-        return new_dag, new_i_covered_arcs, new_score
+        return new_dag, new_i_covered_arcs, new_score, intervention_targets
 
     # === MINIMUM DAG AND SCORE FOUND BY ANY RUN
     min_dag = None
     min_score = float('inf')
+    learned_intervention_targets = None
 
     if starting_permutations is not None:
         nruns = len(starting_permutations)
@@ -505,14 +510,18 @@ def unknown_target_igsp(
         else:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
-        current_score = len(current_dag.arcs) + len(_get_variants(current_dag))
+        variants = _get_variants(current_dag)
+        current_intervention_targets = [set() for _ in range(len(setting_list))]
+        for setting_num, i, parents_i in variants:
+            current_intervention_targets[setting_num].add(i)
+        current_score = len(current_dag.arcs) + len(variants)
         if verbose: print("=== STARTING DAG:", current_dag, "== SCORE:", current_score)
 
         current_covered_arcs = current_dag.reversible_arcs()
         current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j, current_dag)]
         if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
         next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
-        next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
+        next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score <= current_score]
         random.shuffle(next_dags)
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
@@ -522,42 +531,40 @@ def unknown_target_igsp(
         # === SEARCH!
         while True:
             if verbose:
-                print('-'*len(trace))
-                print("current DAG:", current_dag)
-                print("I-covered arcs:", current_i_covered_arcs)
-                print("next dags:", next_dags)
+                print('-'*len(trace), current_dag, '(%d arcs)' % len(current_dag.arcs), 'I-covered arcs:', current_i_covered_arcs, 'score:', current_score)
             all_visited_dags.add(frozenset(current_dag.arcs))
-            lower_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score < current_score]
+            lower_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score < current_score]
 
             if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
                 if len(lower_dags) > 0:  # restart at a lower DAG
                     all_visited_dags = set()
                     trace = []
-                    current_dag, current_i_covered_arcs, current_score = lower_dags.pop()
+                    current_dag, current_i_covered_arcs, current_score, current_intervention_targets = lower_dags.pop()
                     if verbose: print("FOUND DAG WITH LOWER SCORE:", current_dag, "== SCORE:", current_score)
                 else:
                     trace.append((current_dag, current_i_covered_arcs, next_dags))
-                    current_dag, current_i_covered_arcs, current_score = next_dags.pop()
-                next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j)for i, j in current_i_covered_arcs]
-                next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
-                next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if frozenset(d.arcs) not in all_visited_dags]
+                    current_dag, current_i_covered_arcs, current_score, current_intervention_targets = next_dags.pop()
+                next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
+                next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score <= current_score]
+                next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if frozenset(d.arcs) not in all_visited_dags]
                 random.shuffle(next_dags)
             # === DEAD END ===
             else:
                 if len(trace) == 0:  # reached minimum within search depth
                     break
                 else:  # backtrack
-                    current_dag, current_i_covered_arcs, next_dags = trace.pop()
+                    current_dag, current_i_covered_arcs, next_dags, current_intervention_targets = trace.pop()
 
         if min_dag is None or current_score < min_score:
             min_dag = current_dag
             min_score = current_score
+            learned_intervention_targets = current_intervention_targets
         if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
 
     if verbose:
         print('P_values of tested invariances')
         pprint(pvalue_dict)
-    return min_dag
+    return min_dag, learned_intervention_targets
 
 
 

@@ -5,6 +5,7 @@ import os
 import causaldag as cd
 import numpy as np
 import itertools as itr
+import random
 
 
 class TestDAG(TestCase):
@@ -77,26 +78,56 @@ class TestDAG(TestCase):
 
     def test_cpdag_file(self):
         curr_folder = os.path.dirname(__file__)
-        dag = cd.DAG.from_amat(np.loadtxt(os.path.join(curr_folder, './dag1.txt')).T)
+        random.seed(1729)
+        np.random.seed(1729)
+        dag = cd.rand.directed_erdos(30, .7, 1)
+        np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
+        os.system('Rscript %s/test_dag2cpdag.R' % curr_folder)
         cpdag = dag.cpdag()
 
         true_cpdag_edges = set()
         true_cpdag_arcs = set()
         true_cpdag_amat = np.loadtxt(os.path.join(curr_folder, './cpdag1.txt'))
-        for i, j in zip(*np.tril_indices_from(true_cpdag_amat)):
+        for i, j in zip(*np.triu_indices_from(true_cpdag_amat)):
             if true_cpdag_amat[i, j] == 1:
                 if true_cpdag_amat[j, i] == 1:
-                    true_cpdag_edges.add((j, i))
+                    true_cpdag_edges.add((i, j))
                 else:
-                    true_cpdag_arcs.add((j, i))
+                    true_cpdag_arcs.add((i, j))
 
+        print(len(cpdag.edges))
         self.assertEqual(cpdag.arcs, true_cpdag_arcs)
         self.assertEqual(cpdag.edges, true_cpdag_edges)
+
+    def test_icpdag_file(self):
+        curr_folder = os.path.dirname(__file__)
+        random.seed(1729)
+        np.random.seed(1729)
+        dag = cd.rand.directed_erdos(30, .7, 1)
+        interventions = [random.sample(list(range(100)), 5) for _ in range(10)]
+        np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
+        np.savetxt(os.path.join(curr_folder, './interventions.txt'), interventions)
+        os.system('Rscript %s/test_dag2icpdag.R' % curr_folder)
+        icpdag = dag.interventional_cpdag(interventions, cpdag=dag.cpdag())
+
+        true_icpdag_edges = set()
+        true_icpdag_arcs = set()
+        true_icpdag_amat = np.loadtxt(os.path.join(curr_folder, './icpdag1.txt'))
+        for i, j in zip(*np.triu_indices_from(true_icpdag_amat)):
+            if true_icpdag_amat[i, j] == 1:
+                if true_icpdag_amat[j, i] == 1:
+                    true_icpdag_edges.add((i, j))
+                else:
+                    true_icpdag_arcs.add((i, j))
+
+        print('icpdag', len(icpdag.edges))
+        self.assertEqual(icpdag.arcs, true_icpdag_arcs)
+        self.assertEqual(icpdag.edges, true_icpdag_edges)
 
     def test_interventional_cpdag(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         cpdag = dag.cpdag()
-        int_cpdag = dag.interventional_cpdag({1}, cpdag=cpdag)
+        int_cpdag = dag.interventional_cpdag([{1}], cpdag=cpdag)
         self.assertEqual(int_cpdag.arcs, {(1, 2), (1, 3)})
         self.assertEqual(int_cpdag.edges, {(2, 3)})
         self.assertEqual(int_cpdag.undirected_neighbors[1], set())
@@ -161,7 +192,7 @@ class TestDAG(TestCase):
 
     def test_icpdag2alldags(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3), (4, 5)})
-        icpdag = dag.interventional_cpdag([2], cpdag=dag.cpdag())
+        icpdag = dag.interventional_cpdag([{2}], cpdag=dag.cpdag())
         dags = icpdag.all_dags()
         self.assertEqual(len(dags), 2)
 
@@ -214,16 +245,16 @@ class TestDAG(TestCase):
         }
         self.assertIn(frozenset(dag2.arcs), true_possible_arcs)
 
-    def test_interventional_cpdag_no_obs(self):
-        dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-
-        icpdag1 = dag.interventional_cpdag([2])
-        self.assertEqual(icpdag1.arcs, {(1, 3), (2, 3)})
-        self.assertEqual(icpdag1.edges, set())
-
-        icpdag2 = dag.interventional_cpdag([1])
-        self.assertEqual(icpdag2.arcs, set())
-        self.assertEqual(icpdag2.edges, {(1, 2), (1, 3), (2, 3)})
+    # def test_interventional_cpdag_no_obs(self):
+    #     dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+    #
+    #     icpdag1 = dag.interventional_cpdag([2])
+    #     self.assertEqual(icpdag1.arcs, {(1, 3), (2, 3)})
+    #     self.assertEqual(icpdag1.edges, set())
+    #
+    #     icpdag2 = dag.interventional_cpdag([1])
+    #     self.assertEqual(icpdag2.arcs, set())
+    #     self.assertEqual(icpdag2.edges, {(1, 2), (1, 3), (2, 3)})
 
     def test_from_amat(self):
         amat = np.zeros([3, 3])

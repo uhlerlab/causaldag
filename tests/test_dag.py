@@ -72,6 +72,21 @@ class TestDAG(TestCase):
             self.d.add_arc(5, 1)
         self.assertEqual(cm.exception.cycle, [1, 3, 5, 1])
 
+    def test_interventional_cpdag_2node(self):
+        d = cd.DAG(arcs={(0, 1)})
+        c = d.interventional_cpdag([{1}], cpdag=d.cpdag())
+        self.assertEqual(c.arcs, {(0, 1)})
+        self.assertEqual(c.edges, set())
+        c = d.interventional_cpdag([{0}], cpdag=d.cpdag())
+        self.assertEqual(c.arcs, {(0, 1)})
+        self.assertEqual(c.edges, set())
+
+    def test_interventional_cpdag_3node(self):
+        d = cd.DAG(arcs={(0, 1), (0, 2), (1, 2)})
+        c = d.interventional_cpdag([{0}], cpdag=d.cpdag())
+        self.assertEqual(c.arcs, {(0, 1), (0, 2)})
+        self.assertEqual(c.edges, {(1, 2)})
+
     # def test_reversible_arcs(self):
     #     pass
     #
