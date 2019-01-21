@@ -160,7 +160,8 @@ def igsp(
         alpha_invariance: float = 0.05,
         depth: Optional[int] = 4,
         nruns: int = 5,
-        verbose: bool = False
+        verbose: bool = False,
+        starting_permutation = None
 ):
     only_single_node = all(len(iv_nodes) <= 1 for iv_nodes in samples.keys())
     is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
@@ -264,7 +265,10 @@ def igsp(
     for r in range(nruns):
         summary = []
         # === STARTING VALUES
-        starting_perm = random.sample(list(range(nnodes)), nnodes)
+        if starting_permutation is None:
+            starting_perm = random.sample(list(range(nnodes)), nnodes)
+        else:
+            starting_perm = starting_permutation
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
         if verbose: print("=== STARTING RUN %s/%s" % (r+1, nruns))
         current_covered_arcs = current_dag.reversible_arcs()
@@ -325,6 +329,7 @@ def igsp(
         # === END OF RUN
         summaries.append(summary)
         finishing_dags.append(min_dag_run)
+        if starting_permutation is not None: break
 
     min_dag = min(finishing_dags, key=lambda dag_n: (len(dag_n[0].arcs), len(dag_n[1])))
     # print(min_dag)
@@ -381,7 +386,8 @@ def unknown_target_igsp(
         alpha_invariance: float=0.05,
         depth: Optional[int]=4,
         nruns: int=5,
-        verbose: bool=False
+        verbose: bool=False,
+        starting_permutation=None
 ) -> DAG:
     """
     Use the Unknown Target Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the data-generating
@@ -490,7 +496,10 @@ def unknown_target_igsp(
     # === MULTIPLE RUNS
     for r in range(nruns):
         # === STARTING VALUES
-        starting_perm = random.sample(list(range(nnodes)), nnodes)
+        if starting_permutation:
+            starting_perm = starting_permutation
+        else:
+            starting_perm = random.sample(list(range(nnodes)), nnodes)
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
         current_score = len(current_dag.arcs) + len(_get_variants(current_dag))
         if verbose: print("=== STARTING DAG:", current_dag, "== SCORE:", current_score)
@@ -537,6 +546,7 @@ def unknown_target_igsp(
             min_dag = current_dag
             min_score = current_score
         if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
+        if starting_permutation is not None: break
 
     if verbose:
         print('P_values of tested invariances')
