@@ -161,7 +161,7 @@ def igsp(
         depth: Optional[int] = 4,
         nruns: int = 5,
         verbose: bool = False,
-        starting_permutation = None
+        starting_permutations = None
 ):
     only_single_node = all(len(iv_nodes) <= 1 for iv_nodes in samples.keys())
     is_variant_dict = {iv_nodes: dict() for iv_nodes in samples if iv_nodes != frozenset()}
@@ -261,20 +261,23 @@ def igsp(
     # === LIST OF DAGS FOUND BY EACH RUN
     finishing_dags = []
 
+    if starting_permutations is not None:
+        nruns = len(starting_permutations)
     # === DO MULTIPLE RUNS
     for r in range(nruns):
         summary = []
         # === STARTING VALUES
-        if starting_permutation is None:
+        if starting_permutations[r] is None:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
         else:
-            starting_perm = starting_permutation
+            starting_perm = starting_permutations[r]
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
         if verbose: print("=== STARTING RUN %s/%s" % (r+1, nruns))
         current_covered_arcs = current_dag.reversible_arcs()
         current_icovered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j)]
         current_contradicting = _get_contradicting_arcs(current_dag)
         next_dags = [_reverse_arc(current_dag, i, j) for i, j in current_icovered_arcs]
+        random.shuffle(next_dags)
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
         all_visited_dags = set()
@@ -318,7 +321,7 @@ def igsp(
                     for d, icovered_arcs, contradicting_arcs in next_dags
                     if frozenset(d.arcs) not in all_visited_dags
                 ]
-                print('next dags:', next_dags)
+                random.shuffle(next_dags)
             # === DEAD END
             else:
                 if len(trace) == 0:
@@ -329,7 +332,6 @@ def igsp(
         # === END OF RUN
         summaries.append(summary)
         finishing_dags.append(min_dag_run)
-        if starting_permutation is not None: break
 
     min_dag = min(finishing_dags, key=lambda dag_n: (len(dag_n[0].arcs), len(dag_n[1])))
     # print(min_dag)
@@ -387,7 +389,7 @@ def unknown_target_igsp(
         depth: Optional[int]=4,
         nruns: int=5,
         verbose: bool=False,
-        starting_permutation=None
+        starting_permutations = None
 ) -> DAG:
     """
     Use the Unknown Target Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the data-generating
@@ -493,11 +495,13 @@ def unknown_target_igsp(
     min_dag = None
     min_score = float('inf')
 
+    if starting_permutations is not None:
+        nruns = len(starting_permutations)
     # === MULTIPLE RUNS
     for r in range(nruns):
         # === STARTING VALUES
-        if starting_permutation:
-            starting_perm = starting_permutation
+        if starting_permutations is not None:
+            starting_perm = starting_permutations[r]
         else:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
         current_dag = perm2dag(suffstat, starting_perm, ci_test, alpha=alpha)
@@ -509,6 +513,7 @@ def unknown_target_igsp(
         if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
         next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
         next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
+        random.shuffle(next_dags)
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
         all_visited_dags = set()
@@ -518,7 +523,8 @@ def unknown_target_igsp(
         while True:
             if verbose:
                 print('-'*len(trace))
-                print("current DAG:", current_dag, "variants:", _get_variants(current_dag))
+                print("current DAG:", current_dag)
+                print("I-covered arcs:", current_i_covered_arcs)
                 print("next dags:", next_dags)
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score < current_score]
@@ -535,6 +541,7 @@ def unknown_target_igsp(
                 next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j)for i, j in current_i_covered_arcs]
                 next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if score <= current_score]
                 next_dags = [(d, i_cov_arcs, score) for d, i_cov_arcs, score in next_dags if frozenset(d.arcs) not in all_visited_dags]
+                random.shuffle(next_dags)
             # === DEAD END ===
             else:
                 if len(trace) == 0:  # reached minimum within search depth
@@ -546,7 +553,6 @@ def unknown_target_igsp(
             min_dag = current_dag
             min_score = current_score
         if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
-        if starting_permutation is not None: break
 
     if verbose:
         print('P_values of tested invariances')

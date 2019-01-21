@@ -43,7 +43,7 @@ class DAG:
         return d
 
     def copy(self):
-        return DAG(nodes=self._nodes.copy(), arcs=self._arcs.copy())
+        return DAG(nodes=self._nodes, arcs=self._arcs)
 
     @property
     def nodes(self):
