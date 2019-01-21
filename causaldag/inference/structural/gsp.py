@@ -371,7 +371,7 @@ def is_icovered(
 
 
 def unknown_target_igsp(
-        obs_samples: np.ndarry,
+        obs_samples: np.ndarray,
         setting_list: List[Dict],
         suffstat: Any,
         nnodes: int,
@@ -416,7 +416,7 @@ def unknown_target_igsp(
         pvalue = pvalue_dict[setting_num].get((j, cond_set))
         if is_variant is None:
             test_results = invariance_test(
-                obs_samples, setting_list[setting_num], j, cond_set=list(cond_set), alpha=alpha_invariance)
+                obs_samples, setting_list[setting_num]['samples'], j, cond_set=list(cond_set), alpha=alpha_invariance)
             is_variant = test_results['reject']
             pvalue = test_results['p_value']
             is_variant_dict[setting_num][(j, cond_set)] = is_variant
