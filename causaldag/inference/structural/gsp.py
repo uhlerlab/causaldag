@@ -309,7 +309,7 @@ def igsp(
                 else:
                     trace.append((current_dag, current_icovered_arcs, current_contradicting))
                     current_dag, current_icovered_arcs, current_contradicting = next_dags.pop()
-                    if len(current_contradicting) < min_dag_run[1]:
+                    if len(current_contradicting) < len(min_dag_run[1]):
                         min_dag_run = (current_dag, current_contradicting)
                         if verbose: print("FOUND DAG WITH FEWER CONTRADICTING ARCS:", current_dag, "(# CONTRADICTING: %s)" % current_contradicting)
                 next_dags = [_reverse_arc(current_dag, i, j) for i, j in current_icovered_arcs]
