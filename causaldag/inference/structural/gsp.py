@@ -318,6 +318,7 @@ def igsp(
                     for d, icovered_arcs, contradicting_arcs in next_dags
                     if frozenset(d.arcs) not in all_visited_dags
                 ]
+                print('next dags:', next_dags)
             # === DEAD END
             else:
                 if len(trace) == 0:
