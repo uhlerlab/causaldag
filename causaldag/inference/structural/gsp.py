@@ -296,9 +296,9 @@ def igsp(
             ]
 
             if verbose:
-                summary = '(%s arcs, I-covered: %s, I-contradicting: %s)' % \
+                desc = '(%s arcs, I-covered: %s, I-contradicting: %s)' % \
                           (len(current_dag.arcs), current_icovered_arcs, current_contradicting)
-                print('-'*len(trace), current_dag, summary)
+                print('-'*len(trace), current_dag, desc)
             if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
                 if len(lower_dags) > 0:  # restart at a lower DAG
                     all_visited_dags = set()
