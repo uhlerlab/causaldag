@@ -267,7 +267,7 @@ def igsp(
     for r in range(nruns):
         summary = []
         # === STARTING VALUES
-        if starting_permutations[r] is None:
+        if starting_permutations is None:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
         else:
             starting_perm = starting_permutations[r]
@@ -542,7 +542,7 @@ def unknown_target_igsp(
                     current_dag, current_i_covered_arcs, current_score, current_intervention_targets = lower_dags.pop()
                     if verbose: print("FOUND DAG WITH LOWER SCORE:", current_dag, "== SCORE:", current_score)
                 else:
-                    trace.append((current_dag, current_i_covered_arcs, next_dags))
+                    trace.append((current_dag, current_i_covered_arcs, next_dags, current_intervention_targets))
                     current_dag, current_i_covered_arcs, current_score, current_intervention_targets = next_dags.pop()
                 next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
                 next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score <= current_score]

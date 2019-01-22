@@ -266,6 +266,42 @@ class TestDAG(TestCase):
         self.assertEqual(pdag.arcs, {(0, 1), (0, 2)})
         self.assertEqual(pdag.edges, {(1, 2)})
 
+    def test_shd(self):
+        d1 = cd.PDAG(arcs={(0, 1)})
+        d2 = cd.PDAG()
+        self.assertEqual(d1.shd(d2), 1)
+        self.assertEqual(d2.shd(d1), 1)
+
+        d1 = cd.PDAG(arcs={(0, 1)})
+        d2 = cd.PDAG(arcs={(0, 1)})
+        self.assertEqual(d1.shd(d2), 0)
+        self.assertEqual(d2.shd(d1), 0)
+
+        d1 = cd.PDAG(arcs={(0, 1)})
+        d2 = cd.PDAG(edges={(0, 1)})
+        self.assertEqual(d1.shd(d2), 1)
+        self.assertEqual(d2.shd(d1), 1)
+
+        d1 = cd.PDAG(arcs={(0, 1)})
+        d2 = cd.PDAG(arcs={(1, 0)})
+        self.assertEqual(d1.shd(d2), 1)
+        self.assertEqual(d2.shd(d1), 1)
+
+        d1 = cd.PDAG(arcs={(0, 1), (0, 2)})
+        d2 = cd.PDAG(arcs={(0, 1)}, edges={(0, 2)})
+        self.assertEqual(d1.shd(d2), 1)
+        self.assertEqual(d2.shd(d1), 1)
+
+        d1 = cd.PDAG(arcs={(0, 1), (0, 2)})
+        d2 = cd.PDAG(arcs={(1, 0), (2, 0)})
+        self.assertEqual(d1.shd(d2), 2)
+        self.assertEqual(d2.shd(d1), 2)
+
+        d1 = cd.PDAG(arcs={(0, 1), (0, 2)})
+        d2 = cd.PDAG(edges={(1, 0), (2, 0)})
+        self.assertEqual(d1.shd(d2), 2)
+        self.assertEqual(d2.shd(d1), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

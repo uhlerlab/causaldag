@@ -360,6 +360,20 @@ class PDAG:
 
         return all_arcs
 
+    # === COMPARISON
+    def shd(self, other):
+        self_undirected = {tuple(sorted(arc)) for arc in self._arcs} | self._edges
+        other_undirected = {tuple(sorted(arc)) for arc in other._arcs} | other._edges
+        nadditions = len(self_undirected - other_undirected)
+        ndeletions = len(other_undirected - self_undirected)
+        diff_type = {
+            (i, j) for i, j in self_undirected & other_undirected
+            if ((i, j) in self._arcs and (i, j) not in other._arcs) or
+               ((j, i) in self._arcs and (j, i) not in other._arcs) or
+               ((i, j) in self._edges and (i, j) not in other._edges)
+        }
+        return nadditions + ndeletions + len(diff_type)
+
 
 if __name__ == '__main__':
     from ..rand import directed_erdos
