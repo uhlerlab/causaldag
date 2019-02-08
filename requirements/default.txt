@@ -1,7 +1,7 @@
 scipy==1.1.0
 dataclasses==0.6
 numpy==1.14.5
-scikit_sparse==0.4.3
+#scikit_sparse==0.4.3
 matplotlib==2.1.0
 pandas==0.21.0
 scikit_learn==0.20.2
