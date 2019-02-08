@@ -1,0 +1,8 @@
+********
+GaussDAG
+********
+
+Overview
+********
+..autoclass:: GaussDAG
+

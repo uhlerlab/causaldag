@@ -180,6 +180,8 @@ class DAG:
             raise e
 
     def reverse_arc(self, i, j, ignore_error=False):
+        """Reverse the arc i->j to i<-j
+        """
         try:
             self._arcs.remove((i, j))
             self._parents[j].remove(i)
@@ -195,6 +197,8 @@ class DAG:
                 raise e
 
     def remove_arc(self, i, j, ignore_error=False):
+        """Remove the arc i->j
+        """
         try:
             self._arcs.remove((i, j))
             self._parents[j].remove(i)
@@ -208,6 +212,8 @@ class DAG:
                 raise e
 
     def remove_node(self, node, ignore_error=False):
+        """Remove a node from the graph
+        """
         try:
             self._nodes.remove(node)
             for parent in self._parents[node]:
@@ -229,6 +235,8 @@ class DAG:
 
     # === GRAPH PROPERTIES
     def reversible_arcs(self):
+        """Get all reversible (i.e., covered) arcs in the DAG
+        """
         reversible_arcs = set()
         for i, j in self._arcs:
             if self._parents[i] == (self._parents[j] - {i}):
@@ -236,6 +244,8 @@ class DAG:
         return reversible_arcs
 
     def vstructs(self):
+        """Get all arcs in the graph that participate in a v-structure
+        """
         vstructs = set()
         for node in self._nodes:
             for p1, p2 in itr.combinations(self._parents[node], 2):
@@ -246,6 +256,8 @@ class DAG:
 
     # === COMPARISON
     def shd(self, other) -> int:
+        """Compute the structural Hamming distance between this DAG and another graph
+        """
         if isinstance(other, DAG):
             self_arcs_reversed = {(j, i) for i, j in self._arcs}
             other_arcs_reversed = {(j, i) for i, j in other._arcs}
@@ -256,12 +268,16 @@ class DAG:
             return len(additions) + len(deletions) + len(reversals)
 
     def shd_skeleton(self, other) -> int:
+        """Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of another graph
+        """
         if isinstance(other, DAG):
             self_undirected = {(min(i, j), max(i, j)) for (i, j) in self.arcs}
             other_undirected = {(min(i, j), max(i, j)) for (i, j) in other.arcs}
             return len(other_undirected - self_undirected) + len(self_undirected - other_undirected)
 
     def markov_equivalent(self, other, interventions=None) -> bool:
+        """Check if this DAG is (interventionally) Markov equivalent to some other DAG
+        """
         if interventions is None:
             return self.cpdag() == other.cpdag()
         else:
@@ -275,6 +291,7 @@ class DAG:
                 self._add_downstream(downstream, child)
 
     def downstream(self, node):
+        """Return the nodes downstream of node"""
         downstream = set()
         self._add_downstream(downstream, node)
         return downstream
@@ -286,11 +303,13 @@ class DAG:
                 self._add_upstream(upstream, parent)
 
     def upstream(self, node):
+        """Return the nodes upstream of node"""
         upstream = set()
         self._add_upstream(upstream, node)
         return upstream
 
     def incident_arcs(self, node):
+        """Return all arcs adjacent to node"""
         incident_arcs = set()
         for child in self._children[node]:
             incident_arcs.add((node, child))
@@ -299,21 +318,25 @@ class DAG:
         return incident_arcs
 
     def incoming_arcs(self, node):
+        """Return all arcs with target node"""
         incoming_arcs = set()
         for parent in self._parents[node]:
             incoming_arcs.add((parent, node))
         return incoming_arcs
 
     def outgoing_arcs(self, node):
+        """Return all arcs with source node"""
         outgoing_arcs = set()
         for child in self._children[node]:
             outgoing_arcs.add((node, child))
         return outgoing_arcs
 
     def outdegree(self, node):
+        """Return the outdegree of node"""
         return len(self._children[node])
 
     def indegree(self, node):
+        """Return the indegree of node"""
         return len(self._parents[node])
 
     # === CONVERTERS
@@ -353,6 +376,7 @@ class DAG:
             f.write(']')
 
     def to_amat(self, node_list=None, mode='dataframe'):
+        """Return an adjacency matrix for DAG"""
         if not node_list:
             node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}
@@ -375,12 +399,16 @@ class DAG:
 
     # === optimal interventions
     def cpdag(self):
+        """Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
+        Markov equivalence class of this DAG
+        """
         from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.vstructs())
         pdag.remove_unprotected_orientations()
         return pdag
 
     def interventional_cpdag(self, interventions, cpdag=None):
+        """Return the interventional essential graph (aka CPDAG) associated with this DAG."""
         from causaldag import PDAG
 
         if cpdag is None:
@@ -448,8 +476,7 @@ class DAG:
         return ivs, icpdags
 
     def backdoor(self, i, j):
-        """
-        Returns S satisfying the backdoor criterion if such an S exists, otherwise False.
+        """Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.
 
         S satisfies the backdoor criterion if
         (i) S blocks every path from i to j with an arrow into i
@@ -463,8 +490,7 @@ class DAG:
         pass
 
     def frontdoor(self, i, j):
-        """
-        Returns S satisfying the frontdoor criterion if such an S exists, otherwise False.
+        """Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.
 
         S satisfies the frontdoor criterion if
         (i) S blocks all directed paths from i to j

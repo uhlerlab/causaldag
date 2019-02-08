@@ -63,12 +63,12 @@ class TestDAG(TestCase):
             self.assertTrue(ixs[i] < ixs[j])
 
     def test_add_arc_cycle(self):
-        with self.assertRaises(cd.dag.CycleError) as cm:
+        with self.assertRaises(cd.CycleError) as cm:
             self.d.add_arc(2, 1)
         self.assertEqual(cm.exception.cycle, [1, 2, 1])
-        with self.assertRaises(cd.dag.CycleError):
+        with self.assertRaises(cd.CycleError):
             self.d.add_arc(4, 1)
-        with self.assertRaises(cd.dag.CycleError) as cm:
+        with self.assertRaises(cd.CycleError) as cm:
             self.d.add_arc(5, 1)
         self.assertEqual(cm.exception.cycle, [1, 3, 5, 1])
 
