@@ -1,4 +1,4 @@
-from .classes.dag import DAG
+from causaldag import DAG
 import numpy as np
 
 

@@ -9,9 +9,9 @@ import numpy as np
 from scipy.linalg import ldl
 from scipy.stats import norm
 
-from .dag import DAG
-from .interventions import PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
-from ..utils import core_utils
+from causaldag.classes import DAG
+from causaldag.classes.interventions import PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
+from causaldag.utils import core_utils
 
 
 class GaussDAG(DAG):

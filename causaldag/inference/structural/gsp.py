@@ -1,9 +1,9 @@
 from typing import Dict, FrozenSet, Optional, Any, List, Set
 import numpy as np
-from ...classes.dag import DAG
+from causaldag import DAG
 import itertools as itr
-from ...utils.ci_tests import CI_Test, InvarianceTest
-from ...utils.core_utils import powerset
+from causaldag.utils.ci_tests import CI_Test, InvarianceTest
+from causaldag.utils.core_utils import powerset
 import random
 from pprint import pprint
 

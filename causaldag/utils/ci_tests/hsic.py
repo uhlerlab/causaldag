@@ -1,8 +1,8 @@
 from typing import Any, Union, List, Optional
 import numpy as np
-from . import kernels
+from causaldag.utils.ci_tests import kernels
 from scipy.stats import gamma
-from ._utils import residuals, combined_mat
+from causaldag.utils.ci_tests._utils import residuals, combined_mat
 
 
 def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alpha=0.05):

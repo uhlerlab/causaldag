@@ -1,6 +1,5 @@
 import numpy as np
-from ..classes.dag import DAG
-from ..classes.gaussdag import GaussDAG
+from causaldag import DAG, GaussDAG
 import itertools as itr
 
 

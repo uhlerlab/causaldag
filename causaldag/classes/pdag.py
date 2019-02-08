@@ -4,14 +4,13 @@ Base class for partially directed acyclic graphs
 """
 
 from collections import defaultdict
-from ..utils import core_utils
+from causaldag.utils import core_utils
 import itertools as itr
 import numpy as np
 from typing import Set
 from collections import namedtuple
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
-
 
 
 class PDAG:
@@ -284,7 +283,7 @@ class PDAG:
         return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
 
     def to_dag(self):
-        from .dag import DAG
+        from causaldag import DAG
 
         pdag2 = self.copy()
         arcs = set()
@@ -376,7 +375,7 @@ class PDAG:
 
 
 if __name__ == '__main__':
-    from ..rand import directed_erdos
+    from causaldag.rand import directed_erdos
 
     g = directed_erdos(10, .5)
     c = g.cpdag()

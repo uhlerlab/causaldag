@@ -1,12 +1,11 @@
 # Author: Chandler Squires
-"""
-Base class for causal DAGs
+"""Base class for causal DAGs
 """
 
 from collections import defaultdict
 import numpy as np
 import itertools as itr
-from ..utils import core_utils
+from causaldag.utils import core_utils
 import operator as op
 from typing import Set
 
@@ -23,6 +22,9 @@ def path2str(path):
 
 
 class DAG:
+    """
+    Base class for causal DAGs.
+    """
     def __init__(self, nodes: Set=set(), arcs: Set=set()):
         self._nodes = nodes.copy()
         self._arcs = set()
@@ -34,6 +36,9 @@ class DAG:
 
     @classmethod
     def from_amat(cls, amat):
+        """
+        Given an adjacency matrix A, return a DAG with arcs i->j iff. A_{ij} \neq 0
+        """
         nodes = set(range(amat.shape[0]))
         arcs = set()
         d = DAG(nodes=nodes)
@@ -43,6 +48,10 @@ class DAG:
         return d
 
     def copy(self):
+        """Return a copy of the current DAG
+
+
+        """
         return DAG(nodes=self._nodes, arcs=self._arcs)
 
     @property
@@ -93,9 +102,15 @@ class DAG:
 
     # === MUTATORS
     def add_node(self, node):
+        """Add a node to the graph
+
+        """
         self._nodes.add(node)
 
     def add_arc(self, i, j):
+        """Add an arc to the graph
+
+        """
         self._add_arc(i, j)
         try:
             self._check_acyclic()
@@ -121,6 +136,9 @@ class DAG:
         stack.append(node)
 
     def topological_sort(self):
+        """Return a topological sort of the nodes in the graph
+
+        """
         any_visited = {node: False for node in self._nodes}
         curr_path_visited = {node: False for node in self._nodes}
         curr_path = []
@@ -142,10 +160,16 @@ class DAG:
         self._parents[j].add(i)
 
     def add_nodes_from(self, nodes):
+        """Add nodes to the graph from a collection
+
+        """
         for node in nodes:
             self.add_node(node)
 
     def add_arcs_from(self, arcs):
+        """Add arcs to the graph from a collection
+
+        """
         for i, j in arcs:
             self._add_arc(i, j)
         try:
@@ -351,13 +375,13 @@ class DAG:
 
     # === optimal interventions
     def cpdag(self):
-        from .pdag import PDAG
+        from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.vstructs())
         pdag.remove_unprotected_orientations()
         return pdag
 
     def interventional_cpdag(self, interventions, cpdag=None):
-        from .pdag import PDAG
+        from causaldag import PDAG
 
         if cpdag is None:
             raise ValueError('Need the CPDAG')

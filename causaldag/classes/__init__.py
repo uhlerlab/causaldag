@@ -1,4 +1,4 @@
-from .dag import DAG
+from .dag import DAG, CycleError
 from .pdag import PDAG
 from .gaussdag import GaussDAG
 from .interventions import SoftIntervention, PerfectIntervention, SoftInterventionalDistribution, \
