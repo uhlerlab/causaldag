@@ -36,8 +36,7 @@ class DAG:
 
     @classmethod
     def from_amat(cls, amat):
-        """
-        Given an adjacency matrix A, return a DAG with arcs i->j iff. A_{ij} \neq 0
+        """Return a DAG with arcs given by amat
         """
         nodes = set(range(amat.shape[0]))
         arcs = set()
@@ -102,13 +101,13 @@ class DAG:
 
     # === MUTATORS
     def add_node(self, node):
-        """Add a node to the graph
+        """Add a node to the DAG
 
         """
         self._nodes.add(node)
 
     def add_arc(self, i, j):
-        """Add an arc to the graph
+        """Add an arc to the DAG
 
         """
         self._add_arc(i, j)
@@ -376,7 +375,9 @@ class DAG:
             f.write(']')
 
     def to_amat(self, node_list=None, mode='dataframe'):
-        """Return an adjacency matrix for DAG"""
+        """Return an adjacency matrix for DAG
+
+        """
         if not node_list:
             node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}

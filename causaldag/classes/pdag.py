@@ -31,6 +31,8 @@ class PDAG:
 
     @classmethod
     def from_amat(cls, amat):
+        """Return a PDAG with arcs/edges given by amat
+        """
         nrows, ncols = amat.shape
         arcs = set()
         edges = set()
@@ -87,6 +89,8 @@ class PDAG:
         return ''.join(substrings)
 
     def remove_node(self, node):
+        """Remove a node from the graph
+        """
         self._nodes.remove(node)
         self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
         self._edges = {(i, j) for i, j in self._edges if i != node and j != node}
@@ -133,6 +137,8 @@ class PDAG:
         return core_utils.defdict2dict(self._undirected_neighbors, self._nodes)
 
     def copy(self):
+        """Return a copy of the graph
+        """
         return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
 
     def _replace_arc_with_edge(self, arc):
@@ -163,9 +169,13 @@ class PDAG:
         return vstructs
 
     def has_edge(self, i, j):
+        """Return True if the graph contains the edge i--j
+        """
         return (i, j) in self._edges or (j, i) in self._edges
 
     def has_edge_or_arc(self, i, j):
+        """Return True if the graph contains the edge i--j or an arc i->j or i<-j
+        """
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
     def add_protected_orientations(self):
@@ -253,6 +263,8 @@ class PDAG:
         raise NotImplementedError
 
     def to_amat(self, node_list=None, mode='dataframe'):
+        """Return an adjacency matrix for the graph
+        """
         if node_list is None:
             node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}
@@ -302,6 +314,8 @@ class PDAG:
         return DAG(arcs=arcs)
 
     def all_dags(self, verbose=False):
+        """Return all DAGs consistent with this PDAG
+        """
         dag = self.to_dag()
         arcs = dag._arcs
         all_arcs = set()
@@ -361,6 +375,8 @@ class PDAG:
 
     # === COMPARISON
     def shd(self, other):
+        """Return the structural Hamming distance between this PDAG and another
+        """
         self_undirected = {tuple(sorted(arc)) for arc in self._arcs} | self._edges
         other_undirected = {tuple(sorted(arc)) for arc in other._arcs} | other._edges
         nadditions = len(self_undirected - other_undirected)
