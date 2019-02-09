@@ -43,11 +43,12 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
 ]
 
 autosummary_generate = True
 autodoc_mock_imports = ['numpy', 'pandas', 'scipy', 'matplotlib', 'dataclasses', 'sklearn']
-
+latex_paper_size = 'letter'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -15,4 +15,5 @@ release.sh
 .mypy_cache/
 
 docs/_build/
+docs/classes/generated/
 
