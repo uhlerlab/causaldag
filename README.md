@@ -11,7 +11,7 @@ $ pip3 install causaldag
 ```
 
 ### Documentation
-Documentation is available at https://causaldag.readthedocs.io/en/latest/classes/DAG.html
+Documentation is available at https://causaldag.readthedocs.io/en/latest/index.html
 
 ### Simple Example
 Find the CPDAG (complete partially directed acyclic graph,
