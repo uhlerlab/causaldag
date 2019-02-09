@@ -10,6 +10,9 @@ Install the latest version of CausalDAG:
 $ pip3 install causaldag
 ```
 
+### Documentation
+Documentation is available at [https://causaldag.readthedocs.io/en/latest/classes/DAG.html]
+
 ### Simple Example
 Find the CPDAG (complete partially directed acyclic graph,
 AKA the *essential graph*) corresponding to a DAG:
