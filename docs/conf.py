@@ -46,7 +46,7 @@ extensions = [
 ]
 
 autosummary_generate = True
-autodoc_mock_imports = ['numpy', 'pandas', 'scipy', 'matplotlib', 'dataclasses', 'scikit_learn']
+autodoc_mock_imports = ['numpy', 'pandas', 'scipy', 'matplotlib', 'dataclasses', 'sklearn']
 
 
 # Add any paths that contain templates here, relative to this directory.
