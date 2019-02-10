@@ -131,6 +131,17 @@ class TestDAG(TestCase):
         print(np.cov(samples, rowvar=False))
         print(gdag_iv.covariance)
 
+        # === TEST WITH STD FACTOR, CHANGE IN MEAN, INTERVENED NODE HAS NO PARENTS
+        gdag = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5})
+        factor = .1
+        std_factor = .2
+        gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5}, variances=[std_factor ** 2, 1, 1])
+        iv = {0: ScalingIntervention(factor, std_factor, mean=2.13)}
+        samples = gdag.sample_interventional_soft(iv, 100000)
+        print(np.cov(samples, rowvar=False))
+        print(gdag_iv.covariance)
+        print(np.mean(samples[:, 0]))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -29,11 +29,14 @@ SoftIntervention = NewType('Intervention', Dict[Any, SoftInterventionalDistribut
 class ScalingIntervention(SoftInterventionalDistribution):
     factor: float = 1
     noise_factor: float = 1
+    mean: Optional[float] = None
 
     def sample(self, parent_values: Optional[np.ndarray], dag, node) -> np.ndarray:
         nsamples, nparents = parent_values.shape
         node_ix = dag._node2ix[node]
-        noise = np.random.normal(scale=dag._variances[node_ix], size=nsamples) * self.noise_factor
+        mean = dag._means[node_ix] if self.mean is None else self.mean
+        std = dag._variances[node_ix]**.5 * self.noise_factor
+        noise = np.random.normal(loc=mean, scale=std, size=nsamples)
         parent_ixs = [dag._node2ix[p] for p in dag._parents[node]]
         if nparents != 0:
             return np.sum(parent_values * dag._weight_mat[parent_ixs, node]*self.factor, axis=1) + noise
