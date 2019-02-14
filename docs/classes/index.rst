@@ -9,4 +9,5 @@ Classes
    :maxdepth: 2
 
    DAG
+   PDAG
    GaussDAG

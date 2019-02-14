@@ -4,7 +4,7 @@ import numpy as np
 import causaldag as cd
 from scipy.stats import multivariate_normal
 
-from causaldag import ConstantIntervention, BinaryIntervention, ScalingIntervention
+from causaldag import ConstantIntervention, BinaryIntervention, ScalingIntervention, GaussIntervention
 
 
 class TestDAG(TestCase):
@@ -99,7 +99,7 @@ class TestDAG(TestCase):
         factor = .1
         gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3*factor, (1, 2): 5*factor})
         iv = {2: ScalingIntervention(factor=factor)}
-        samples = gdag.sample_interventional_soft(iv, 100000)
+        samples = gdag.sample_interventional(iv, 100000)
         print(np.cov(samples, rowvar=False))
         print(gdag_iv.covariance)
 
@@ -107,7 +107,7 @@ class TestDAG(TestCase):
         gdag = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5})
         factor = .1
         iv = {0: ScalingIntervention(factor=factor)}
-        samples = gdag.sample_interventional_soft(iv, 100000)
+        samples = gdag.sample_interventional(iv, 100000)
         print(np.cov(samples, rowvar=False))
         print(gdag.covariance)
 
@@ -117,7 +117,7 @@ class TestDAG(TestCase):
         std_factor = .2
         gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3 * factor, (1, 2): 5 * factor}, variances=[1, 1, std_factor**2])
         iv = {2: ScalingIntervention(factor, std_factor)}
-        samples = gdag.sample_interventional_soft(iv, 100000)
+        samples = gdag.sample_interventional(iv, 100000)
         print(np.cov(samples, rowvar=False))
         print(gdag_iv.covariance)
 
@@ -127,7 +127,7 @@ class TestDAG(TestCase):
         std_factor = .2
         gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5}, variances=[std_factor ** 2, 1, 1])
         iv = {0: ScalingIntervention(factor, std_factor)}
-        samples = gdag.sample_interventional_soft(iv, 100000)
+        samples = gdag.sample_interventional(iv, 100000)
         print(np.cov(samples, rowvar=False))
         print(gdag_iv.covariance)
 
@@ -137,10 +137,20 @@ class TestDAG(TestCase):
         std_factor = .2
         gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5}, variances=[std_factor ** 2, 1, 1])
         iv = {0: ScalingIntervention(factor, std_factor, mean=2.13)}
-        samples = gdag.sample_interventional_soft(iv, 100000)
+        samples = gdag.sample_interventional(iv, 100000)
         print(np.cov(samples, rowvar=False))
         print(gdag_iv.covariance)
         print(np.mean(samples[:, 0]))
+
+    def test_mixed_interventions(self):
+        gdag = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3, (1, 2): 5})
+        factor = .1
+        gdag_iv = cd.GaussDAG([0, 1, 2], arcs={(0, 1): 2, (0, 2): 3*factor, (1, 2): 5*factor}, means=[1, 0, 0], variances=[.5, 1, 1])
+        iv = {0: GaussIntervention(1, .5), 2: ScalingIntervention(factor=factor)}
+        samples = gdag.sample_interventional(iv, 100000)
+        print(np.cov(samples, rowvar=False))
+        print(gdag_iv.covariance)
+        print(np.mean(samples, axis=0))
 
 
 if __name__ == '__main__':

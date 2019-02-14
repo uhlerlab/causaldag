@@ -10,7 +10,7 @@ from scipy.linalg import ldl
 from scipy.stats import norm
 
 from causaldag.classes import DAG
-from causaldag.classes.interventions import PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
+from causaldag.classes.interventions import Intervention, SoftInterventionalDistribution, PerfectInterventionalDistribution, PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
 from causaldag.utils import core_utils
 
 
@@ -298,6 +298,30 @@ class GaussDAG(DAG):
             interventional_dist = intervention.get(node)
             if interventional_dist is not None:
                 samples[:, ix] = interventional_dist.sample(parent_vals, self, node)
+            elif len(parent_ixs) != 0:
+                samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
+            else:
+                samples[:, ix] = noise[:, ix]
+
+        return samples
+
+    def sample_interventional(self, intervention: Intervention, nsamples: int = 1) -> np.ndarray:
+        samples = np.zeros((nsamples, len(self._nodes)))
+        noise = np.random.normal(size=[nsamples, len(self._nodes)])
+        noise = noise * np.array(self._variances)**.5 + self._means
+
+        t = self.topological_sort()
+        for node in t:
+            ix = self._node2ix[node]
+            parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+            parent_vals = samples[:, parent_ixs]
+
+            interventional_dist = intervention.get(node)
+            if interventional_dist is not None:
+                if isinstance(interventional_dist, SoftInterventionalDistribution):
+                    samples[:, ix] = interventional_dist.sample(parent_vals, self, node)
+                elif isinstance(interventional_dist, PerfectInterventionalDistribution):
+                    samples[:, ix] = interventional_dist.sample(nsamples)
             elif len(parent_ixs) != 0:
                 samples[:, ix] = np.sum(parent_vals * self._weight_mat[parent_ixs, node], axis=1) + noise[:, ix]
             else:

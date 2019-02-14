@@ -4,3 +4,4 @@ from .gaussdag import GaussDAG
 from .interventions import SoftIntervention, PerfectIntervention, SoftInterventionalDistribution, \
     PerfectInterventionalDistribution, ScalingIntervention, GaussIntervention, BinaryIntervention, \
     ConstantIntervention, MultinomialIntervention
+from .ancestral_graph import AncestralGraph

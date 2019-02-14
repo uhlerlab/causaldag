@@ -5,6 +5,8 @@ from scipy.stats import norm
 
 
 class PerfectInterventionalDistribution:
+    """Base class for perfect interventional distributions
+    """
     def sample(self, size: int) -> np.ndarray:
         raise NotImplementedError
 
@@ -21,8 +23,9 @@ class SoftInterventionalDistribution:
 
 
 InterventionalDistribution = NewType('InterventionalDistribution', Union[PerfectInterventionalDistribution, SoftInterventionalDistribution])
-PerfectIntervention = NewType('Intervention', Dict[Any, PerfectInterventionalDistribution])
-SoftIntervention = NewType('Intervention', Dict[Any, SoftInterventionalDistribution])
+Intervention = NewType('Intervention', Dict[Any, InterventionalDistribution])
+PerfectIntervention = NewType('PerfectIntervention', Dict[Any, PerfectInterventionalDistribution])
+SoftIntervention = NewType('SoftIntervention', Dict[Any, SoftInterventionalDistribution])
 
 
 @dataclass

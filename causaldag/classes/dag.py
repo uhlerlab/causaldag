@@ -276,9 +276,7 @@ class DAG:
             self._parents[j].remove(i)
             self._children[i].remove(j)
 
-            self._arcs.add((j, i))
-            self._parents[i].add(j)
-            self._children[j].add(i)
+            self.add_arc(j, i)
         except KeyError as e:
             if ignore_error:
                 pass
@@ -711,29 +709,64 @@ class DAG:
                 f.write(newline(indent))
             f.write(']')
 
-    def to_amat(self, node_list=None, mode='dataframe'):
+    def to_dataframe(self, node_list=None):
+        if not node_list:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+        for source, target in self._arcs:
+            amat[node2ix[source], node2ix[target]] = 1
+
+        from pandas import DataFrame
+        return DataFrame(amat, index=node_list, columns=node_list)
+
+    @classmethod
+    def from_dataframe(cls, df):
+        g = DAG(nodes=set(df.index)|set(df.columns))
+        for (i, j), val in np.ndenumerate(df.values):
+            if val != 0:
+                g.add_arc(df.index[i], df.columns[j])
+        return g
+
+    def to_amat(self, node_list=None) -> (np.ndarray, list):
         """Return an adjacency matrix for DAG
 
+        Parameters
+        ----------
+        node_list:
+            List indexing the rows/columns of the matrix.
+
+        See Also
+        --------
+        from_amat
+
+        Return
+        ------
+        (amat, node_list)
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.to_amat()[0]
+        array([[0, 1, 1],
+               [0, 0, 1],
+               [0, 0, 0]])
+        >>> g.to_amat()[1]
+        [1, 2, 3]
         """
         if not node_list:
             node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}
 
         shape = (len(self._nodes), len(self._nodes))
-        if mode == 'dataframe' or mode == 'numpy':
-            amat = np.zeros(shape, dtype=int)
-        else:
-            from scipy.sparse import lil_matrix
-            amat = lil_matrix(shape, dtype=int)
+        amat = np.zeros(shape, dtype=int)
 
         for source, target in self._arcs:
             amat[node2ix[source], node2ix[target]] = 1
 
-        if mode == 'dataframe':
-            from pandas import DataFrame
-            return DataFrame(amat, index=node_list, columns=node_list)
-        else:
-            return amat, node_list
+        return amat, node_list
 
     # === optimal interventions
     def cpdag(self):
