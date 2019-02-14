@@ -80,7 +80,48 @@ class AncestralGraph:
 
     # === MUTATORS
     def add_node(self, node):
+        """Add a node to the ancestral graph.
+
+        Parameters
+        ----------
+        node:
+            a hashable Python object
+
+        See Also
+        --------
+        add_nodes_from
+
+        Examples
+        --------
+        >>> g = cd.AncestralGraph()
+        >>> g.add_node(1)
+        >>> g.add_node(2)
+        >>> len(g.nodes)
+        2
+        """
         self._nodes.add(node)
+
+    def add_nodes_from(self, nodes):
+        """Add a node to the ancestral graph.
+
+        Parameters
+        ----------
+        nodes:
+            an iterable of hashable Python objects
+
+        See Also
+        --------
+        add_node
+
+        Examples
+        --------
+        >>> g = cd.AncestralGraph()
+        >>> g.add_nodes_from({1, 2})
+        >>> len(g.nodes)
+        2
+        """
+        for node in nodes:
+            self._nodes.add(node)
 
     def add_directed(self, i, j):
         self._add_directed(i, j)
@@ -98,7 +139,7 @@ class AncestralGraph:
         # === CHECK REMAINS ANCESTRAL
         if self._neighbors[j]:
             raise NeighborError(j, self._neighbors[j])
-        if i in self._ancestors[j]:
+        if j in self._ancestors[i]:
             raise CycleError(i, j)
 
         # === CHECK i AND j NOT ALREADY ADJACENT
@@ -151,7 +192,7 @@ class AncestralGraph:
                 else:
                     self.remove_undirected(i, j)
             else:
-                raise AdjacentError(i, j, '->')
+                raise AdjacentError(i, j, '<->')
 
         self._nodes.add(i)
         self._nodes.add(j)
@@ -177,12 +218,16 @@ class AncestralGraph:
             raise NeighborError(j, spouses=self._spouses[j])
 
         # === CHECK i AND j NOT ALREADY ADJACENT
-        if self.has_directed(i, j):
-            self.remove_directed(i, j)
-        elif self.has_directed(j, i):
-            self.remove_directed(j, i)
-        else:
-            self.remove_bidirected(i, j)
+        if i in self._adjacent[j]:
+            if ignore_error:
+                if self.has_directed(i, j):
+                    self.remove_directed(i, j)
+                elif self.has_directed(j, i):
+                    self.remove_directed(j, i)
+                else:
+                    self.remove_bidirected(i, j)
+            else:
+                raise AdjacentError(i, j, '-')
 
         self._nodes.add(i)
         self._nodes.add(j)
@@ -310,10 +355,10 @@ class AncestralGraph:
         return (i, j) in self._directed
 
     def has_bidirected(self, i, j):
-        return tuple(sorted(i, j)) in self._bidirected
+        return tuple(sorted((i, j))) in self._bidirected
 
     def has_undirected(self, i, j):
-        return tuple(sorted(i, j)) in self._undirected
+        return tuple(sorted((i, j))) in self._undirected
 
     # === ???
     def to_maximal(self):
