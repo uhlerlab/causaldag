@@ -527,7 +527,7 @@ class DAG:
         -------
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g.upstream(3)
-        {1, 2}
+        {1, 2, 3g}
         """
         upstream = set()
         self._add_upstream(upstream, node)
