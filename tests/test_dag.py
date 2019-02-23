@@ -124,6 +124,23 @@ class TestDAG(TestCase):
         self.assertEqual(d1.shd(d2), 1)
         self.assertEqual(d2.shd(d1), 1)
 
+    def test_dsep(self):
+        d = cd.DAG(arcs={(1, 2), (2, 3)})  # chain
+        self.assertTrue(d.dsep(1, 3, {2}))
+        self.assertFalse(d.dsep(1, 3))
+
+        d = cd.DAG(arcs={(2, 1), (2, 3)})  # confounder
+        self.assertTrue(d.dsep(1, 3, {2}))
+        self.assertFalse(d.dsep(1, 3))
+
+        d = cd.DAG(arcs={(1, 3), (2, 3)})  # v-structure
+        self.assertTrue(d.dsep(1, 2))
+        self.assertFalse(d.dsep(1, 2, {3}))
+
+        d = cd.DAG(arcs={(1, 3), (2, 3), (3, 4), (4, 5)})  # v-structure with chain
+        self.assertTrue(d.dsep(1, 2))
+        self.assertFalse(d.dsep(1, 2, {5}))
+
     # def test_vstructs(self):
     #     pass
     #

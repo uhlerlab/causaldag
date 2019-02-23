@@ -873,8 +873,45 @@ class DAG:
         """
         raise NotImplementedError()
 
-    def dsep(self, i, j, c=None):
-        raise NotImplementedError()
+    def dsep(self, A, B, C=set()):
+        # type coercion
+        A = core_utils.to_set(A)
+        B = core_utils.to_set(B)
+        C = core_utils.to_set(C)
+
+        # shade ancestors of C
+        shaded_nodes = set(C)
+        for node in C:
+            self._add_upstream(shaded_nodes, node)
+
+        visited = set()
+        # marks for which direction the path is traveling through the node
+        _c = '_c'  # child
+        _p = '_p'  # parent
+
+        schedule = {node: _c for node in A}
+        while schedule:
+            node, _dir = schedule.popitem()
+            if node in B: return False
+            if (node, _dir) in visited: continue
+            visited.add((node, _dir))
+            print(node, _dir)
+
+            # if coming from child, won't encounter v-structure
+            if _dir == _c and node not in C:
+                schedule.update({(parent, _c) for parent in self._parents[node]})
+                schedule.update({(child, _p) for child in self._children[node]})
+
+            if _dir == _p:
+                # if coming from parent and see shaded node, can go through v-structure
+                if node in shaded_nodes:
+                    schedule.update({(parent, _c) for parent in self._parents[node]})
+
+                # if coming from parent and see unconditioned node, can go through children
+                if node not in C:
+                    schedule.update({(child, _p) for child in self._children[node]})
+
+        return True
 
 
 if __name__ == '__main__':

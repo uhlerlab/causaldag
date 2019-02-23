@@ -17,3 +17,12 @@ def defdict2dict(defdict, keys):
 def powerset(s):
     return itr.chain(*(itr.combinations(s, r) for r in range(len(s)+1)))
 
+
+def to_set(o):
+    if not isinstance(o, set):
+        try:
+            o = set(o)
+        except TypeError:
+            o = {o}
+    return o
+

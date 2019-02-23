@@ -59,10 +59,6 @@ class AncestralGraph:
         self._spouses = defaultdict(set)
         self._parents = defaultdict(set)
         self._children = defaultdict(set)
-        self._neighbors = defaultdict(set)
-
-        self._ancestors = defaultdict(set)
-        self._descendants = defaultdict(set)
         self._adjacent = defaultdict(set)
 
         for i, j in directed:
@@ -139,8 +135,6 @@ class AncestralGraph:
         # === CHECK REMAINS ANCESTRAL
         if self._neighbors[j]:
             raise NeighborError(j, self._neighbors[j])
-        if j in self._ancestors[i]:
-            raise CycleError(i, j)
 
         # === CHECK i AND j NOT ALREADY ADJACENT
         if i in self._adjacent[j]:
@@ -163,20 +157,11 @@ class AncestralGraph:
         self._adjacent[i].add(j)
         self._adjacent[j].add(i)
 
-        self._ancestors[j].add(i)
-        self._descendants[i].add(j)
-        self._ancestors[j].update(self._ancestors[i])
-        self._descendants[i].update(self._descendants[j])
-
     def _add_bidirected(self, i, j, ignore_error=False):
         if self.has_bidirected(i, j):
             return
 
         # === CHECK REMAINS ANCESTRAL
-        if i in self._ancestors[j]:
-            raise SpouseError(i, j)
-        if j in self._ancestors[i]:
-            raise SpouseError(j, i)
         if self._neighbors[i]:
             raise NeighborError(i, neighbors=self._neighbors[i])
         if self._neighbors[j]:
@@ -257,18 +242,12 @@ class AncestralGraph:
                 self._neighbors[nbr].remove(node)
                 self._adjacent[nbr].remove(node)
                 self._undirected.remove(tuple(sorted((nbr, node))))
-            for ancestor in self._ancestors[node]:
-                self._descendants[ancestor].remove(node)
-            for desc in self._descendants[node]:
-                self._ancestors[desc].remove(node)
 
             del self._children[node]
             del self._parents[node]
             del self._spouses[node]
             del self._neighbors[node]
             del self._adjacent[node]
-            del self._ancestors[node]
-            del self._descendants[node]
         except KeyError as e:
             if ignore_error:
                 pass
@@ -282,8 +261,6 @@ class AncestralGraph:
             self._parents[j].remove(i)
             self._adjacent[i].remove(j)
             self._adjacent[j].remove(i)
-            raise NotImplementedError  # TODO: check ancestors of j
-            raise NotImplementedError  # TODO: check descendants of i
         except KeyError as e:
             if ignore_error:
                 pass
@@ -346,10 +323,10 @@ class AncestralGraph:
         return self._neighbors[i].copy()
 
     def ancestors_of(self, i):
-        return self._ancestors[i].copy()
+        raise NotImplementedError
 
     def descendants_of(self, i):
-        return self._descendants[i].copy()
+        raise NotImplementedError
 
     def has_directed(self, i, j):
         return (i, j) in self._directed
