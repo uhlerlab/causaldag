@@ -45,6 +45,7 @@ class PDAG:
                     arcs.add((i, j))
         return PDAG(set(range(nrows)), arcs, edges)
 
+
     def _add_arc(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)
@@ -141,6 +142,28 @@ class PDAG:
         """
         return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
 
+    def remove_edge(self, i, j, ignore_error=False):
+        try:
+            self._edges.remove(tuple(sorted((i, j))))
+            self._neighbors[i].remove(j)
+            self._neighbors[j].remove(i)
+            self._undirected_neighbors[i].remove(j)
+            self._undirected_neighbors[j].remove(i)
+        except KeyError as e:
+            if ignore_error:
+                pass
+            else:
+                raise e
+
+    def replace_edge_with_arc(self, arc, ignore_error=False):
+        try:
+            self._replace_edge_with_arc(arc)
+        except KeyError as e:
+            if ignore_error:
+                pass
+            else:
+                raise e
+
     def _replace_arc_with_edge(self, arc):
         self._arcs.remove(arc)
         self._edges.add(tuple(sorted(arc)))
@@ -172,6 +195,10 @@ class PDAG:
         """Return True if the graph contains the edge i--j
         """
         return (i, j) in self._edges or (j, i) in self._edges
+
+    def has_arc(self, i, j):
+        """Return True if the graph contains the arc i->j"""
+        return (i,j) in self._arcs
 
     def has_edge_or_arc(self, i, j):
         """Return True if the graph contains the edge i--j or an arc i->j or i<-j
