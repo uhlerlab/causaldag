@@ -914,10 +914,59 @@ class DAG:
         return True
 
 
+
+    def dsep_from_given(self, A, C = set()):
+        """Find all nodes seperated from A given C using algorithm in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""
+
+        A = core_utils.to_set(A) 
+        C = core_utils.to_set(C)
+
+        determined = set()
+        descendants = set()
+
+        for c in C:
+            determined.add(c)
+            descendants.add(c)
+            self._add_upstream(descendants, c)
+            
+        reachable = set()
+        i_links = set()
+        labeled_links = set()
+
+        for a in A:
+            i_links.add((None, a)) 
+            reachable.add(a)
+       
+        while(True):
+            i_p_1_links = set()
+            #Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
+            for link in i_links:
+                u,v = link
+                for w in self._neighbors[v]:
+                    if(not u == w and (v,w) not in labeled_links):
+                        if(v in self._children[u] and v in self._children[w]): #Is collider?
+                            if(v in descendants):
+                                i_p_1_links.add((v,w))
+                                reachable.add(w)
+                        else: #Not collider
+                            if(v not in determined):
+                                i_p_1_links.add((v,w))
+                                reachable.add(w)
+
+            if(len(i_p_1_links) == 0):
+                break
+
+            labeled_links = labeled_links.union(i_links)
+            i_links = i_p_1_links
+
+        return self._nodes.difference(A).difference(C).difference(reachable)
+
+
+
 if __name__ == '__main__':
     d = DAG(arcs={(1, 2), (1, 3), (3, 4), (2, 4), (3, 5)})
     d.save_gml('test_mine.gml')
-
+    
 
 
 

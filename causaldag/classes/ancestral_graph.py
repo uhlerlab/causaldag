@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from causaldag.utils import core_utils
 
 class CycleError(Exception):
     def __init__(self, source, target):
@@ -350,5 +350,71 @@ class AncestralGraph:
 
     def from_amat(self):
         raise NotImplementedError
+    
+    # === Algorithms
 
+    def _add_upstream(self, upstream, node):
+        for parent in self._parents[node]:
+            if parent not in upstream:
+                upstream.add(parent)
+                self._add_upstream(upstream, parent)
+
+    def _is_collider(self, u, v, w):
+        """return True if u-v-w is a collider"""
+        if(v in self._children[u] and v in self._children[w]):
+            return True
+        elif(v in self._children[u] and v in self._spouses[w]):
+            return True
+        elif(v in self._spouses[u] and v in self._children[w]):
+            return True
+        elif(v in self._spouses[u] and v in self._spouses[w]):
+            return True
+        else:
+            return False
+
+    def msep_from_given(self, A, C = set()):
+        """Find all nodes m-seperated from A given C using algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""
+
+        A = core_utils.to_set(A) 
+        C = core_utils.to_set(C)
+
+        determined = set()
+        descendants = set()
+
+        for c in C:
+            determined.add(c)
+            descendants.add(c)
+            self._add_upstream(descendants, c)
+            
+        reachable = set()
+        i_links = set()
+        labeled_links = set()
+
+        for a in A:
+            i_links.add((None, a)) 
+            reachable.add(a)
+       
+        while(True):
+            i_p_1_links = set()
+            #Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
+            for link in i_links:
+                u,v = link
+                for w in self._adjacent[v]:
+                    if(not u == w and (v,w) not in labeled_links):
+                        if(self._is_collider(u,v,w)): #Is collider?
+                            if(v in descendants):
+                                i_p_1_links.add((v,w))
+                                reachable.add(w)
+                        else: #Not collider
+                            if(v not in determined):
+                                i_p_1_links.add((v,w))
+                                reachable.add(w)
+
+            if(len(i_p_1_links) == 0):
+                break
+
+            labeled_links = labeled_links.union(i_links)
+            i_links = i_p_1_links
+
+        return self._nodes.difference(A).difference(C).difference(reachable)
 
