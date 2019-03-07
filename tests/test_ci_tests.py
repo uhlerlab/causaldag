@@ -217,7 +217,5 @@ class TestKCI(TestCase):
     #     print("Number of false positives (should be low):", false_positives)
 
 
-
-
 if __name__ == '__main__':
     unittest.main()

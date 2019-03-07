@@ -21,8 +21,8 @@ def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alph
     # === COMPUTE CENTRALIZED KERNEL MATRICES
     kx = kernels.rbf_kernel(x, kernel_precision)
     ky = kernels.rbf_kernel(y, kernel_precision)
-    kx_centered = H @ kx @ H
-    ky_centered = H @ ky @ H
+    kx_centered = kernels.center(kx)
+    ky_centered = kernels.center(ky)
 
     # === COMPUTE STATISTIC
     statistic = 1/n**2 * np.sum(kx_centered * ky_centered.T)  # SAME AS trace(kx_centered @ ky_centered)
