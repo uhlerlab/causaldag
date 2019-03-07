@@ -15,7 +15,7 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
     :return: dictionary containing statistic, crit_val, p_value, and reject.
     """
     n = suffstat['n']
-    C = suffstat['C']
+    C = suffstat.get('C')
     n_cond = 0 if cond_set is None else len(cond_set)
 
     # === COMPUTE PARTIAL CORRELATION
@@ -32,9 +32,44 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
     statistic = np.sqrt(n - n_cond - 3) * np.abs(.5 * np.log1p(2*r/(1 - r)))
     # NOTE: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0
 
-    crit_val = norm.ppf(1 - alpha/2)
+    # crit_val = norm.ppf(1 - alpha/2)
     p_value = 1 - norm.cdf(statistic)
 
-    return dict(statistic=statistic, crit_val=crit_val, p_value=p_value, reject=statistic > crit_val)
+    return dict(statistic=statistic, p_value=p_value, reject=p_value < alpha)
 
 
+class GaussCIMemoizer:
+    def __init__(self, C):
+        self.C = C
+        self.partial_correlations = dict()
+
+    def get_partial_correlation(self, i, j, cond_set=None):
+        if cond_set is None or len(cond_set) == 0:
+            return self.C[i, j]
+        else:
+            i_, j_ = tuple(sorted((i, j)))
+            cond_frozen = frozenset(cond_set)
+            r = self.partial_correlations.get((i_, j_, cond_frozen))
+            if r is not None:
+                return r
+
+            cond_set = cond_set.copy()
+            k = cond_set.pop()
+            rij = self.get_partial_correlation(i, j, cond_set)
+            rik = self.get_partial_correlation(i, k, cond_set)
+            rjk = self.get_partial_correlation(j, k, cond_set)
+            r = (rij - rik*rjk) / np.sqrt(1 - rik**2) / np.sqrt(1 - rjk**2)
+            self.partial_correlations[(i_, j_, cond_frozen)] = r
+            return r
+
+    def ci_test(self, suffstat, i, j, cond_set=None, alpha=0.01):
+        n = suffstat['n']
+        n_cond = len(cond_set) if cond_set is not None else 0
+
+        r = self.get_partial_correlation(i, j, cond_set)
+        statistic = np.sqrt(n - n_cond - 3) * np.abs(.5 * np.log1p(2 * r / (1 - r)))
+
+        crit_val = norm.ppf(1 - alpha / 2)
+        p_value = 1 - norm.cdf(statistic)
+
+        return dict(statistic=statistic, crit_val=crit_val, p_value=p_value, reject=statistic > crit_val)
