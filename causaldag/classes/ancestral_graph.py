@@ -1,20 +1,25 @@
 from collections import defaultdict
 from causaldag.utils import core_utils
 
+
 class CycleError(Exception):
-    def __init__(self, source, target):
-        self.source = source
-        self.target = target
-        message = '%s -> %s will cause a cycle' % (source, target)
-        super().__init__(message)
+    def __init__(self):
+        super().__init__()
+    # def __init__(self, source, target):
+    #     self.source = source
+    #     self.target = target
+    #     message = '%s -> %s will cause a cycle' % (source, target)
+    #     super().__init__(message)
 
 
 class SpouseError(Exception):
-    def __init__(self, ancestor, desc):
-        self.ancestor = ancestor
-        self.desc = desc
-        message = '%s <-> %s cannot be added since %s is an ancestor of %s' % (ancestor, desc, ancestor, desc)
-        super().__init__(message)
+    def __init__(self):
+        super().__init__()
+    # def __init__(self, ancestor, desc):
+    #     self.ancestor = ancestor
+    #     self.desc = desc
+    #     message = '%s <-> %s cannot be added since %s is an ancestor of %s' % (ancestor, desc, ancestor, desc)
+    #     super().__init__(message)
 
 
 class AdjacentError(Exception):
@@ -119,11 +124,51 @@ class AncestralGraph:
         for node in nodes:
             self._nodes.add(node)
 
+    def _check_ancestral(self):
+        self.topological_sort()
+
+    def _mark_children_visited(self, node, any_visited, curr_path_visited, curr_path, stack):
+        any_visited[node] = True
+        curr_path_visited[node] = True
+        curr_path.append(node)
+        for child in self._children[node]:
+            if not any_visited[child]:
+                self._mark_children_visited(child, any_visited, curr_path_visited, curr_path, stack)
+            elif curr_path_visited[child]:
+                cycle = curr_path + [child]
+                raise CycleError
+        for spouse in self._spouses[node]:
+            if curr_path_visited[spouse]:
+                raise SpouseError
+        curr_path.pop()
+        curr_path_visited[node] = False
+        stack.append(node)
+
+    def topological_sort(self):
+        any_visited = {node: False for node in self._nodes}
+        curr_path_visited = {node: False for node in self._nodes}
+        curr_path = []
+        stack = []
+        for node in self._nodes:
+            if not any_visited[node]:
+                self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
+        return list(reversed(stack))
+
     def add_directed(self, i, j):
         self._add_directed(i, j)
+        try:
+            self._check_ancestral()
+        except CycleError as e:
+            self.remove_directed(i, j)
+            raise e
 
     def add_bidirected(self, i, j):
         self._add_bidirected(i, j)
+        try:
+            self._add_bidirected(i, j)
+        except CycleError as e:
+            self.remove_bidirected(i, j)
+            raise e
 
     def add_undirected(self, i, j):
         self._add_undirected(i, j)
