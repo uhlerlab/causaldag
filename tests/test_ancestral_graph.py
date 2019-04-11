@@ -63,20 +63,39 @@ class TestAncestralGraph(TestCase):
     #     with self.assertRaises(cd.classes.ancestral_graph.AdjacentError) as cm:
     #         self.d.add_bidirected(2, 1)
 
-    def test_add_cycle_error(self):
-        d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
-        with self.assertRaises(cd.classes.ancestral_graph.CycleError) as cm:
-            d.add_directed(3, 1)
+    # def test_add_cycle_error(self):
+    #     d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
+    #     with self.assertRaises(cd.classes.ancestral_graph.CycleError) as cm:
+    #         d.add_directed(3, 1)
+    #
+    # def test_add_spouse_error(self):
+    #     d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
+    #     with self.assertRaises(cd.classes.ancestral_graph.SpouseError) as cm:
+    #         d.add_bidirected(3, 1)
+    #
+    # def test_add_neighbor_error(self):
+    #     d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
+    #     with self.assertRaises(cd.classes.ancestral_graph.SpouseError) as cm:
+    #         d.add_bidirected(3, 1)
 
-    def test_add_spouse_error(self):
-        d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
-        with self.assertRaises(cd.classes.ancestral_graph.SpouseError) as cm:
-            d.add_bidirected(3, 1)
+    def test_msep_from_given(self):
+        d = cd.AncestralGraph(directed={(1, 2), (3, 2), (2, 4), (3, 4)})
+        print(d.msep_from_given(1))
+        print(d.msep_from_given(1, 2))
 
-    def test_add_neighbor_error(self):
-        d = cd.AncestralGraph(directed={(1, 2), (2, 3)})
-        with self.assertRaises(cd.classes.ancestral_graph.SpouseError) as cm:
-            d.add_bidirected(3, 1)
+    def test_disc_paths(self):
+        g = cd.AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4), (3, 2), (3, 4)})
+        disc_paths = g.discriminating_paths()
+        self.assertEqual(disc_paths, [([1, 2, 3, 4], 'n')])
+
+        g = cd.AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4)}, bidirected={(3, 2), (3, 4)})
+        disc_paths = g.discriminating_paths()
+        self.assertEqual(disc_paths, [([1, 2, 3, 4], 'c')])
+
+        g = cd.AncestralGraph(nodes=set(range(1, 6)), directed={(1, 2), (2, 5), (3, 5)}, bidirected={(2, 3), (3, 4), (4, 5)})
+        disc_paths = g.discriminating_paths()
+        print(disc_paths)
+        self.assertEqual(disc_paths, [([1, 2, 3, 5], 'n'), ([1, 2, 3, 4, 5], 'c')])
 
 
 if __name__ == '__main__':

@@ -58,8 +58,16 @@ class DAG:
         return set(self._nodes)
 
     @property
+    def nnodes(self):
+        return len(self._nodes)
+
+    @property
     def arcs(self):
         return set(self._arcs)
+
+    @property
+    def num_arcs(self):
+        return len(self._arcs)
 
     @property
     def neighbors(self):
@@ -72,6 +80,10 @@ class DAG:
     @property
     def children(self):
         return core_utils.defdict2dict(self._children, self._nodes)
+
+    @property
+    def skeleton(self):
+        return {tuple(sorted((i, j))) for i, j in self._arcs}
 
     def parents_of(self, node):
         return self._parents[node].copy()
@@ -351,6 +363,38 @@ class DAG:
                 raise e
 
     # === GRAPH PROPERTIES
+    def sources(self):
+        """Get all nodes in the graph that have no parents
+
+        Return
+        ------
+        List[node]
+            Nodes in the graph that have no parents
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.sources()
+        {1)
+        """
+        return {node for node in self._nodes if len(self._parents[node]) == 0}
+
+    def sinks(self):
+        """Get all nodes in the graph that have no children
+
+        Return
+        ------
+        List[node]
+            Nodes in the graph that have no children
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.sinks()
+        {3)
+        """
+        return {node for node in self._nodes if len(self._children[node]) == 0}
+
     def reversible_arcs(self):
         """Get all reversible (aka covered) arcs in the DAG.
 
@@ -454,9 +498,7 @@ class DAG:
         1
         """
         if isinstance(other, DAG):
-            self_undirected = {(min(i, j), max(i, j)) for (i, j) in self.arcs}
-            other_undirected = {(min(i, j), max(i, j)) for (i, j) in other.arcs}
-            return len(other_undirected - self_undirected) + len(self_undirected - other_undirected)
+            return len(self.skeleton.symmetric_difference(other.skeleton))
 
     def markov_equivalent(self, other, interventions=None) -> bool:
         """Check if this DAG is (interventionally) Markov equivalent to some other DAG
@@ -895,7 +937,7 @@ class DAG:
             if node in B: return False
             if (node, _dir) in visited: continue
             visited.add((node, _dir))
-            print(node, _dir)
+            # print(node, _dir)
 
             # if coming from child, won't encounter v-structure
             if _dir == _c and node not in C:

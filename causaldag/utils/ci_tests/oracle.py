@@ -8,7 +8,7 @@ def dsep_test(
         j,
         cond_set: Union[List[int], int]=None
 ):
-    return dag.dsep(i, j, cond_set)
+    return dict(reject=not dag.dsep(i, j, cond_set))
 
 
 def dsep_invariance_test(

@@ -43,6 +43,12 @@ class TestDAG(TestCase):
         self.assertEqual(self.d.upstream(4), {1, 2, 3})
         self.assertEqual(self.d.upstream(5), {1, 3})
 
+    def test_sources(self):
+        self.assertEqual(self.d.sources(), {1})
+
+    def test_sinks(self):
+        self.assertEqual(self.d.sinks(), {4, 5})
+
     def test_add_node(self):
         self.d.add_node(6)
         self.assertEqual(self.d.nodes, set(range(1, 7)))

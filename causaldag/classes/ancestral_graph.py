@@ -1,25 +1,26 @@
 from collections import defaultdict
 from causaldag.utils import core_utils
+import itertools as itr
 
 
 class CycleError(Exception):
     def __init__(self):
         super().__init__()
-    # def __init__(self, source, target):
-    #     self.source = source
-    #     self.target = target
-    #     message = '%s -> %s will cause a cycle' % (source, target)
-    #     super().__init__(message)
+        # def __init__(self, source, target):
+        #     self.source = source
+        #     self.target = target
+        #     message = '%s -> %s will cause a cycle' % (source, target)
+        #     super().__init__(message)
 
 
 class SpouseError(Exception):
     def __init__(self):
         super().__init__()
-    # def __init__(self, ancestor, desc):
-    #     self.ancestor = ancestor
-    #     self.desc = desc
-    #     message = '%s <-> %s cannot be added since %s is an ancestor of %s' % (ancestor, desc, ancestor, desc)
-    #     super().__init__(message)
+        # def __init__(self, ancestor, desc):
+        #     self.ancestor = ancestor
+        #     self.desc = desc
+        #     message = '%s <-> %s cannot be added since %s is an ancestor of %s' % (ancestor, desc, ancestor, desc)
+        #     super().__init__(message)
 
 
 class AdjacentError(Exception):
@@ -27,7 +28,8 @@ class AdjacentError(Exception):
         self.node1 = node1
         self.node2 = node2
         self.arrow_type = arrow_type
-        message = '%s %s %s cannot be added since %s and %s are already adjacent' % (node1, arrow_type, node2, node1, node2)
+        message = '%s %s %s cannot be added since %s and %s are already adjacent' % (
+        node1, arrow_type, node2, node1, node2)
         super().__init__(message)
 
 
@@ -38,11 +40,14 @@ class NeighborError(Exception):
         self.parents = parents
         self.spouses = spouses
         if self.neighbors:
-            message = 'The node %s has neighbors %s. Nodes cannot have neighbors and parents/spouses.' % (node, ','.join(map(str, neighbors)))
+            message = 'The node %s has neighbors %s. Nodes cannot have neighbors and parents/spouses.' % (
+            node, ','.join(map(str, neighbors)))
         elif self.parents:
-            message = 'The node %s has parents %s. Nodes cannot have neighbors and parents/spouses.' % (node, ','.join(map(str, parents)))
+            message = 'The node %s has parents %s. Nodes cannot have neighbors and parents/spouses.' % (
+            node, ','.join(map(str, parents)))
         elif self.spouses:
-            message = 'The node %s has spouses %s. Nodes cannot have neighbors and parents/spouses.' % (node, ','.join(map(str, spouses)))
+            message = 'The node %s has spouses %s. Nodes cannot have neighbors and parents/spouses.' % (
+            node, ','.join(map(str, spouses)))
         super().__init__(message)
 
 
@@ -54,6 +59,7 @@ class AncestralGraph:
     """
     Base class for ancestral graphs, used to represent causal models with latent variables.
     """
+
     def __init__(self, nodes=set(), directed=set(), bidirected=set(), undirected=set()):
         self._nodes = nodes.copy()
         self._directed = set()
@@ -344,16 +350,40 @@ class AncestralGraph:
         return self._nodes.copy()
 
     @property
+    def nnodes(self):
+        return len(self._nodes)
+
+    @property
     def directed(self):
         return self._directed.copy()
+
+    @property
+    def num_directed(self):
+        return len(self._directed)
 
     @property
     def bidirected(self):
         return self._bidirected.copy()
 
     @property
+    def num_bidirected(self):
+        return len(self._bidirected)
+
+    @property
     def undirected(self):
         return self._undirected.copy()
+
+    @property
+    def num_undirected(self):
+        return len(self._undirected)
+
+    @property
+    def num_edges(self):
+        return self.num_directed + self.num_bidirected + self.num_undirected
+
+    @property
+    def skeleton(self):
+        return {tuple(sorted((i, j))) for i, j in self._bidirected | self._undirected | self._directed}
 
     def children_of(self, i):
         return self._children[i].copy()
@@ -382,6 +412,62 @@ class AncestralGraph:
     def has_undirected(self, i, j):
         return tuple(sorted((i, j))) in self._undirected
 
+    def has_any_edge(self, i, j):
+        return self.has_directed(i, j) or self.has_directed(j, i) or self.has_bidirected(i, j) or self.has_undirected(i, j)
+
+    def vstructures(self):
+        vstructs = set()
+        for node in self._nodes:
+            for p1, p2 in itr.combinations(self._parents[node] | self._spouses[node], 2):
+                if not self.has_any_edge(p1, p2):
+                    p1_, p2_ = sorted((p1, p2))
+                    vstructs.add((p1_, node, p2))
+        return vstructs
+
+    def colliders(self):
+        return {node for node in self._nodes if len(self._parents[node] | self._spouses[node]) >= 2}
+
+    def discriminating_paths(self):
+        colliders = self.colliders()
+        discriminating_paths = []
+        for j, parents in self._parents.items():  # potential endpoints of discriminating paths
+            if not parents:
+                break
+            nonadjacent = self._nodes - parents - self._children[j] - self._spouses[j] - {j}
+            for i in nonadjacent:  # potential start points of discriminating paths
+                # search all paths that satisfy discriminating path criteria
+                path_queue = [
+                    [i, k]
+                    for k in self._spouses[i] | self._children[i]
+                    if k in colliders and j in self._children[k]
+                ]
+                while path_queue:
+                    path = path_queue.pop(0)
+                    final_node = path[-1]
+                    # check if path is discriminating for the next node
+                    for k in filter(lambda k: k not in path, self._spouses[final_node]):
+                        if j in self._spouses[k]:
+                            full_path = path.copy()
+                            full_path.extend([k, j])
+                            discriminating_paths.append((full_path, 'c'))
+                        elif j in self._children[k]:
+                            full_path = path.copy()
+                            full_path.extend([k, j])
+                            discriminating_paths.append((full_path, 'n'))
+                    for k in filter(lambda k: k not in path, self._parents[final_node]):
+                        if j in self._children[k]:
+                            full_path = path.copy()
+                            full_path.extend([k, j])
+                            discriminating_paths.append((full_path, 'n'))
+
+                    # extend path
+                    for k in self._spouses[final_node]:
+                        if k not in path and k in colliders and j in self._children[k]:
+                            new_path = path.copy()
+                            new_path.append(k)
+                            path_queue.append(new_path)
+        return discriminating_paths
+
     # === ???
     def to_maximal(self):
         raise NotImplementedError
@@ -395,9 +481,15 @@ class AncestralGraph:
 
     def from_amat(self):
         raise NotImplementedError
-    
-    # === Algorithms
 
+    # === COMPARISON
+    def markov_equivalent(self, other):
+        same_skeleton = self.skeleton == other.skeleton
+        same_vstructures = self.vstructures() == other.vstructures()
+        same_discriminating = self.discriminating_paths() == other.discriminating_paths()
+        return same_skeleton and same_vstructures and same_discriminating
+
+    # === Algorithms
     def _add_upstream(self, upstream, node):
         for parent in self._parents[node]:
             if parent not in upstream:
@@ -406,21 +498,21 @@ class AncestralGraph:
 
     def _is_collider(self, u, v, w):
         """return True if u-v-w is a collider"""
-        if(v in self._children[u] and v in self._children[w]):
+        if v in self._children[u] and v in self._children[w]:
             return True
-        elif(v in self._children[u] and v in self._spouses[w]):
+        elif v in self._children[u] and v in self._spouses[w]:
             return True
-        elif(v in self._spouses[u] and v in self._children[w]):
+        elif v in self._spouses[u] and v in self._children[w]:
             return True
-        elif(v in self._spouses[u] and v in self._spouses[w]):
+        elif v in self._spouses[u] and v in self._spouses[w]:
             return True
         else:
             return False
 
-    def msep_from_given(self, A, C = set()):
+    def msep_from_given(self, A, C=set()):
         """Find all nodes m-seperated from A given C using algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""
 
-        A = core_utils.to_set(A) 
+        A = core_utils.to_set(A)
         C = core_utils.to_set(C)
 
         determined = set()
@@ -430,36 +522,43 @@ class AncestralGraph:
             determined.add(c)
             descendants.add(c)
             self._add_upstream(descendants, c)
-            
+
         reachable = set()
         i_links = set()
         labeled_links = set()
 
         for a in A:
-            i_links.add((None, a)) 
+            i_links.add((None, a))
             reachable.add(a)
-       
-        while(True):
+
+        while True:
             i_p_1_links = set()
-            #Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
+            # Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
             for link in i_links:
-                u,v = link
+                u, v = link
                 for w in self._adjacent[v]:
-                    if(not u == w and (v,w) not in labeled_links):
-                        if(self._is_collider(u,v,w)): #Is collider?
-                            if(v in descendants):
-                                i_p_1_links.add((v,w))
+                    if not u == w and (v, w) not in labeled_links:
+                        if self._is_collider(u, v, w):  # Is collider?
+                            if v in descendants:
+                                i_p_1_links.add((v, w))
                                 reachable.add(w)
-                        else: #Not collider
-                            if(v not in determined):
-                                i_p_1_links.add((v,w))
+                        else:  # Not collider
+                            if v not in determined:
+                                i_p_1_links.add((v, w))
                                 reachable.add(w)
 
-            if(len(i_p_1_links) == 0):
+            if len(i_p_1_links) == 0:
                 break
 
             labeled_links = labeled_links.union(i_links)
             i_links = i_p_1_links
 
         return self._nodes.difference(A).difference(C).difference(reachable)
+
+
+if __name__ == '__main__':
+    g = AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4), (3, 2), (3, 4)})
+    disc_paths = g.discriminating_paths()
+
+
 
