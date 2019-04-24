@@ -85,6 +85,22 @@ class DAG:
     def skeleton(self):
         return {tuple(sorted((i, j))) for i, j in self._arcs}
 
+    @property
+    def in_degrees(self):
+        return {node: len(self._parents[node]) for node in self._nodes}
+
+    @property
+    def out_degrees(self):
+        return {node: len(self._children[node]) for node in self._nodes}
+
+    @property
+    def max_in_degree(self):
+        return max(len(self._parents[node]) for node in self._nodes)
+
+    @property
+    def max_out_degree(self):
+        return max(len(self._parents[node]) for node in self._nodes)
+
     def parents_of(self, node):
         return self._parents[node].copy()
 
@@ -895,9 +911,7 @@ class DAG:
         (i) S blocks every path from i to j with an arrow into i
         (ii) no node in S is a descendant of i
 
-        :param i:
-        :param j:
-        :return:
+
         """
         raise NotImplementedError
         pass
@@ -909,13 +923,39 @@ class DAG:
         (i) S blocks all directed paths from i to j
         (ii) there are no unblocked backdoor paths from i to S
         (iii) i blocks all backdoor paths from S to j
-        :param i:
-        :param j:
-        :return:
+
         """
         raise NotImplementedError()
 
-    def dsep(self, A, B, C=set()):
+    def dsep(self, A, B, C=set(), verbose=False):
+        """
+        Check if A and B are d-separated given C, using the Bayes ball algorithm.
+
+        Parameters
+        ----------
+        A:
+            First set of nodes.
+        B:
+            Second set of nodes.
+        C:
+            Separating set of nodes.
+
+        See Also
+        --------
+        dsep_from_given
+
+        Return
+        ------
+        is_dsep
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> g.dsep(1, 3)
+        True
+        >>> g.dsep(1, 3, 2)
+        False
+        """
         # type coercion
         A = core_utils.to_set(A)
         B = core_utils.to_set(B)
@@ -931,13 +971,18 @@ class DAG:
         _c = '_c'  # child
         _p = '_p'  # parent
 
-        schedule = {node: _c for node in A}
+        schedule = {(node, _c) for node in A}
         while schedule:
-            node, _dir = schedule.popitem()
+            if verbose:
+                print('Current schedule:', schedule)
+
+            node, _dir = schedule.pop()
             if node in B: return False
             if (node, _dir) in visited: continue
             visited.add((node, _dir))
-            # print(node, _dir)
+
+            if verbose:
+                print('Going through node', node, 'in direction', _dir)
 
             # if coming from child, won't encounter v-structure
             if _dir == _c and node not in C:
@@ -955,12 +1000,14 @@ class DAG:
 
         return True
 
+    def dsep_from_given(self, A, C=set()):
+        """
+        Find all nodes d-separated from A given C .
 
-
-    def dsep_from_given(self, A, C = set()):
-        """Find all nodes seperated from A given C using algorithm in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""
-
-        A = core_utils.to_set(A) 
+        Uses algorithm in Geiger, D., Verma, T., & Pearl, J. (1990).
+        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
+        """
+        A = core_utils.to_set(A)
         C = core_utils.to_set(C)
 
         determined = set()
@@ -979,23 +1026,23 @@ class DAG:
             i_links.add((None, a)) 
             reachable.add(a)
        
-        while(True):
+        while True:
             i_p_1_links = set()
             #Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
             for link in i_links:
-                u,v = link
+                u, v = link
                 for w in self._neighbors[v]:
-                    if(not u == w and (v,w) not in labeled_links):
-                        if(v in self._children[u] and v in self._children[w]): #Is collider?
-                            if(v in descendants):
+                    if not u == w and (v, w) not in labeled_links:
+                        if v in self._children[u] and v in self._children[w]:  #Is collider?
+                            if v in descendants:
                                 i_p_1_links.add((v,w))
                                 reachable.add(w)
-                        else: #Not collider
-                            if(v not in determined):
+                        else:  #Not collider
+                            if v not in determined:
                                 i_p_1_links.add((v,w))
                                 reachable.add(w)
 
-            if(len(i_p_1_links) == 0):
+            if len(i_p_1_links) == 0:
                 break
 
             labeled_links = labeled_links.union(i_links)

@@ -5,7 +5,52 @@ import itertools as itr
 from causaldag.utils.ci_tests import CI_Test, InvarianceTest
 from causaldag.utils.core_utils import powerset
 import random
+from collections import defaultdict
 from pprint import pprint
+import time
+import operator as op
+
+
+class UndirectedGraph:
+    def __init__(self, nodes, edges=set()):
+        self._nodes = nodes.copy()
+        self._edges = edges.copy()
+        self._neighbors = {node: set() for node in self._nodes}
+        self._degrees = {node: 0 for node in self._nodes}
+        for i, j in edges:
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+            self._degrees[i] += 1
+            self._degrees[j] += 1
+
+    def copy(self):
+        return UndirectedGraph(self._nodes, self._edges)
+
+    def add_edge(self, i, j):
+        self._edges.add(tuple(sorted((i, j))))
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+        self._degrees[i] += 1
+        self._degrees[j] += 1
+
+    def delete_edge(self, i, j):
+        self._edges.remove(tuple(sorted((i, j))))
+        self._neighbors[i].remove(j)
+        self._neighbors[j].remove(i)
+        self._degrees[i] -= 1
+        self._degrees[j] -= 1
+
+    def delete_node(self, i):
+        self._nodes.remove(i)
+        for j in self._neighbors[i]:
+            self._neighbors[j].remove(i)
+            self._degrees[i] -= 1
+            self._edges.remove(tuple(sorted((i, j))))
+        del self._neighbors[i]
+        del self._degrees[i]
+
+    def has_edge(self, i, j):
+        return tuple(sorted((i, j))) in self._edges
 
 
 def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
@@ -21,6 +66,7 @@ def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
     """
     d = DAG(nodes=set(range(len(perm))))
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
+        # cond_set = d.parents_of(pi_i) | d.parents_of(pi_j)
         rest = perm[:j]
         del rest[i]
         test_results = ci_test(suffstat, pi_i, pi_j, cond_set=rest if len(rest) != 0 else None, alpha=alpha)
@@ -29,14 +75,45 @@ def perm2dag(suffstat: Any, perm: list, ci_test: CI_Test, alpha: float=.05):
     return d
 
 
-def _perm2dag(perm, _is_ci):
+def _perm2dag(perm, _is_ci, restricted=True):
     d = DAG(nodes=set(range(len(perm))))
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
-        rest = perm[:j]
-        del rest[i]
-        if not _is_ci(pi_i, pi_j, rest):
+        if not restricted:
+            cond_set = perm[:j]
+            del cond_set[i]
+        else:
+            cond_set = d.parents_of(pi_i) | d.parents_of(pi_j)
+        if not _is_ci(pi_i, pi_j, cond_set):
             d.add_arc(pi_i, pi_j)
     return d
+
+
+def get_undirected_graph(nnodes, _is_ci):
+    nodes = set(range(nnodes))
+    edges = {(i, j) for i, j in itr.combinations(nodes, 2) if not _is_ci(i, j, nodes - {i, j})}
+    return UndirectedGraph(nodes, edges)
+
+
+def min_degree_alg(undirected_graph, _is_ci):
+    permutation = []
+    curr_undirected_graph = undirected_graph
+    while curr_undirected_graph._nodes:
+        min_degree = min(curr_undirected_graph._degrees.items(), key=op.itemgetter(1))[1]
+        min_degree_nodes = {node for node, degree in curr_undirected_graph._degrees.items() if degree == min_degree}
+        k = random.sample(min_degree_nodes, 1)[0]
+        nbrs_k = curr_undirected_graph._neighbors[k]
+
+        curr_undirected_graph = curr_undirected_graph.copy()
+        curr_undirected_graph.delete_node(k)
+        for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
+            if not curr_undirected_graph.has_edge(nbr1, nbr2):
+                curr_undirected_graph.add_edge(nbr1, nbr2)
+            elif _is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
+                curr_undirected_graph.delete_edge(nbr1, nbr2)
+
+        permutation.append(k)
+
+    return list(reversed(permutation))
 
 
 def gsp(
@@ -46,32 +123,66 @@ def gsp(
         alpha: float=0.01,
         depth: Optional[int]=4,
         nruns: int=5,
-        verbose=False
+        verbose=False,
+        restricted=True,
+        memoize=True,
+        smart_initialize=False
 ) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
     DAG.
 
-    :param suffstat:
-    :param nnodes:
-    :param ci_test: Conditional independence test.
-    :param alpha: Significance level for independence tests.
-    :param depth: Maximum depth in depth-first search. Use None for infinite search depth.
-    :param nruns: Number of runs of the algorithm. Each run starts at a random permutation and the sparsest DAG from all
-    runs is returned.
-    :param verbose:
-    :return:
+    Parameters
+    ----------
+    suffstat:
+        Dictionary of sufficient statistics for the conditional independence test.
+    nnodes:
+        Number of nodes in the graph.
+    ci_test:
+        A conditional independence test, which takes suffstat, two sets A and B, and a conditioning set C, and
+        returns a dictionary with "reject": True/False as a key-value pair.
+    alpha:
+        Significance level for conditional independence tests.
+    depth:
+        Maximum depth in depth-first search. Use None for infinite search depth.
+    nruns:
+        Number of runs of the algorithm. Each run starts at a random permutation and the sparsest DAG from all
+        runs is returned.
+    verbose:
+        TODO
+    restricted:
+        TODO
+    memoize:
+        TODO
+    smart_initialize:
+        If True, find the starting permutation by finding an undirected graph and applying the minimum-degree algorithm.
+        This initialization takes longer, but will tend to be more accurate.
+
+    See Also
+    --------
+    igsp, unknown_target_igsp
+
+    Return
+    ------
+    (est_dag, summaries)
     """
     is_ci_dict = dict()
+    ci_test_size_counter = defaultdict(list)
 
     def _is_ci(i, j, S):
-        i, j = sorted((i, j))  # standardize order
-        is_ci = is_ci_dict.get((i, j, frozenset(S)))
-        if is_ci is not None:
+        if memoize:
+            i, j = sorted((i, j))  # standardize order
+            is_ci = is_ci_dict.get((i, j, frozenset(S)))
+            if is_ci is not None:
+                return is_ci
+
+            start = time.time()
+            is_ci = not ci_test(suffstat, i, j, cond_set=S, alpha=alpha)['reject']
+            is_ci_dict[(i, j, frozenset(S))] = is_ci
+            ci_test_size_counter[len(S)].append(time.time() - start)
             return is_ci
-        is_ci = not ci_test(suffstat, i, j, cond_set=S, alpha=alpha)['reject']
-        is_ci_dict[(i, j, frozenset(S))] = is_ci
-        return is_ci
+        else:
+            return not ci_test(suffstat, i, j, cond_set=S, alpha=alpha)['reject']
 
     def _reverse_arc(dag, covered_arcs, i, j):
         new_dag = dag.copy()
@@ -92,13 +203,19 @@ def gsp(
                 new_covered_arcs.add((k, l))
         return new_dag, new_covered_arcs
 
+    if smart_initialize:
+        undirected_graph = get_undirected_graph(nnodes, _is_ci)
+
     summaries = []
     min_dag = None
     for r in range(nruns):
         summary = []
         # === STARTING VALUES
-        starting_perm = random.sample(list(range(nnodes)), nnodes)
-        current_dag = _perm2dag(starting_perm, _is_ci)
+        if smart_initialize:
+            starting_perm = min_degree_alg(undirected_graph, _is_ci)
+        else:
+            starting_perm = random.sample(list(range(nnodes)), nnodes)
+        current_dag = _perm2dag(starting_perm, _is_ci, restricted=restricted)
         if verbose: print("=== STARTING DAG:", current_dag)
         current_covered_arcs = current_dag.reversible_arcs()
         next_dags = [
@@ -147,7 +264,7 @@ def gsp(
         if min_dag is None or len(current_dag.arcs) < len(min_dag.arcs):
             min_dag = current_dag
 
-    return min_dag, summaries
+    return min_dag, summaries, ci_test_size_counter
 
 
 def igsp(

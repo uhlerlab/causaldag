@@ -85,6 +85,9 @@ class AncestralGraph:
         """
         return AncestralGraph(self.nodes, self.directed, self.bidirected, self.undirected)
 
+    def __str__(self):
+        return 'Directed edges: %s, Bidirected edges: %s, Undirected edges: %s' % (self._directed, self._bidirected, self._undirected)
+
     # === MUTATORS
     def add_node(self, node):
         """Add a node to the ancestral graph.
@@ -489,6 +492,9 @@ class AncestralGraph:
         same_discriminating = self.discriminating_paths() == other.discriminating_paths()
         return same_skeleton and same_vstructures and same_discriminating
 
+    def as_hashed(self):
+        return frozenset(self._directed), frozenset(self._bidirected), frozenset(self._undirected)
+
     # === Algorithms
     def _add_upstream(self, upstream, node):
         for parent in self._parents[node]:
@@ -508,6 +514,55 @@ class AncestralGraph:
             return True
         else:
             return False
+
+    def msep(self, A, B, C=set()):
+        """
+        Check whether A and B are m-separated given C, using the Bayes ball algorithm.
+
+
+        """
+        # type coercion
+        A = core_utils.to_set(A)
+        B = core_utils.to_set(B)
+        C = core_utils.to_set(C)
+
+        # shade ancestors of C
+        shaded_nodes = set(C)
+        for node in C:
+            self._add_upstream(shaded_nodes, node)
+
+        visited = set()
+        # marks whether the node has been encountered along a path where it has a tail or an arrowhead
+        _t = 'tail'  # tail
+        _a = 'arrowhead'  # arrowhead
+
+        schedule = {(node, _t) for node in A}
+        while schedule:
+            node, _dir = schedule.pop()
+            if node in B: return False
+            if (node, _dir) in visited: continue
+            visited.add((node, _dir))
+            # print(node, _dir)
+
+            # if coming through a tail, won't encounter v-structure
+            if _dir == _t and node not in C:
+                schedule.update({(parent, _t) for parent in self._parents[node]})
+                schedule.update({(child, _a) for child in self._children[node]})
+                schedule.update({(spouse, _a) for spouse in self._spouses[node]})
+                schedule.update({(nbr, _t) for nbr in self._neighbors[node]})
+
+            if _dir == _a:
+                # if coming through an arrowhead and see shaded node, can go through v-structure
+                if node in shaded_nodes:
+                    schedule.update({(parent, _t) for parent in self._parents[node]})
+                    schedule.update({(spouse, _a) for spouse in self._spouses[node]})
+
+                # if coming through an arrowhead and see unconditioned node, can go through children and neighbors
+                if node not in C:
+                    schedule.update({(child, _a) for child in self._children[node]})
+                    schedule.update({(nbr, _a) for nbr in self._neighbors[node]})
+
+        return True
 
     def msep_from_given(self, A, C=set()):
         """Find all nodes m-seperated from A given C using algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""

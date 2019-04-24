@@ -1,7 +1,12 @@
 from unittest import TestCase
 import unittest
 import numpy as np
+import subprocess
+import os
 import causaldag as cd
+import random
+
+CURR_DIR = os.path.dirname(__file__)
 
 
 class TestAncestralGraph(TestCase):
@@ -80,8 +85,68 @@ class TestAncestralGraph(TestCase):
 
     def test_msep_from_given(self):
         d = cd.AncestralGraph(directed={(1, 2), (3, 2), (2, 4), (3, 4)})
-        print(d.msep_from_given(1))
-        print(d.msep_from_given(1, 2))
+        # print(d.msep_from_given(1))
+        # print(d.msep_from_given(1, 2))
+
+    def test_msep(self):
+        # 1 -> 3 <-> 4 <- 2
+        d = cd.AncestralGraph(directed={(1, 3), (2, 4)}, bidirected={(3, 4)})
+        self.assertTrue(d.msep({1, 3}, 2))
+        self.assertTrue(d.msep(1, 2))
+        self.assertTrue(d.msep({1}, 4))
+        self.assertFalse(d.msep({1, 3}, 4))
+        self.assertFalse(d.msep(1, 2, {3, 4}))
+
+        # undirected 4-cycle
+        d = cd.AncestralGraph(undirected={(1, 2), (2, 3), (3, 4), (4, 1)})
+        self.assertFalse(d.msep(1, 3))
+        self.assertTrue(d.msep(1, 3, {2, 4}))
+
+        # bidirected 4-cycle
+        d = cd.AncestralGraph(bidirected={(1, 2), (2, 3), (3, 4), (4, 1)})
+        self.assertTrue(d.msep(1, 3))
+        self.assertFalse(d.msep(1, 3, 2))
+
+        # discriminating path with discriminated node (3) as collider
+        d = cd.AncestralGraph(directed={(1, 2), (2, 4)}, bidirected={(2, 3), (3, 4)})
+        self.assertTrue(d.msep(1, 4, 2))
+        self.assertFalse(d.msep(1, 4, {2, 3}))
+
+        # big random graph
+        np.random.seed(1729)
+        random.seed(1729)
+        nnodes = 10
+        nodes = set(range(nnodes))
+        g = cd.rand.directed_erdos(nnodes, 1/(nnodes-1))
+        print(g.arcs)
+        amat_file = os.path.join(CURR_DIR, 'random_mag.txt')
+        np.savetxt(amat_file, g.to_amat(list(nodes))[0])
+
+        rfile = os.path.join(CURR_DIR, 'test_msep.R')
+
+        ntests = 50
+        for _ in range(ntests):
+            set_size = random.randint(1, 3)  # these currently need to be the same size b/c ggm is buggy
+            nodes1 = random.sample(nodes, set_size)
+            nodes2 = random.sample(nodes - set(nodes1), set_size)
+            cond_set = random.sample(nodes - set(nodes1) - set(nodes2), random.randint(1, 3))
+            print(nodes1, nodes2, cond_set)
+            nodes1_str = ','.join(map(str, nodes1))
+            nodes2_str = ','.join(map(str, nodes2))
+            cond_set_str = ','.join(map(str, cond_set))
+            if len(cond_set) > 0:
+                r_output = subprocess.check_output(['Rscript', rfile, amat_file, nodes1_str, nodes2_str, cond_set_str])
+            else:
+                r_output = subprocess.check_output(['Rscript', rfile, amat_file, nodes1_str, nodes2_str])
+            print(r_output.decode())
+            r_output = r_output.decode() == 'TRUE'
+            my_output = g.dsep(nodes1, nodes2, cond_set)
+            print(r_output, my_output)
+            self.assertEqual(r_output, my_output)
+
+    # def dsep_regression_test1(self):
+    #     d = cd.DAG(nodes=set(range(10)), arcs={(0, 9), (1, 9), (8, 9), (2, 5)})
+    #     print(d.dsep({5, 9, 1}, {3, 0, 6}, {7, 2}, verbose=True))
 
     def test_disc_paths(self):
         g = cd.AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4), (3, 2), (3, 4)})
@@ -94,7 +159,7 @@ class TestAncestralGraph(TestCase):
 
         g = cd.AncestralGraph(nodes=set(range(1, 6)), directed={(1, 2), (2, 5), (3, 5)}, bidirected={(2, 3), (3, 4), (4, 5)})
         disc_paths = g.discriminating_paths()
-        print(disc_paths)
+        # print(disc_paths)
         self.assertEqual(disc_paths, [([1, 2, 3, 5], 'n'), ([1, 2, 3, 4, 5], 'c')])
 
 
