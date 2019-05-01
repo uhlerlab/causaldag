@@ -3,6 +3,7 @@ import numpy as np
 
 
 def residuals(samples, i, j, cond_set):
+    cond_set = list(cond_set)
     g = pygam.GAM()
     g.fit(samples[:, cond_set], samples[:, i])
     residuals_i = g.deviance_residuals(samples[:, cond_set], samples[:, i])

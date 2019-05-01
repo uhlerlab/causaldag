@@ -432,7 +432,7 @@ class DAG:
                 reversible_arcs.add((i, j))
         return reversible_arcs
 
-    def vstructs(self):
+    def arcs_in_vstructures(self):
         """Get all arcs in the graph that participate in a v-structure.
 
         Return
@@ -445,15 +445,23 @@ class DAG:
         Example
         -------
         >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
-        >>> g.vstructs()
+        >>> g.arcs_in_vstructures()
         {(1, 3), (2, 3))
         """
+        vstruct_arcs = set()
+        for node in self._nodes:
+            for p1, p2 in itr.combinations(self._parents[node], 2):
+                if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
+                    vstruct_arcs.add((p1, node))
+                    vstruct_arcs.add((p2, node))
+        return vstruct_arcs
+
+    def vstructures(self):
         vstructs = set()
         for node in self._nodes:
             for p1, p2 in itr.combinations(self._parents[node], 2):
                 if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
-                    vstructs.add((p1, node))
-                    vstructs.add((p2, node))
+                    vstructs.add((p1, node, p2))
         return vstructs
 
     # === COMPARISON
@@ -523,6 +531,17 @@ class DAG:
             return self.cpdag() == other.cpdag()
         else:
             return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
+
+    def local_markov_statements(self):
+        statements = set()
+        for node in self._nodes:
+            parents = self._parents[node]
+            nondescendants = self._nodes - {node} - self.downstream(node) - parents
+            statements.add((node, frozenset(nondescendants), frozenset(parents)))
+        return statements
+
+    def is_imap(self, other):
+        return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
@@ -832,9 +851,14 @@ class DAG:
         Markov equivalence class of this DAG
         """
         from causaldag import PDAG
-        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.vstructs())
+        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
         pdag.remove_unprotected_orientations()
         return pdag
+
+    def moral_graph(self):
+        from causaldag import UndirectedGraph
+        edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
+        return UndirectedGraph(self._nodes, edges)
 
     def interventional_cpdag(self, interventions, cpdag=None):
         """Return the interventional essential graph (aka CPDAG) associated with this DAG."""

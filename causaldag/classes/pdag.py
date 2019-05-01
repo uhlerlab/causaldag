@@ -45,7 +45,6 @@ class PDAG:
                     arcs.add((i, j))
         return PDAG(set(range(nrows)), arcs, edges)
 
-
     def _add_arc(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)

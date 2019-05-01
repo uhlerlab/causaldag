@@ -6,3 +6,4 @@ from .interventions import SoftIntervention, PerfectIntervention, SoftInterventi
     ConstantIntervention, MultinomialIntervention
 from .ancestral_graph import AncestralGraph
 from . import ancestral_graph, dag, pdag
+from .undirected_graph import UndirectedGraph

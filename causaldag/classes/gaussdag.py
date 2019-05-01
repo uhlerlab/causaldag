@@ -163,8 +163,8 @@ class GaussDAG(DAG):
         raise NotImplementedError
         pass
 
-    def vstructs(self):
-        return super().vstructs()
+    def arcs_in_vstructures(self):
+        return super().arcs_in_vstructures()
 
     def reversible_arcs(self):
         return super().reversible_arcs()

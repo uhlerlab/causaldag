@@ -1,5 +1,5 @@
-from ...classes.dag import DAG
-from ...classes.ancestral_graph import AncestralGraph
+from causaldag import DAG
+from causaldag import AncestralGraph
 from typing import Union, List
 
 
