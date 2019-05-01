@@ -173,7 +173,7 @@ def igsp(
         i -> j is I-covered if:
         1) if {i} is an intervention, then f^{i}(j) = f(j)
         """
-        setting_num = interventions2setting_nums[frozenset({i})]
+        setting_num = interventions2setting_nums.get(frozenset({i}))
         if setting_num is not None and not invariance_tester.is_invariant(j, 0, setting_num):
             return False
         # for iv_nodes in samples.keys():
@@ -215,10 +215,10 @@ def igsp(
         2) {j} \in I and f^{j}(i) \neq f(i)
         """
         if only_single_node:
-            setting_num_i = interventions2setting_nums[frozenset({i})]
+            setting_num_i = interventions2setting_nums.get(frozenset({i}))
             if setting_num_i is not None and invariance_tester.is_invariant(j, 0, setting_num_i):
                 return True
-            setting_num_j = interventions2setting_nums[frozenset({j})]
+            setting_num_j = interventions2setting_nums.get(frozenset({j}))
             if setting_num_j is not None and not invariance_tester.is_invariant(i, 0, setting_num_j):
                 return True
             return False
@@ -234,7 +234,9 @@ def igsp(
             neighbors_i = dag.neighbors_of(i) - {j}
             for setting_num, setting in enumerate(setting_list):
                 if j in setting['interventions'] and i not in setting['interventions']:
-                    i_always_varies = all(invariance_tester.is_invariant(i, 0, setting_num, cond_set=s) for s in powerset(neighbors_i))
+                    i_always_varies = all(
+                        invariance_tester.is_invariant(i, 0, setting_num, cond_set=s) for s in powerset(neighbors_i)
+                    )
                     if i_always_varies: return True
             return False
 
@@ -287,8 +289,9 @@ def igsp(
             ]
 
             if verbose:
-                desc = '(%s arcs, I-covered: %s, I-contradicting: %s)' % \
-                          (len(current_dag.arcs), current_icovered_arcs, current_contradicting)
+                desc = f'({len(current_dag.arcs)} arcs'
+                desc += f', I-covered: {current_icovered_arcs}'
+                desc += f', I-contradicting: {current_contradicting})'
                 print('-'*len(trace), current_dag, desc)
             if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
                 if len(lower_dags) > 0:  # restart at a lower DAG
@@ -296,13 +299,14 @@ def igsp(
                     trace = []
                     current_dag, current_icovered_arcs, current_contradicting = lower_dags.pop()
                     min_dag_run = (current_dag, current_contradicting)
-                    if verbose: print("FOUND DAG WITH FEWER ARCS:", current_dag, "(# ARCS: %s)" % len(current_dag.arcs))
+                    if verbose: print(f"FOUND DAG WITH {len(current_dag.arcs)}) ARCS: {current_dag}")
                 else:
                     trace.append((current_dag, current_icovered_arcs, current_contradicting))
                     current_dag, current_icovered_arcs, current_contradicting = next_dags.pop()
                     if len(current_contradicting) < len(min_dag_run[1]):
                         min_dag_run = (current_dag, current_contradicting)
-                        if verbose: print("FOUND DAG WITH FEWER CONTRADICTING ARCS:", current_dag, "(# CONTRADICTING: %s)" % current_contradicting)
+                        if verbose:
+                            print(f"FOUND DAG WITH {current_contradicting} CONTRADICTING ARCS: {current_dag}")
                 next_dags = [_reverse_arc(current_dag, i, j) for i, j in current_icovered_arcs]
                 next_dags = [
                     (d, icovered_arcs, contradicting_arcs)
@@ -351,7 +355,7 @@ def is_icovered(
 
     for setting_num, setting in enumerate(setting_list):
         if i in setting['interventions']:
-            if not invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j):
+            if invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j):
                 return False
 
     return True
@@ -397,7 +401,7 @@ def unknown_target_igsp(
         parents_j = frozenset(dag.parents_of(j))
         for setting_num, setting in enumerate(setting_list):
             if i in setting['known_interventions']:
-                if not invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j)[0]:
+                if invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j):
                     return False
         return True
 
@@ -406,18 +410,13 @@ def unknown_target_igsp(
         Count the number of variances for the DAG dag
         """
         variants = set()
-        pvalues = {}
 
         for i in dag.nodes:
             parents_i = frozenset(dag.parents_of(i))
             for setting_num, setting in enumerate(setting_list):
-                is_variant, pvalue = invariance_tester.is_invariant(i, 0, setting_num, cond_set=parents_i)
-                pvalues[(setting_num, i, parents_i)] = pvalue
-                if is_variant:
+                if not invariance_tester.is_invariant(i, 0, setting_num, cond_set=parents_i):
                     variants.add((setting_num, i, parents_i))
 
-        # print(dag, variants)
-        # print(pvalues)
         return variants
 
     def _reverse_arc_igsp(dag, i_covered_arcs, i, j):
@@ -477,7 +476,10 @@ def unknown_target_igsp(
         current_i_covered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j, current_dag)]
         if verbose: print("=== STARTING I-COVERED ARCS:", current_i_covered_arcs)
         next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
-        next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score <= current_score]
+        next_dags = [
+            (d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags
+            if score <= current_score
+        ]
         random.shuffle(next_dags)
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
@@ -489,7 +491,10 @@ def unknown_target_igsp(
             if verbose:
                 print('-'*len(trace), current_dag, '(%d arcs)' % len(current_dag.arcs), 'I-covered arcs:', current_i_covered_arcs, 'score:', current_score)
             all_visited_dags.add(frozenset(current_dag.arcs))
-            lower_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score < current_score]
+            lower_dags = [
+                (d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags
+                if score < current_score
+            ]
 
             if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
                 if len(lower_dags) > 0:  # restart at a lower DAG
@@ -500,9 +505,18 @@ def unknown_target_igsp(
                 else:
                     trace.append((current_dag, current_i_covered_arcs, next_dags, current_intervention_targets))
                     current_dag, current_i_covered_arcs, current_score, current_intervention_targets = next_dags.pop()
-                next_dags = [_reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j) for i, j in current_i_covered_arcs]
-                next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if score <= current_score]
-                next_dags = [(d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags if frozenset(d.arcs) not in all_visited_dags]
+                next_dags = [
+                    _reverse_arc_igsp(current_dag, current_i_covered_arcs, i, j)
+                    for i, j in current_i_covered_arcs
+                ]
+                next_dags = [
+                    (d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags
+                    if score <= current_score
+                ]
+                next_dags = [
+                    (d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags
+                    if frozenset(d.arcs) not in all_visited_dags
+                ]
                 random.shuffle(next_dags)
             # === DEAD END ===
             else:

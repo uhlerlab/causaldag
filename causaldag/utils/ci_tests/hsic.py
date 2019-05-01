@@ -3,6 +3,7 @@ import numpy as np
 from causaldag.utils.ci_tests import kernels
 from scipy.stats import gamma
 from causaldag.utils.ci_tests._utils import residuals, combined_mat
+from causaldag.utils.core_utils import to_list
 
 
 def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alpha=0.05):
@@ -38,7 +39,14 @@ def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alph
     critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
     p_value = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
 
-    return dict(statistic=statistic, critval=critval, p_value=p_value, reject=statistic > critval, mean_approx=mean_approx, var_approx=var_approx)
+    return dict(
+        statistic=statistic,
+        critval=critval,
+        p_value=p_value,
+        reject=statistic > critval,
+        mean_approx=mean_approx,
+        var_approx=var_approx
+    )
 
 
 def hsic_test(
@@ -48,9 +56,8 @@ def hsic_test(
         cond_set: Union[List[int], int]=None,
         alpha: float=0.05
 ):
-    if isinstance(cond_set, int):
-        cond_set = [cond_set]
-    if cond_set is None or len(cond_set) == 0:
+    cond_set = to_list(cond_set)
+    if len(cond_set) == 0:
         return hsic_test_vector(suffstat[:, i], suffstat[:, j], alpha=alpha)
     else:
         residuals_i, residuals_j = residuals(suffstat, i, j, cond_set)
@@ -64,10 +71,7 @@ def hsic_invariance_test(
         cond_set: Optional[Union[List[int], int]]=None,
         alpha: float=0.05
 ):
-    if isinstance(cond_set, int):
-        cond_set = [cond_set]
-    if cond_set is None:
-        cond_set = []
+    cond_set = to_list(cond_set)
 
     mat = combined_mat(samples1, samples2, i, cond_set)
     return hsic_test(mat, 0, 1, list(range(2, 2+len(cond_set))), alpha=alpha)

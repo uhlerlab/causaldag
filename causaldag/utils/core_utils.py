@@ -21,8 +21,21 @@ def powerset(s):
 def to_set(o):
     if not isinstance(o, set):
         try:
-            o = set(o)
+            return set(o)
         except TypeError:
-            o = {o}
+            if o is None:
+                return set()
+            return {o}
+    return o
+
+
+def to_list(o):
+    if not isinstance(o, list):
+        try:
+            return list(o)
+        except TypeError:
+            if o is None:
+                return []
+            return [o]
     return o
 

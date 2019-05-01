@@ -1,7 +1,7 @@
-from typing import NewType, Callable, Dict
+from typing import NewType, Callable, Dict, List
 import time
 
-InvarianceTest = NewType('InvarianceTest', Callable[[Dict, Dict, ], Dict])
+InvarianceTest = NewType('InvarianceTest', Callable[[Dict, Dict], Dict])
 
 
 class InvarianceTester:
@@ -13,7 +13,7 @@ class InvarianceTester:
 
 
 class MemoizedInvarianceTester(InvarianceTester):
-    def __init__(self, invariance_test: InvarianceTest, suffstats: Dict[Dict], track_times=False, detailed=False, **kwargs):
+    def __init__(self, invariance_test: InvarianceTest, suffstats: List[Dict], track_times=False, detailed=False, **kwargs):
         """
         Class for memoizing the results of invariance tests.
 
@@ -22,7 +22,7 @@ class MemoizedInvarianceTester(InvarianceTester):
         invariance_test:
             the DAG to which the SHD of the skeleton will be computed.
         suffstats:
-            dictionary mapping settings to their sufficient statistics
+            list mapping settings to their sufficient statistics
         track_times:
             if True, keep a dictionary mapping each invariance test to the time taken to perform it.
         detailed:
@@ -31,7 +31,7 @@ class MemoizedInvarianceTester(InvarianceTester):
         """
         InvarianceTester.__init__(self)
         self.invariance_dict_detailed = dict()
-        self.invariance_dict = {setting: dict() for setting in suffstats}
+        self.invariance_dict = dict()
         self.invariance_test = invariance_test
         self.suffstats = suffstats
         self.kwargs = kwargs
@@ -65,14 +65,14 @@ class MemoizedInvarianceTester(InvarianceTester):
             self.invariance_times[index] = time.time() - start
         if self.detailed:
             self.invariance_dict_detailed[index] = test_results
-            _is_invariant = not test_results['reject']
+        _is_invariant = not test_results['reject']
         self.invariance_dict[index] = _is_invariant
 
         return _is_invariant
 
 
 class PlainInvarianceTester(InvarianceTester):
-    def __init__(self, invariance_test: InvarianceTest, suffstats: Dict, **kwargs):
+    def __init__(self, invariance_test: InvarianceTest, suffstats: List[Dict], **kwargs):
         """
         Class for returning the results of invariance tests.
 
@@ -81,7 +81,7 @@ class PlainInvarianceTester(InvarianceTester):
         invariance_test:
             the DAG to which the SHD of the skeleton will be computed.
         suffstats:
-            dictionary mapping settings to their sufficient statistics
+            list mapping settings to their sufficient statistics
         """
         InvarianceTester.__init__(self)
         self.invariance_test = invariance_test
