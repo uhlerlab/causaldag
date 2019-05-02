@@ -7,3 +7,4 @@ from .interventions import SoftIntervention, PerfectIntervention, SoftInterventi
 from .ancestral_graph import AncestralGraph
 from . import ancestral_graph, dag, pdag
 from .undirected_graph import UndirectedGraph
+from .sample_dag import SampleDAG

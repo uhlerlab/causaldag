@@ -5,13 +5,18 @@ from causaldag.utils.ci_tests import InvarianceTester, CI_Tester
 from causaldag.utils.core_utils import powerset
 import random
 import operator as op
+from causaldag.inference.structural.undirected import threshold_ug
 
 
-def perm2dag(perm, ci_tester: CI_Tester):
+def perm2dag(perm, ci_tester: CI_Tester, restricted=True):
     d = DAG(nodes=set(range(len(perm))))
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
-        cond_set = perm[:j]
-        del cond_set[i]
+        if restricted:
+            cond_set = set(perm[i+1:j]) | d.parents_of(pi_i) | d.parents_of(pi_j)
+        else:
+            cond_set = perm[:j]
+            del cond_set[i]
+
         if not ci_tester.is_ci(pi_i, pi_j, cond_set):
             d.add_arc(pi_i, pi_j)
     return d
@@ -45,7 +50,8 @@ def gsp(
         depth: Optional[int]=4,
         nruns: int=5,
         verbose=False,
-        initial_undirected=None
+        restricted=True,
+        initial_undirected='threshold'
 ) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
@@ -66,8 +72,9 @@ def gsp(
     verbose:
         TODO
     initial_undirected:
-        If True, find the starting permutation by finding an undirected graph and applying the minimum-degree algorithm.
-        This initialization takes longer, but will tend to be more accurate.
+        Option to find the starting permutation by using the minimum degree algorithm on an undirected graph that is
+        Markov to the data. You can provide the undirected graph yourself, use the default 'threshold' to do simple
+        thresholding on the partial correlation matrix, or select 'None' to start at a random permutation.
 
     See Also
     --------
@@ -96,6 +103,12 @@ def gsp(
                 new_covered_arcs.add((k, l))
         return new_dag, new_covered_arcs
 
+    if isinstance(initial_undirected, str):
+        if initial_undirected == 'threshold':
+            initial_undirected = threshold_ug(nnodes, ci_tester)
+        else:
+            raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
+
     summaries = []
     min_dag = None
     for r in range(nruns):
@@ -105,7 +118,7 @@ def gsp(
             starting_perm = min_degree_alg(initial_undirected, ci_tester)
         else:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
-        current_dag = perm2dag(starting_perm, ci_tester)
+        current_dag = perm2dag(starting_perm, ci_tester, restricted=restricted)
         if verbose: print("=== STARTING DAG:", current_dag)
         current_covered_arcs = current_dag.reversible_arcs()
         next_dags = [

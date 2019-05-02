@@ -44,7 +44,7 @@ class MemoizedCI_Tester(CI_Tester):
         self.ci_dict[index] = _is_ci
 
         return _is_ci
-    
+
 
 class PlainCI_Tester(CI_Tester):
     def __init__(self, ci_test: CI_Test, suffstat: Dict, **kwargs):
