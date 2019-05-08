@@ -5,8 +5,7 @@ import itertools as itr
 from scipy.stats import gamma
 from typing import Dict, Union, List
 from causaldag.utils.ci_tests import kernels
-import pygam
-from causaldag.utils.ci_tests._utils import residuals, combined_mat
+from causaldag.utils.ci_tests._utils import residuals
 
 
 def ki_test_vector(

@@ -963,6 +963,8 @@ class DAG:
             Second set of nodes.
         C:
             Separating set of nodes.
+        verbose:
+            If True, print moves of the algorithm.
 
         See Also
         --------
@@ -1002,6 +1004,69 @@ class DAG:
 
             node, _dir = schedule.pop()
             if node in B: return False
+            if (node, _dir) in visited: continue
+            visited.add((node, _dir))
+
+            if verbose:
+                print('Going through node', node, 'in direction', _dir)
+
+            # if coming from child, won't encounter v-structure
+            if _dir == _c and node not in C:
+                schedule.update({(parent, _c) for parent in self._parents[node]})
+                schedule.update({(child, _p) for child in self._children[node]})
+
+            if _dir == _p:
+                # if coming from parent and see shaded node, can go through v-structure
+                if node in shaded_nodes:
+                    schedule.update({(parent, _c) for parent in self._parents[node]})
+
+                # if coming from parent and see unconditioned node, can go through children
+                if node not in C:
+                    schedule.update({(child, _p) for child in self._children[node]})
+
+        return True
+
+    def is_invariant(self, A, intervened_nodes, cond_set=set(), verbose=False):
+        """
+        Check if the distribution of A given cond_set is invariant to an intervention on intervened_nodes.
+
+        :math:`f^\emptyset(A|C) = f^I(A|C)` if the "intervention node" I with intervened_nodes as its children
+        is d-separated from A given C. Equivalently, the :math:`f^\emptyset(A|C) \neq f^I(A|C)` if there is an
+        active path to an intervened node, and that intervened node or one of its descendants is conditioned on.
+
+        Parameters
+        ----------
+        A:
+            Set of nodes.
+        intervened_nodes:
+            Nodes on which an intervention has occurred.
+        cond_set:
+            Conditioning set for the tested distribution.
+        verbose:
+            If True, print moves of the algorithm.
+        """
+        # type coercion
+        A = core_utils.to_set(A)
+        I = core_utils.to_set(intervened_nodes)
+        C = core_utils.to_set(cond_set)
+
+        # shade ancestors of C
+        shaded_nodes = set(C)
+        for node in C:
+            self._add_upstream(shaded_nodes, node)
+
+        visited = set()
+        # marks for which direction the path is traveling through the node
+        _c = '_c'  # child
+        _p = '_p'  # parent
+
+        schedule = {(node, _c) for node in A}
+        while schedule:
+            if verbose:
+                print('Current schedule:', schedule)
+
+            node, _dir = schedule.pop()
+            if node in I and I in shaded_nodes: return False
             if (node, _dir) in visited: continue
             visited.add((node, _dir))
 

@@ -13,6 +13,29 @@ class CI_Tester:
 
 class MemoizedCI_Tester(CI_Tester):
     def __init__(self, ci_test: CI_Test, suffstat: Dict, track_times=False, detailed=False, **kwargs):
+        """
+        Class for memoizing the results of conditional independence tests.
+
+        Parameters
+        ----------
+        ci_test:
+            Function taking suffstat, i, j, and cond_set, and returning a dictionary that includes the key 'reject'.
+        suffstat:
+            dictionary of sufficient statistics for the conditional independence test.
+        track_times:
+            if True, keep a dictionary mapping each conditional independence test to the time taken to perform it.
+        detailed:
+            if True, keep a dictionary mapping each conditional independence test to its full set of results.
+        **kwargs:
+            Additional keyword arguments to be passed to the conditional independence test.
+
+        See Also
+        --------
+        PlainCI_Tester
+
+        Example
+        -------
+        """
         CI_Tester.__init__(self)
         self.ci_dict_detailed = dict()
         self.ci_dict = dict()
@@ -48,6 +71,25 @@ class MemoizedCI_Tester(CI_Tester):
 
 class PlainCI_Tester(CI_Tester):
     def __init__(self, ci_test: CI_Test, suffstat: Dict, **kwargs):
+        """
+        Class for returning the results of conditional independence tests.
+
+        Parameters
+        ----------
+        ci_test:
+            Function taking suffstat, i, j, and cond_set, and returning a dictionary that includes the key 'reject'.
+        suffstat:
+            dictionary of sufficient statistics for the conditional independence test.
+        **kwargs:
+            Additional keyword arguments to be passed to the conditional independence test.
+
+        See Also
+        --------
+        MemoizedCI_Tester
+
+        Example
+        -------
+        """
         CI_Tester.__init__(self)
         self.ci_test = ci_test
         self.suffstat = suffstat

@@ -1,7 +1,8 @@
 from typing import Dict, Optional, Any, List, Set
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import InvarianceTester, CI_Tester
+from causaldag.utils.ci_tests import CI_Tester
+from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset
 import random
 import operator as op

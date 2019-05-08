@@ -20,14 +20,23 @@ class MemoizedInvarianceTester(InvarianceTester):
         Parameters
         ----------
         invariance_test:
-            the DAG to which the SHD of the skeleton will be computed.
+            Function taking suffstat1, suffstat2, node, and conditioning set, and returning a dictionary that includes
+            the key 'reject'.
         suffstats:
             list mapping settings to their sufficient statistics
         track_times:
             if True, keep a dictionary mapping each invariance test to the time taken to perform it.
         detailed:
-            if True, keep a dictionary mappint each invariance test to its full set of results.
+            if True, keep a dictionary mapping each invariance test to its full set of results.
+        **kwargs:
+            Additional keyword arguments to be passed to the invariance test.
 
+        See Also
+        --------
+        PlainInvarianceTester
+
+        Example
+        -------
         """
         InvarianceTester.__init__(self)
         self.invariance_dict_detailed = dict()
@@ -79,9 +88,20 @@ class PlainInvarianceTester(InvarianceTester):
         Parameters
         ----------
         invariance_test:
-            the DAG to which the SHD of the skeleton will be computed.
+            Function taking suffstat1, suffstat2, node, and conditioning set, and returning a dictionary that includes
+            the key 'reject'.
         suffstats:
-            list mapping settings to their sufficient statistics
+            List mapping settings to their sufficient statistics.
+        **kwargs:
+            Additional keyword arguments to be passed to the invariance test.
+
+        See Also
+        --------
+        MemoizedInvarianceTester
+
+        Example
+        -------
+
         """
         InvarianceTester.__init__(self)
         self.invariance_test = invariance_test
