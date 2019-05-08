@@ -230,10 +230,10 @@ def igsp(
         """
         if only_single_node:
             setting_num_i = interventions2setting_nums.get(frozenset({i}))
-            if setting_num_i is not None and invariance_tester.is_invariant(j, 0, setting_num_i):
+            if setting_num_i is not None and invariance_tester.is_invariant(j, context=setting_num_i):
                 return True
             setting_num_j = interventions2setting_nums.get(frozenset({j}))
-            if setting_num_j is not None and not invariance_tester.is_invariant(i, 0, setting_num_j):
+            if setting_num_j is not None and not invariance_tester.is_invariant(i, context=setting_num_j):
                 return True
             return False
         else:
@@ -242,14 +242,14 @@ def igsp(
             for s in powerset(neighbors_j):
                 for setting_num, setting in enumerate(setting_list):
                     if i in setting['interventions'] and j not in setting['interventions']:
-                        if not invariance_tester.is_invariant(j, 0, setting_num, cond_set=s):
+                        if not invariance_tester.is_invariant(j, context=setting_num, cond_set=s):
                             return True
 
             neighbors_i = dag.neighbors_of(i) - {j}
             for setting_num, setting in enumerate(setting_list):
                 if j in setting['interventions'] and i not in setting['interventions']:
                     i_always_varies = all(
-                        invariance_tester.is_invariant(i, 0, setting_num, cond_set=s) for s in powerset(neighbors_i)
+                        invariance_tester.is_invariant(i, context=setting_num, cond_set=s) for s in powerset(neighbors_i)
                     )
                     if i_always_varies: return True
             return False
@@ -369,7 +369,7 @@ def is_icovered(
 
     for setting_num, setting in enumerate(setting_list):
         if i in setting['interventions']:
-            if invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j):
+            if invariance_tester.is_invariant(j, context=setting_num, cond_set=parents_j):
                 return False
 
     return True
@@ -415,7 +415,7 @@ def unknown_target_igsp(
         parents_j = frozenset(dag.parents_of(j))
         for setting_num, setting in enumerate(setting_list):
             if i in setting['known_interventions']:
-                if invariance_tester.is_invariant(j, 0, setting_num, cond_set=parents_j):
+                if invariance_tester.is_invariant(j, context=setting_num, cond_set=parents_j):
                     return False
         return True
 
@@ -428,7 +428,7 @@ def unknown_target_igsp(
         for i in dag.nodes:
             parents_i = frozenset(dag.parents_of(i))
             for setting_num, setting in enumerate(setting_list):
-                if not invariance_tester.is_invariant(i, 0, setting_num, cond_set=parents_i):
+                if not invariance_tester.is_invariant(i, context=setting_num, cond_set=parents_i):
                     variants.add((setting_num, i, parents_i))
 
         return variants

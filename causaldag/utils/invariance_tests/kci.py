@@ -1,12 +1,12 @@
-import numpy as np
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 from ._utils import combined_mat
 from causaldag.utils.ci_tests import kci_test
+from causaldag.utils.core_utils import to_list
 
 
 def kci_invariance_test(
-        samples1: np.ndarray,
-        samples2: np.ndarray,
+        suffstat: Dict,
+        context,
         i: int,
         cond_set: Optional[Union[List[int], int]]=None,
         width: float=0,
@@ -19,12 +19,11 @@ def kci_invariance_test(
         thresh: float=1e-5,
         num_eig: int=0,
 ):
-    if isinstance(cond_set, int):
-        cond_set = [cond_set]
-    if cond_set is None:
-        cond_set = []
+    cond_set = to_list(cond_set)
+    obs_samples = suffstat['obs_samples']
+    iv_samples = suffstat[context]
 
-    mat = combined_mat(samples1, samples2, i, cond_set)
+    mat = combined_mat(obs_samples, iv_samples, i, cond_set)
     return kci_test(
         mat, 0, 1, list(range(2, 2+len(cond_set))),
         width=width,

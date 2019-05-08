@@ -9,21 +9,24 @@ lr = LinearRegression()
 
 
 def gauss_invariance_test(
-        samples1: np.ndarray,
-        samples2: np.ndarray,
+        suffstat,
+        context,
         i: int,
         cond_set: Optional[Union[List[int], int]]=None,
         alpha: float=0.05,
 ):
     cond_set = to_list(cond_set)
-    lr.fit(samples1[:, cond_set], samples1[:, i])
-    residuals1 = samples1[:, i] - samples1[:, cond_set] @ lr.coef_
-    lr.fit(samples2[:, cond_set], samples2[:, i])
-    residuals2 = samples2[:, i] - samples2[:, cond_set] @ lr.coef_
+    obs_samples = suffstat['observational']
+    iv_samples = suffstat[context]
+
+    lr.fit(obs_samples[:, cond_set], obs_samples[:, i])
+    residuals1 = obs_samples[:, i] - obs_samples[:, cond_set] @ lr.coef_
+    lr.fit(iv_samples[:, cond_set], iv_samples[:, i])
+    residuals2 = iv_samples[:, i] - iv_samples[:, cond_set] @ lr.coef_
 
     ttest_results = ttest_ind(residuals1, residuals2, equal_var=False)
     ftest_stat = np.var(residuals1)/np.var(residuals2)
-    f_pvalue = 1 - fdist.cdf(ftest_stat, samples1.shape[0]-1, samples2.shape[0]-1)
+    f_pvalue = 1 - fdist.cdf(ftest_stat, obs_samples.shape[0]-1, iv_samples.shape[0]-1)
 
     return dict(
         ttest_stat=ttest_results.statistic,

@@ -1,33 +1,33 @@
-from typing import NewType, Callable, Dict, List
+from typing import NewType, Callable, Dict, Any, Set
 import time
 
-InvarianceTest = NewType('InvarianceTest', Callable[[Dict, Dict], Dict])
+InvarianceTest = NewType('InvarianceTest', Callable[[Dict, Any, Any, Set], Dict])
 
 
 class InvarianceTester:
     def __init__(self):
         pass
 
-    def is_invariant(self, node, setting1, setting2, cond_set=set()):
+    def is_invariant(self, node, context, cond_set=set()):
         raise NotImplementedError
 
 
 class MemoizedInvarianceTester(InvarianceTester):
-    def __init__(self, invariance_test: InvarianceTest, suffstats: List[Dict], track_times=False, detailed=False, **kwargs):
+    def __init__(self, invariance_test: InvarianceTest, suffstat: Dict, track_times=False, detailed=False, **kwargs):
         """
         Class for memoizing the results of invariance tests.
 
         Parameters
         ----------
         invariance_test:
-            Function taking suffstat1, suffstat2, node, and conditioning set, and returning a dictionary that includes
+            Function taking suffstat, context, node, and conditioning set, and returning a dictionary that includes
             the key 'reject'.
-        suffstats:
-            list mapping settings to their sufficient statistics
+        suffstat:
+            Dictionary containing sufficient statistics for all contexts.
         track_times:
-            if True, keep a dictionary mapping each invariance test to the time taken to perform it.
+            If True, keep a dictionary mapping each invariance test to the time taken to perform it.
         detailed:
-            if True, keep a dictionary mapping each invariance test to its full set of results.
+            If True, keep a dictionary mapping each invariance test to its full set of results.
         **kwargs:
             Additional keyword arguments to be passed to the invariance test.
 
@@ -42,18 +42,17 @@ class MemoizedInvarianceTester(InvarianceTester):
         self.invariance_dict_detailed = dict()
         self.invariance_dict = dict()
         self.invariance_test = invariance_test
-        self.suffstats = suffstats
+        self.suffstat = suffstat
         self.kwargs = kwargs
         self.detailed = detailed
         self.track_times = track_times
         self.invariance_times = dict()
 
-    def is_invariant(self, node, setting1, setting2, cond_set=set()):
+    def is_invariant(self, node, context, cond_set=set()):
         """
-        Check if the conditional distribution of node, given cond_set, is invariant between setting1 and setting2
+        Check if the conditional distribution of node, given cond_set, is invariant to the context.
         """
-        setting1_, setting2_ = sorted((setting1, setting2))
-        index = (node, setting1_, setting2_, frozenset(cond_set))
+        index = (node, context, frozenset(cond_set))
 
         # check if result exists and return
         _is_invariant = self.invariance_dict.get(index)
@@ -64,8 +63,8 @@ class MemoizedInvarianceTester(InvarianceTester):
         if self.track_times:
             start = time.time()
         test_results = self.invariance_test(
-            self.suffstats[setting1],
-            self.suffstats[setting2],
+            self.suffstat,
+            context,
             node,
             cond_set=cond_set,
             **self.kwargs
@@ -81,17 +80,17 @@ class MemoizedInvarianceTester(InvarianceTester):
 
 
 class PlainInvarianceTester(InvarianceTester):
-    def __init__(self, invariance_test: InvarianceTest, suffstats: List[Dict], **kwargs):
+    def __init__(self, invariance_test: InvarianceTest, suffstat: Dict, **kwargs):
         """
         Class for returning the results of invariance tests.
 
         Parameters
         ----------
         invariance_test:
-            Function taking suffstat1, suffstat2, node, and conditioning set, and returning a dictionary that includes
+            Function taking suffstat, context, node, and conditioning set, and returning a dictionary that includes
             the key 'reject'.
-        suffstats:
-            List mapping settings to their sufficient statistics.
+        suffstat:
+            Dictionary containing sufficient statistics for all contexts.
         **kwargs:
             Additional keyword arguments to be passed to the invariance test.
 
@@ -105,13 +104,13 @@ class PlainInvarianceTester(InvarianceTester):
         """
         InvarianceTester.__init__(self)
         self.invariance_test = invariance_test
-        self.suffstats = suffstats
+        self.suffstat = suffstat
         self.kwargs = kwargs
 
-    def is_invariant(self, node, setting1, setting2, cond_set=set()):
+    def is_invariant(self, node, context, cond_set=set()):
         return self.invariance_test(
-            self.suffstats[setting1],
-            self.suffstats[setting2],
+            self.suffstat,
+            context,
             node,
             cond_set=cond_set,
             **self.kwargs
