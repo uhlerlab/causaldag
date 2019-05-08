@@ -1031,8 +1031,12 @@ class DAG:
         Check if the distribution of A given cond_set is invariant to an intervention on intervened_nodes.
 
         :math:`f^\emptyset(A|C) = f^I(A|C)` if the "intervention node" I with intervened_nodes as its children
-        is d-separated from A given C. Equivalently, the :math:`f^\emptyset(A|C) \neq f^I(A|C)` if there is an
-        active path to an intervened node, and that intervened node or one of its descendants is conditioned on.
+        is d-separated from A given C. Equivalently, the :math:`f^\emptyset(A|C) \neq f^I(A|C)` if:
+
+        - there is an active path to an intervened node that ends in an arrowhead, and that intervened node
+            or one of its descendants is conditioned on.
+        - there is an active path to an intervened node that ends in a tail, and that intervened node
+            is not conditioned on.
 
         Parameters
         ----------
@@ -1066,7 +1070,8 @@ class DAG:
                 print('Current schedule:', schedule)
 
             node, _dir = schedule.pop()
-            if node in I and I in shaded_nodes: return False
+            if node in I and _dir == _p and node in shaded_nodes: return False
+            if node in I and _dir == _c and node not in C: return False
             if (node, _dir) in visited: continue
             visited.add((node, _dir))
 

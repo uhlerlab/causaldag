@@ -19,9 +19,3 @@ def msep_test(
         cond_set: Union[List[int], int]=None
 ):
     return dict(reject=not mag.msep(i, j, cond_set))
-
-
-def dsep_invariance_test(
-
-):
-    pass

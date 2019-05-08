@@ -147,6 +147,16 @@ class TestDAG(TestCase):
         self.assertTrue(d.dsep(1, 2))
         self.assertFalse(d.dsep(1, 2, {5}))
 
+    def test_is_invariant(self):
+        d = cd.DAG(arcs={(1, 2), (2, 3)})
+        self.assertTrue(d.is_invariant(1, 3))
+        self.assertTrue(d.is_invariant(2, 3))
+        self.assertFalse(d.is_invariant(3, 3))
+        self.assertFalse(d.is_invariant(1, 3, cond_set=3))
+        self.assertFalse(d.is_invariant(2, 3, cond_set=3))
+        self.assertTrue(d.is_invariant(2, 3, cond_set=1))
+        self.assertTrue(d.is_invariant(1, 3, cond_set=2))
+
     # def test_vstructs(self):
     #     pass
     #
