@@ -47,8 +47,7 @@ class MemoizedCI_Tester(CI_Tester):
         self.ci_times = dict()
 
     def is_ci(self, i, j, cond_set=set()):
-        i_, j_ = sorted((i, j))
-        index = (i_, j_, frozenset(cond_set))
+        index = (frozenset({i, j}), frozenset(cond_set))
 
         # check if result exists and return
         _is_ci = self.ci_dict.get(index)
@@ -58,7 +57,7 @@ class MemoizedCI_Tester(CI_Tester):
         # otherwise, compute result and save
         if self.track_times:
             start = time.time()
-        test_results = self.ci_test(self.suffstat, i_, j_, cond_set=cond_set, **self.kwargs)
+        test_results = self.ci_test(self.suffstat, i, j, cond_set=cond_set, **self.kwargs)
         if self.track_times:
             self.ci_times[index] = time.time() - start
         if self.detailed:

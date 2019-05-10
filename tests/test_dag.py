@@ -157,6 +157,13 @@ class TestDAG(TestCase):
         self.assertTrue(d.is_invariant(2, 3, cond_set=1))
         self.assertTrue(d.is_invariant(1, 3, cond_set=2))
 
+    def test_marginal_mag(self):
+        d = cd.DAG(arcs={(1, 2), (1, 3)})
+        self.assertEqual(d.marginal_mag(1), cd.AncestralGraph(bidirected={(2, 3)}))
+
+        d = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        self.assertEqual(d.marginal_mag(1), cd.AncestralGraph(directed={(2, 3)}))
+
     # def test_vstructs(self):
     #     pass
     #

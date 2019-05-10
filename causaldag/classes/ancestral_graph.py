@@ -79,6 +79,16 @@ class AncestralGraph:
         for i, j in undirected:
             self._add_undirected(i, j)
 
+    def __eq__(self, other):
+        if not isinstance(other, AncestralGraph):
+            return False
+
+        same_nodes = self._nodes == other._nodes
+        same_directed = self._directed == other._directed
+        same_bidirected = self._bidirected == other._bidirected
+        same_undirected = self._undirected == other._undirected
+        return same_nodes and same_directed and same_bidirected and same_undirected
+
     def copy(self):
         """
         Return a copy of the current ancestral graph.

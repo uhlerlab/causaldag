@@ -1,17 +1,24 @@
-from typing import Dict, Optional, Any, List, Set
+from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester
+from causaldag.utils.ci_tests import CI_Tester, MemoizedCI_Tester
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset
 import random
 import operator as op
 from causaldag.inference.structural.undirected import threshold_ug
+from causaldag import UndirectedGraph
 
 
-def perm2dag(perm, ci_tester: CI_Tester, restricted=True):
+def perm2dag(perm, ci_tester: CI_Tester, restricted=True, fixed_adjacencies=set(), fixed_gaps=set()):
     d = DAG(nodes=set(range(len(perm))))
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
+        if (pi_i, pi_j) in fixed_adjacencies or (pi_j, pi_i) in fixed_adjacencies:
+            d.add_arc(pi_i, pi_j)
+            continue
+        if (pi_i, pi_j) in fixed_gaps or (pi_j, pi_i) in fixed_gaps:
+            continue
+
         if restricted:
             cond_set = set(perm[i+1:j]) | d.parents_of(pi_i) | d.parents_of(pi_j)
         else:
@@ -45,14 +52,44 @@ def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
     return list(reversed(permutation))
 
 
+def jci_gsp(
+        setting_list: List[Dict],
+        nnodes: int,
+        combined_ci_tester: CI_Tester,
+        nruns: int=5,
+        verbose: bool=False
+):
+    context_nodes = ['c%d' % i for i in range(len(setting_list))]
+    context_adjacencies = set(itr.permutations(context_nodes, r=2))
+    known_iv_adjacencies = set.union(*(
+        {('c%s' % i, node) for node in setting['known_interventions']} for i, setting in enumerate(setting_list)
+    ))
+    fixed_orders = set(itr.product(context_nodes, range(nnodes)))
+
+    initial_permutations = [context_nodes+random.sample(list(range(nnodes)), nnodes) for _ in range(nruns)]
+
+    return gsp(
+        nnodes+len(context_nodes),
+        combined_ci_tester,
+        initial_permutations=initial_permutations,
+        fixed_orders=fixed_orders,
+        fixed_adjacencies=context_adjacencies|known_iv_adjacencies,
+        verbose=verbose
+    )
+
+
 def gsp(
         nnodes: int,
         ci_tester: CI_Tester,
         depth: Optional[int]=4,
         nruns: int=5,
-        verbose=False,
-        restricted=True,
-        initial_undirected='threshold'
+        verbose: bool=False,
+        restricted: bool=True,
+        initial_undirected: Optional[Union[str, UndirectedGraph]]='threshold',
+        initial_permutations: Optional[List]=None,
+        fixed_orders=set(),
+        fixed_adjacencies=set(),
+        fixed_gaps=set()
 ) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
@@ -76,6 +113,15 @@ def gsp(
         Option to find the starting permutation by using the minimum degree algorithm on an undirected graph that is
         Markov to the data. You can provide the undirected graph yourself, use the default 'threshold' to do simple
         thresholding on the partial correlation matrix, or select 'None' to start at a random permutation.
+    initial_permutations:
+        A list of initial permutations with which to start the algorithm. This option is helpful when there is
+        background knowledge on orders. This option is mutually exclusive with initial_undirected.
+    fixed_orders:
+        Tuples (i, j) where i is known to come before j.
+    fixed_adjacencies:
+        Tuples (i, j) where i and j are known to be adjacent.
+    fixed_gaps:
+        Tuples (i, j) where i and j are known to be non-adjacent.
 
     See Also
     --------
@@ -93,9 +139,11 @@ def gsp(
         if parents:
             for parent in parents:
                 rest = parents - {parent}
-                if ci_tester.is_ci(i, parent, [*rest, j]):
+                i_parent_fixed = (i, parent) in fixed_adjacencies or (parent, i) in fixed_adjacencies
+                j_parent_fixed = (j, parent) in fixed_adjacencies or (parent, j) in fixed_adjacencies
+                if not i_parent_fixed and ci_tester.is_ci(i, parent, [*rest, j]):
                     new_dag.remove_arc(parent, i)
-                if ci_tester.is_ci(j, parent, [*rest]):
+                if not j_parent_fixed and ci_tester.is_ci(j, parent, [*rest]):
                     new_dag.remove_arc(parent, j)
 
         new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
@@ -104,7 +152,7 @@ def gsp(
                 new_covered_arcs.add((k, l))
         return new_dag, new_covered_arcs
 
-    if isinstance(initial_undirected, str):
+    if initial_permutations is None and isinstance(initial_undirected, str):
         if initial_undirected == 'threshold':
             initial_undirected = threshold_ug(nnodes, ci_tester)
         else:
@@ -115,13 +163,21 @@ def gsp(
     for r in range(nruns):
         summary = []
         # === STARTING VALUES
-        if initial_undirected:
+        if initial_permutations is not None:
+            starting_perm = initial_permutations[r]
+        elif initial_undirected:
             starting_perm = min_degree_alg(initial_undirected, ci_tester)
         else:
             starting_perm = random.sample(list(range(nnodes)), nnodes)
-        current_dag = perm2dag(starting_perm, ci_tester, restricted=restricted)
+        current_dag = perm2dag(
+            starting_perm,
+            ci_tester,
+            restricted=restricted,
+            fixed_adjacencies=fixed_adjacencies,
+            fixed_gaps=fixed_gaps
+        )
         if verbose: print("=== STARTING DAG:", current_dag)
-        current_covered_arcs = current_dag.reversible_arcs()
+        current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
         next_dags = [
             _reverse_arc(current_dag, current_covered_arcs, i, j)
             for i, j in current_covered_arcs
@@ -392,8 +448,7 @@ def unknown_target_igsp(
     Parameters
     ----------
     setting_list:
-        A list of dictionaries that provide meta-information about each setting.
-        The first setting must be observational.
+        A list of dictionaries that provide meta-information about each non-observational setting.
     nnodes:
         Number of nodes in the graph.
     ci_tester:

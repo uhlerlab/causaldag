@@ -16,13 +16,17 @@ def gauss_invariance_test(
         alpha: float=0.05,
 ):
     cond_set = to_list(cond_set)
-    obs_samples = suffstat['observational']
+    obs_samples = suffstat['obs_samples']
     iv_samples = suffstat[context]
 
-    lr.fit(obs_samples[:, cond_set], obs_samples[:, i])
-    residuals1 = obs_samples[:, i] - obs_samples[:, cond_set] @ lr.coef_
-    lr.fit(iv_samples[:, cond_set], iv_samples[:, i])
-    residuals2 = iv_samples[:, i] - iv_samples[:, cond_set] @ lr.coef_
+    if len(cond_set) != 0:
+        lr.fit(obs_samples[:, cond_set], obs_samples[:, i])
+        residuals1 = obs_samples[:, i] - obs_samples[:, cond_set] @ lr.coef_
+        lr.fit(iv_samples[:, cond_set], iv_samples[:, i])
+        residuals2 = iv_samples[:, i] - iv_samples[:, cond_set] @ lr.coef_
+    else:
+        residuals1 = obs_samples[:, i]
+        residuals2 = iv_samples[:, i]
 
     ttest_results = ttest_ind(residuals1, residuals2, equal_var=False)
     ftest_stat = np.var(residuals1)/np.var(residuals2)

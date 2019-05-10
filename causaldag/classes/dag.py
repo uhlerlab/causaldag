@@ -34,6 +34,11 @@ class DAG:
         for i, j in arcs:
             self._add_arc(i, j)
 
+    def __eq__(self, other):
+        if not isinstance(other, DAG):
+            return False
+        return self._nodes == other._nodes and self._arcs == other._arcs
+
     @classmethod
     def from_amat(cls, amat):
         """Return a DAG with arcs given by amat
@@ -112,6 +117,24 @@ class DAG:
 
     def has_arc(self, source, target):
         return (source, target) in self._arcs
+
+    def is_upstream_of(self, anc, desc):
+        """Check if `anc` is upstream from `desc`
+
+        Return
+        ------
+        bool
+            True if `anc` is upstream of `desc`
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.is_upstream_of(1, 3)
+        True
+        >>> g.is_upstream_of(3, 1)
+        False
+        """
+        return desc in self._children[anc] or desc in self.downstream(anc)
 
     def __str__(self):
         t = self.topological_sort()
@@ -751,6 +774,24 @@ class DAG:
         return len(self._parents[node])
 
     # === CONVERTERS
+    def marginal_mag(self, latent_nodes):
+        latent_nodes = core_utils.to_set(latent_nodes)
+        from .ancestral_graph import AncestralGraph
+
+        directed = set()
+        bidirected = set()
+        for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
+            adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
+            if adjacent:
+                if self.is_upstream_of(i, j):
+                    directed.add((i, j))
+                elif self.is_upstream_of(j, i):
+                    directed.add((j, i))
+                else:
+                    bidirected.add((i, j))
+
+        return AncestralGraph(nodes=self._nodes - latent_nodes, directed=directed, bidirected=bidirected)
+
     def save_gml(self, filename):
         tab = '  '
         indent = 0
@@ -1143,8 +1184,6 @@ class DAG:
             i_links = i_p_1_links
 
         return self._nodes.difference(A).difference(C).difference(reachable)
-
-
 
 if __name__ == '__main__':
     d = DAG(arcs={(1, 2), (1, 3), (3, 4), (2, 4), (3, 5)})
