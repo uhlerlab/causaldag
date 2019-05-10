@@ -1,6 +1,7 @@
 from collections import defaultdict
 from causaldag.utils import core_utils
 import itertools as itr
+import numpy as np
 
 
 class CycleError(Exception):
@@ -97,6 +98,9 @@ class AncestralGraph:
 
     def __str__(self):
         return 'Directed edges: %s, Bidirected edges: %s, Undirected edges: %s' % (self._directed, self._bidirected, self._undirected)
+
+    def __repr__(self):
+        return str(self)
 
     # === MUTATORS
     def add_node(self, node):
@@ -490,10 +494,35 @@ class AncestralGraph:
 
     # === CONVERTERS
     def to_amat(self):
-        raise NotImplementedError
+        amat = np.zeros([self.nnodes, self.nnodes])
+        for i, j in self.directed:
+            amat[i, j] = 2
+            amat[j, i] = 3
+        for i, j in self.bidirected:
+            amat[i, j] = 2
+            amat[j, i] = 2
+        for i, j in self.undirected:
+            amat[i, j] = 3
+            amat[j, i] = 3
+        return amat
 
-    def from_amat(self):
-        raise NotImplementedError
+    def from_amat(self, amat):
+        p = amat.shape[0]
+        directed = set()
+        bidirected = set()
+        undirected = set()
+        for i, j in itr.combinations(set(range(p)), 2):
+            vij = amat[i, j]
+            vji = amat[j, i]
+            if vij == 2 and vji == 3:
+                directed.add((i, j))
+            if vij == 3 and vji == 2:
+                directed.add((j, i))
+            if vij == 2 and vji == 2:
+                bidirected.add((i, j))
+            if vij == 3 and vji == 3:
+                undirected.add((i, j))
+        return AncestralGraph(set(range(p)), directed, bidirected, undirected)
 
     # === COMPARISON
     def markov_equivalent(self, other):

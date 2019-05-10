@@ -774,10 +774,11 @@ class DAG:
         return len(self._parents[node])
 
     # === CONVERTERS
-    def marginal_mag(self, latent_nodes):
+    def marginal_mag(self, latent_nodes, relabel=False):
         latent_nodes = core_utils.to_set(latent_nodes)
         from .ancestral_graph import AncestralGraph
 
+        new_nodes = self._nodes - latent_nodes
         directed = set()
         bidirected = set()
         for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
@@ -790,7 +791,15 @@ class DAG:
                 else:
                     bidirected.add((i, j))
 
-        return AncestralGraph(nodes=self._nodes - latent_nodes, directed=directed, bidirected=bidirected)
+        if relabel:
+            t = self.topological_sort()
+            t_new = [node for node in t if node not in latent_nodes]
+            node2new_label = dict(map(reversed, enumerate(t_new)))
+            new_nodes = {node2new_label[node] for node in new_nodes}
+            directed = {(node2new_label[i], node2new_label[j]) for i, j in directed}
+            bidirected = {(node2new_label[i], node2new_label[j]) for i, j in bidirected}
+
+        return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
 
     def save_gml(self, filename):
         tab = '  '
