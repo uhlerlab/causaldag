@@ -70,3 +70,10 @@ class PAG:
     def circles(self):
         raise NotImplementedError
 
+    @property
+    def skeleton(self):
+        return self._adjacencies.copy()
+
+    def shd_skeleton(self, other):
+        return len(self.skeleton.symmetric_difference(other.skeleton))
+

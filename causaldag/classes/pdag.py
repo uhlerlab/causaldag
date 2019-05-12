@@ -136,6 +136,10 @@ class PDAG:
     def undirected_neighbors(self):
         return core_utils.defdict2dict(self._undirected_neighbors, self._nodes)
 
+    @property
+    def skeleton(self):
+        return {frozenset({i, j}) for i, j in self._arcs | self._edges}
+
     def copy(self):
         """Return a copy of the graph
         """

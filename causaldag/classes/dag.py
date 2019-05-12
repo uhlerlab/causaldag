@@ -88,7 +88,7 @@ class DAG:
 
     @property
     def skeleton(self):
-        return {tuple(sorted((i, j))) for i, j in self._arcs}
+        return {frozenset({i, j}) for i, j in self._arcs}
 
     @property
     def in_degrees(self):

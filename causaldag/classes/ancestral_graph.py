@@ -400,7 +400,7 @@ class AncestralGraph:
 
     @property
     def skeleton(self):
-        return {tuple(sorted((i, j))) for i, j in self._bidirected | self._undirected | self._directed}
+        return {frozenset({i, j}) for i, j in self._bidirected | self._undirected | self._directed}
 
     def children_of(self, i):
         return self._children[i].copy()
@@ -446,7 +446,7 @@ class AncestralGraph:
 
     def discriminating_paths(self):
         colliders = self.colliders()
-        discriminating_paths = []
+        discriminating_paths = {}
         for j, parents in self._parents.items():  # potential endpoints of discriminating paths
             if not parents:
                 break
@@ -466,16 +466,16 @@ class AncestralGraph:
                         if j in self._spouses[k]:
                             full_path = path.copy()
                             full_path.extend([k, j])
-                            discriminating_paths.append((full_path, 'c'))
+                            discriminating_paths[tuple(full_path)] = 'c'
                         elif j in self._children[k]:
                             full_path = path.copy()
                             full_path.extend([k, j])
-                            discriminating_paths.append((full_path, 'n'))
+                            discriminating_paths[tuple(full_path)] = 'n'
                     for k in filter(lambda k: k not in path, self._parents[final_node]):
                         if j in self._children[k]:
                             full_path = path.copy()
                             full_path.extend([k, j])
-                            discriminating_paths.append((full_path, 'n'))
+                            discriminating_paths[tuple(full_path)] = 'n'
 
                     # extend path
                     for k in self._spouses[final_node]:
@@ -528,8 +528,19 @@ class AncestralGraph:
     def markov_equivalent(self, other):
         same_skeleton = self.skeleton == other.skeleton
         same_vstructures = self.vstructures() == other.vstructures()
-        same_discriminating = self.discriminating_paths() == other.discriminating_paths()
+
+        self_discriminating_paths = self.discriminating_paths()
+        other_discriminating_paths = other.discriminating_paths()
+        shared_disc_paths = set(self_discriminating_paths.keys()) & set(other_discriminating_paths)
+        same_discriminating = all(
+            self_discriminating_paths[path] == other_discriminating_paths[path]
+            for path in shared_disc_paths
+        )
+
         return same_skeleton and same_vstructures and same_discriminating
+
+    def shd_skeleton(self, other):
+        return len(self.skeleton.symmetric_difference(other.skeleton))
 
     def as_hashed(self):
         return frozenset(self._directed), frozenset(self._bidirected), frozenset(self._undirected)
@@ -553,6 +564,35 @@ class AncestralGraph:
             return True
         else:
             return False
+
+    def legitimate_mark_changes(self):
+        if self._undirected:
+            raise ValueError('Only defined for DMAGs')
+
+        disc_paths = self.discriminating_paths()
+
+        mark_changes_dir = set()
+        for i, j in self._directed:
+            parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
+            if not parents_condition: continue
+            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[j])
+            if not spouses_condition: continue
+            disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
+            disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
+            if not disc_paths_condition: continue
+            # TODO: ADD ANCESTRAL CRITERION
+            mark_changes_dir.add((i, j))
+
+        mark_changes_bidir = set()
+        for i, j in self._bidirected:
+            parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
+            if not parents_condition: continue
+            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[j])
+            if not spouses_condition: continue
+            # TODO: ADD ANCESTRAL CRITERION
+            mark_changes_dir.add((i, j))
+
+        return mark_changes_dir, mark_changes_bidir
 
     def msep(self, A, B, C=set()):
         """
