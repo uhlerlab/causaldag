@@ -414,8 +414,35 @@ class AncestralGraph:
     def neighbors_of(self, i):
         return self._neighbors[i].copy()
 
-    def ancestors_of(self, i):
-        raise NotImplementedError
+    def _add_ancestors(self, ancestors, node, exclude_arcs=set()):
+        for parent in self._parents[node]:
+            if parent not in ancestors and (parent, node) not in exclude_arcs:
+                ancestors.add(parent)
+                self._add_ancestors(ancestors, parent, exclude_arcs=exclude_arcs)
+
+    def ancestors_of(self, node, exclude_arcs=set()):
+        """Return the nodes upstream of node
+
+        Parameters
+        ----------
+        node:
+            The node.
+
+        See Also
+        --------
+        descendants_of
+
+        Return
+        ------
+        Set[node]
+            Return all nodes j such that there is a directed path from j to node.
+
+        Example
+        -------
+        """
+        ancestors = set()
+        self._add_ancestors(ancestors, node, exclude_arcs=exclude_arcs)
+        return ancestors
 
     def descendants_of(self, i):
         raise NotImplementedError
@@ -565,7 +592,23 @@ class AncestralGraph:
         else:
             return False
 
-    def legitimate_mark_changes(self):
+    def legitimate_mark_changes(self, verbose=False):
+        """
+        Return directed edges that can be changed to bidirected edges, and bidirected edges that can be changed to
+        directed edges.
+
+        Return
+        ------
+        (mark_changes_dir, mark_changes_bidir)
+            Directed edges that can be changed to bidirected edges, and bidirected edges that can be changed to directed
+            edges (which will be the new directed edge).
+
+        Example
+        -------
+        >>> g = cd.AncestralGraph(directed={(0, 1)}, bidirected={(1, 2)})
+        >>> g.legitimate_mark_changes()
+        ({(0, 1)}, {(2, 1)})
+        """
         if self._undirected:
             raise ValueError('Only defined for DMAGs')
 
@@ -573,24 +616,59 @@ class AncestralGraph:
 
         mark_changes_dir = set()
         for i, j in self._directed:
+            if verbose: print(f'{i}->{j} => {i}<->{j} ?')
+            # FIRST CONDITIONS
             parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
-            if not parents_condition: continue
-            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[j])
-            if not spouses_condition: continue
+            if not parents_condition:
+                if verbose: print('Failed parents condition')
+                continue
+            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i])
+            if not spouses_condition:
+                if verbose: print('Failed spouses condition')
+                continue
+
+            # SECOND CONDITION
             disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
             disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
-            if not disc_paths_condition: continue
-            # TODO: ADD ANCESTRAL CRITERION
+            if not disc_paths_condition:
+                if verbose: print('Failed discriminating path condition')
+                continue
+
+            # FINAL CONDITION
+            if i in self.ancestors_of(j, exclude_arcs={(i, j)}):
+                if verbose: print('Failed ancestral condition')
+                continue
+
+            if verbose: print('Passed')
             mark_changes_dir.add((i, j))
 
         mark_changes_bidir = set()
-        for i, j in self._bidirected:
+        for i, j in self._bidirected | set(map(reversed, self._bidirected)):
+            if verbose: print(f'{i}<->{j} => {i}->{j} ?')
+            # FIRST CONDITIONS
             parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
-            if not parents_condition: continue
-            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[j])
-            if not spouses_condition: continue
-            # TODO: ADD ANCESTRAL CRITERION
-            mark_changes_dir.add((i, j))
+            if not parents_condition:
+                if verbose: print('Failed parents condition')
+                continue
+            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i] if spouse != j)
+            if not spouses_condition:
+                if verbose: print('Failed spouses condition')
+                continue
+
+            # SECOND CONDITION
+            disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
+            disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
+            if not disc_paths_condition:
+                if verbose: print('Failed discriminating path condition')
+                continue
+
+            # FINAL CONDITION
+            if i in self.ancestors_of(j):
+                if verbose: print('Failed ancestral condition')
+                continue
+
+            if verbose: print('Passed')
+            mark_changes_bidir.add((i, j))
 
         return mark_changes_dir, mark_changes_bidir
 

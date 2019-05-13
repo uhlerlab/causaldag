@@ -89,6 +89,7 @@ class TestAncestralGraph(TestCase):
         # print(d.msep_from_given(1, 2))
 
     def test_msep(self):
+        return
         # 1 -> 3 <-> 4 <- 2
         d = cd.AncestralGraph(directed={(1, 3), (2, 4)}, bidirected={(3, 4)})
         self.assertTrue(d.msep({1, 3}, 2))
@@ -151,16 +152,29 @@ class TestAncestralGraph(TestCase):
     def test_disc_paths(self):
         g = cd.AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4), (3, 2), (3, 4)})
         disc_paths = g.discriminating_paths()
-        self.assertEqual(disc_paths, [([1, 2, 3, 4], 'n')])
+        self.assertEqual(disc_paths, {(1, 2, 3, 4): 'n'})
 
         g = cd.AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4)}, bidirected={(3, 2), (3, 4)})
         disc_paths = g.discriminating_paths()
-        self.assertEqual(disc_paths, [([1, 2, 3, 4], 'c')])
+        self.assertEqual(disc_paths, {(1, 2, 3, 4): 'c'})
 
         g = cd.AncestralGraph(nodes=set(range(1, 6)), directed={(1, 2), (2, 5), (3, 5)}, bidirected={(2, 3), (3, 4), (4, 5)})
         disc_paths = g.discriminating_paths()
         # print(disc_paths)
-        self.assertEqual(disc_paths, [([1, 2, 3, 5], 'n'), ([1, 2, 3, 4, 5], 'c')])
+        self.assertEqual(disc_paths, {(1, 2, 3, 5): 'n', (1, 2, 3, 4, 5): 'c'})
+
+    def test_legitimate_mark_changes(self):
+        g = cd.AncestralGraph(directed={(0, 1)}, bidirected={(1, 2)})
+        lmcs = g.legitimate_mark_changes()
+        self.assertEqual(lmcs, ({(0, 1)}, {(2, 1)}))
+
+        g = cd.AncestralGraph(directed={(0, 1), (1, 2)})
+        lmcs = g.legitimate_mark_changes()
+        self.assertEqual(lmcs, ({(0, 1)}, set()))
+
+        g = cd.AncestralGraph(directed={(2, 1), (2, 3), (3, 5)}, bidirected={(1, 3), (4, 5), (2, 4)})
+        lmcs = g.legitimate_mark_changes()
+        self.assertEqual(lmcs, (set(), {(1, 3), (2, 4), (3, 1)}))
 
 
 if __name__ == '__main__':
