@@ -895,6 +895,9 @@ class DAG:
 
         return amat, node_list
 
+    def subgraph(self, nodes):
+        return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
+
     # === optimal interventions
     def cpdag(self):
         """Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the

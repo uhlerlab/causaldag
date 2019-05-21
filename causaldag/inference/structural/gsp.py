@@ -11,7 +11,7 @@ from causaldag import UndirectedGraph
 
 
 def perm2dag(perm, ci_tester: CI_Tester, restricted=True, fixed_adjacencies=set(), fixed_gaps=set()):
-    d = DAG(nodes=set(range(len(perm))))
+    d = DAG(nodes=set(perm))
     for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
         if (pi_i, pi_j) in fixed_adjacencies or (pi_j, pi_i) in fixed_adjacencies:
             d.add_arc(pi_i, pi_j)
@@ -54,7 +54,7 @@ def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
 
 def jci_gsp(
         setting_list: List[Dict],
-        nnodes: int,
+        nodes: set,
         combined_ci_tester: CI_Tester,
         nruns: int=5,
         verbose: bool=False
@@ -64,12 +64,12 @@ def jci_gsp(
     known_iv_adjacencies = set.union(*(
         {('c%s' % i, node) for node in setting['known_interventions']} for i, setting in enumerate(setting_list)
     ))
-    fixed_orders = set(itr.product(context_nodes, range(nnodes)))
+    fixed_orders = set(itr.product(context_nodes, nodes))
 
-    initial_permutations = [context_nodes+random.sample(list(range(nnodes)), nnodes) for _ in range(nruns)]
+    initial_permutations = [context_nodes+random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
 
-    return gsp(
-        nnodes+len(context_nodes),
+    est_meta_dag, _ = gsp(
+        list(nodes)+context_nodes,
         combined_ci_tester,
         initial_permutations=initial_permutations,
         fixed_orders=fixed_orders,
@@ -77,9 +77,19 @@ def jci_gsp(
         verbose=verbose
     )
 
+    learned_intervention_targets = {
+        int(node[1:]): {child for child in est_meta_dag.children_of(node) if not isinstance(child, str)}
+        for node in est_meta_dag.nodes
+        if isinstance(node, str)
+    }
+    learned_intervention_targets = [learned_intervention_targets[i] for i in range(len(setting_list))]
+    est_dag = est_meta_dag.subgraph({node for node in est_meta_dag.nodes if not isinstance(node, str)})
+
+    return est_dag, learned_intervention_targets
+
 
 def gsp(
-        nnodes: int,
+        nodes: set,
         ci_tester: CI_Tester,
         depth: Optional[int]=4,
         nruns: int=5,
@@ -97,7 +107,7 @@ def gsp(
 
     Parameters
     ----------
-    nnodes:
+    nodes:
         Number of nodes in the graph.
     ci_tester:
         A conditional independence tester, which has a method is_ci taking two sets A and B, and a conditioning set C,
@@ -154,7 +164,7 @@ def gsp(
 
     if initial_permutations is None and isinstance(initial_undirected, str):
         if initial_undirected == 'threshold':
-            initial_undirected = threshold_ug(nnodes, ci_tester)
+            initial_undirected = threshold_ug(nodes, ci_tester)
         else:
             raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
 
@@ -168,7 +178,7 @@ def gsp(
         elif initial_undirected:
             starting_perm = min_degree_alg(initial_undirected, ci_tester)
         else:
-            starting_perm = random.sample(list(range(nnodes)), nnodes)
+            starting_perm = random.sample(nodes, len(nodes))
         current_dag = perm2dag(
             starting_perm,
             ci_tester,
