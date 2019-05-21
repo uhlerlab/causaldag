@@ -43,7 +43,7 @@ def gauss_invariance_test(
         i: int,
         cond_set: Optional[Union[List[int], int]]=None,
         alpha: float=0.05,
-        new=False
+        new=True
 ):
     """
     Test the null hypothesis that two Gaussian distributions are equal.

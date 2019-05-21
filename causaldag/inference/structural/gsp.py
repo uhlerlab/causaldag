@@ -57,8 +57,10 @@ def jci_gsp(
         nodes: set,
         combined_ci_tester: CI_Tester,
         nruns: int=5,
-        verbose: bool=False
+        verbose: bool=False,
+        initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
 ):
+    # CREATE NEW NODES AND OTHER INPUT TO ALGORITHM
     context_nodes = ['c%d' % i for i in range(len(setting_list))]
     context_adjacencies = set(itr.permutations(context_nodes, r=2))
     known_iv_adjacencies = set.union(*(
@@ -66,8 +68,18 @@ def jci_gsp(
     ))
     fixed_orders = set(itr.product(context_nodes, nodes))
 
-    initial_permutations = [context_nodes+random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
+    # === DO SMART INITIALIZATION
+    if isinstance(initial_undirected, str):
+        if initial_undirected == 'threshold':
+            initial_undirected = threshold_ug(set(nodes), combined_ci_tester)
+        else:
+            raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
+    if initial_undirected:
+        initial_permutations = [context_nodes+min_degree_alg(initial_undirected, combined_ci_tester) for _ in range(nruns)]
+    else:
+        initial_permutations = [context_nodes+random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
 
+    # === RUN GSP ON FULL DAG
     est_meta_dag, _ = gsp(
         list(nodes)+context_nodes,
         combined_ci_tester,
@@ -77,6 +89,7 @@ def jci_gsp(
         verbose=verbose
     )
 
+    # === PROCESS OUTPUT
     learned_intervention_targets = {
         int(node[1:]): {child for child in est_meta_dag.children_of(node) if not isinstance(child, str)}
         for node in est_meta_dag.nodes
@@ -160,7 +173,7 @@ def gsp(
         for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
             if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
                 new_covered_arcs.add((k, l))
-        return new_dag, new_covered_arcs
+        return new_dag, new_covered_arcs - fixed_orders
 
     if initial_permutations is None and isinstance(initial_undirected, str):
         if initial_undirected == 'threshold':
