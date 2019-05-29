@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='causaldag',
-    version='0.1a.98',
+    version='0.1a.102',
     description='Causal DAG manipulation and inference',
     long_description='CausalDAG is a Python package for the creation, manipulation, and learning of Causal DAGs.',
     author='Chandler Squires',
@@ -24,7 +24,8 @@ setuptools.setup(
         'pandas',
         'scikit_learn',
         'typing',
-        'pygam'
+        'pygam',
+        'numba'
     ]
 )
 

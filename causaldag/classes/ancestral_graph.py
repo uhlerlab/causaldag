@@ -514,7 +514,10 @@ class AncestralGraph:
 
     # === ???
     def to_maximal(self):
-        raise NotImplementedError
+        for i, j in itr.combinations(self._nodes, r=2):
+            if not self.has_any_edge(i, j):
+                never_msep = not any(self.msep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j}))
+                if never_msep: self.add_bidirected(i, j)
 
     def to_pag(self):
         raise NotImplementedError

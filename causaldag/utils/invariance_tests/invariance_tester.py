@@ -1,5 +1,6 @@
 from typing import NewType, Callable, Dict, Any, Set
 import time
+from causaldag.utils.core_utils import to_set
 
 InvarianceTest = NewType('InvarianceTest', Callable[[Dict, Any, Any, Set], Dict])
 
@@ -52,6 +53,7 @@ class MemoizedInvarianceTester(InvarianceTester):
         """
         Check if the conditional distribution of node, given cond_set, is invariant to the context.
         """
+        cond_set = to_set(cond_set)
         index = (node, context, frozenset(cond_set))
 
         # check if result exists and return

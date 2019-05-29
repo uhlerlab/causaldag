@@ -65,6 +65,7 @@ def jci_gsp(
         setting_list: List[Dict],
         nodes: set,
         combined_ci_tester: CI_Tester,
+        depth: int=4,
         nruns: int=5,
         verbose: bool=False,
         initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
@@ -92,6 +93,8 @@ def jci_gsp(
     est_meta_dag, _ = gsp(
         list(nodes)+context_nodes,
         combined_ci_tester,
+        depth=depth,
+        nruns=nruns,
         initial_permutations=initial_permutations,
         fixed_orders=fixed_orders,
         fixed_adjacencies=context_adjacencies|known_iv_adjacencies,
