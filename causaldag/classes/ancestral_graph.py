@@ -444,6 +444,37 @@ class AncestralGraph:
         self._add_ancestors(ancestors, node, exclude_arcs=exclude_arcs)
         return ancestors
 
+    def ancestor_dict(self):
+        """Return a dictionary from each node to its ancestors
+
+        See Also
+        --------
+        ancestors_of
+
+        Return
+        ------
+        Dict[node,Set]
+            Mapping node to ancestors
+
+        Example
+        -------
+        """
+        visited = set()
+        node2ancestors = defaultdict(set)
+        node_queue = [node for node in self._nodes if not self._parents[node]]
+
+        while node_queue:
+            node = node_queue.pop()
+            if node in visited:
+                continue
+            visited.add(node)
+            for child in self._children[node]:
+                node2ancestors[child].add(node)
+                node2ancestors[child].update(node2ancestors[node])
+                node_queue.append(child)
+
+        return core_utils.defdict2dict(node2ancestors, self._nodes)
+
     def descendants_of(self, i):
         raise NotImplementedError
 
@@ -470,6 +501,42 @@ class AncestralGraph:
 
     def colliders(self):
         return {node for node in self._nodes if len(self._parents[node] | self._spouses[node]) >= 2}
+
+    def _bidirected_reachable(self, node, tmp, visited):
+        visited.add(node)
+        tmp.add(node)
+        for spouse in filter(lambda spouse: spouse not in visited, self._spouses[node]):
+            tmp = self._bidirected_reachable(spouse, tmp, visited)
+        return tmp
+
+    def c_components(self):
+        """Return the c-components of this graph.
+
+        Return
+        ------
+        List[Set[node]]
+            Return the partition of nodes coming from the relation of reachability by bidirected edges.
+        """
+        node_queue = self._nodes.copy()
+        components = []
+        visited_nodes = set()
+
+        while node_queue:
+            node = node_queue.pop()
+            if node not in visited_nodes:
+                components.append(self._bidirected_reachable(node, set(), visited_nodes))
+
+        return components
+
+    def district_of(self, node):
+        """Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
+
+        Return
+        ------
+        Set[node]
+            The district of node.
+        """
+        return self._bidirected_reachable(node, set(), set())
 
     def discriminating_paths(self):
         colliders = self.colliders()
@@ -512,12 +579,65 @@ class AncestralGraph:
                             path_queue.append(new_path)
         return discriminating_paths
 
+    def _reachable(self, start_node, end_node, visited=set(), allowed_edges={'b', 'u', 'c', 'p'}, predicate=lambda node: True):
+        allowed_nbrs = set()
+        if 'b' in allowed_edges:
+            allowed_nbrs.update(self._spouses[start_node])
+        if 'u' in allowed_edges:
+            allowed_nbrs.update(self._neighbors[start_node])
+        if 'c' in allowed_edges:
+            allowed_nbrs.update(self._children[start_node])
+        if 'p' in allowed_edges:
+            allowed_nbrs.update(self._parents[start_node])
+
+        allowed_nbrs = {nbr for nbr in allowed_nbrs if predicate(nbr)}
+
+        results = []
+        for nbr in allowed_nbrs:
+            if nbr in visited:
+                continue
+            visited.add(nbr)
+            if nbr == end_node:
+                return True
+            results.append(self._reachable(nbr, end_node, visited, allowed_edges, predicate))
+
+        return any(results)
+
     # === ???
-    def to_maximal(self):
-        for i, j in itr.combinations(self._nodes, r=2):
-            if not self.has_any_edge(i, j):
-                never_msep = not any(self.msep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j}))
-                if never_msep: self.add_bidirected(i, j)
+    def to_maximal(self, new=False):
+        if new:
+            # === NEED DICTIONARY OF ANCESTORS AND C-COMPONENTS TO CHECK INDUCING PATHS
+            ancestor_dict = self.ancestor_dict()
+            c_components = self.c_components()
+            node2component = dict()
+            for ix, component in enumerate(c_components):
+                for node in component:
+                    node2component[node] = ix
+
+            # === FIND INDUCING PATHS BETWEEN PAIRS OF NODE
+            induced_pairs = []
+
+            non_adjacent_pairs = ((i, j) for i, j in itr.combinations(self._nodes, 2) if not self.has_any_edge(i, j))
+            for node1, node2 in non_adjacent_pairs:
+                check_ancestry = lambda node: node in ancestor_dict[node1] or node in ancestor_dict[node2]
+                nbrs1 = self._children[node1] | self._spouses[node1]
+                nbrs2 = self._children[node2] | self._spouses[node2]
+
+                # ONLY CHECK PATHS BETWEEN SPOUSES/CHILDREN THAT ARE IN THE SAME C-COMPONENT
+                for nbr1, nbr2 in itr.product(nbrs1, nbrs2):
+                    same_component = node2component[nbr1] == node2component[nbr2]
+                    if same_component and nbr1 in ancestor_dict[node2] and nbr2 in ancestor_dict[node1]:
+                        if self._reachable(nbr1, nbr2, allowed_edges={'b'}, predicate=check_ancestry):
+                            induced_pairs.append((node1, node2))
+                            continue
+
+            for node1, node2 in induced_pairs:
+                self._add_bidirected(node1, node2)
+        else:
+            for i, j in itr.combinations(self._nodes, r=2):
+                if not self.has_any_edge(i, j):
+                    never_msep = not any(self.msep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j}))
+                    if never_msep: self.add_bidirected(i, j)
 
     def to_pag(self):
         raise NotImplementedError
@@ -536,7 +656,8 @@ class AncestralGraph:
             amat[j, i] = 3
         return amat
 
-    def from_amat(self, amat):
+    @staticmethod
+    def from_amat(amat):
         p = amat.shape[0]
         directed = set()
         bidirected = set()

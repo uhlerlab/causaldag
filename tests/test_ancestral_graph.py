@@ -176,6 +176,19 @@ class TestAncestralGraph(TestCase):
         lmcs = g.legitimate_mark_changes()
         self.assertEqual(lmcs, (set(), {(1, 3), (2, 4), (3, 1)}))
 
+    def test_ancestor_dict(self):
+        g = cd.AncestralGraph(bidirected={(0, 1)}, directed={(0, 2), (1, 3), (2, 4), (3, 4)})
+        ancestor_dict = g.ancestor_dict()
+        self.assertEqual(ancestor_dict[0], set())
+        self.assertEqual(ancestor_dict[1], set())
+        self.assertEqual(ancestor_dict[2], {0})
+        self.assertEqual(ancestor_dict[3], {1})
+        self.assertEqual(ancestor_dict[4], {0, 1, 2, 3})
+
+    def test_inducing_paths(self):
+        g = cd.AncestralGraph(directed={(1, 3), (2, 0)}, bidirected={(0, 1), (1, 2), (2, 3)})
+        self.assertEqual(g._inducing_paths(), [(0, 3)])
+
 
 if __name__ == '__main__':
     unittest.main()

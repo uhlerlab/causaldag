@@ -9,6 +9,7 @@ import itertools as itr
 import numpy as np
 from typing import Set
 from collections import namedtuple
+from scipy.misc import factorial
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
@@ -342,6 +343,28 @@ class PDAG:
             pdag2.remove_node(sink)
 
         return DAG(arcs=arcs)
+
+    def mec_size(self):
+        """Return the number of DAGs in the MEC represented by this PDAG
+        """
+        raise NotImplementedError
+
+        nnodes = len(self._nodes)
+        n_edges = len(self._edges)
+
+        if len(self._arcs) != 0:
+            pass
+        elif n_edges == nnodes - 1:
+            return nnodes
+        elif n_edges == nnodes*(nnodes-1)/2:
+            return factorial(nnodes)
+        else:
+            pass
+
+    def exact_sample(self, save_sampler=True, nsamples=1):
+        """Return a DAG sampled uniformly at random from the MEC represented by this PDAG
+        """
+        raise NotImplementedError
 
     def all_dags(self, verbose=False):
         """Return all DAGs consistent with this PDAG
