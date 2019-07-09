@@ -185,10 +185,6 @@ class TestAncestralGraph(TestCase):
         self.assertEqual(ancestor_dict[3], {1})
         self.assertEqual(ancestor_dict[4], {0, 1, 2, 3})
 
-    def test_inducing_paths(self):
-        g = cd.AncestralGraph(directed={(1, 3), (2, 0)}, bidirected={(0, 1), (1, 2), (2, 3)})
-        self.assertEqual(g._inducing_paths(), [(0, 3)])
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -202,27 +202,82 @@ class PDAG:
 
     def has_arc(self, i, j):
         """Return True if the graph contains the arc i->j"""
-        return (i,j) in self._arcs
+        return (i, j) in self._arcs
 
     def has_edge_or_arc(self, i, j):
         """Return True if the graph contains the edge i--j or an arc i->j or i<-j
         """
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
-    def add_protected_orientations(self):
-        pass
+    def to_complete_pdag(self, verbose=False):
+        """
+        Replace with arcs those edges whose orientations can be determined by Meek rules:
+        =====
+        See Koller & Friedman, Algorithm 3.5
+
+        """
+        PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
+        UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge
+        NOT_PROTECTED = 'N'  # indicates no possible configuration that could protect the edge
+
+        undecided_arcs = self._edges.copy() | {(j, i) for i, j in self._edges}
+        arc_flags = {arc: PROTECTED for arc in self._arcs}
+        arc_flags.update({arc: UNDECIDED for arc in undecided_arcs})
+
+        while undecided_arcs:
+            for arc in undecided_arcs:
+                i, j = arc
+                flag = NOT_PROTECTED
+
+                # check configuration (a) -- causal chain
+                for k in self._parents[i]:
+                    if not self.has_edge_or_arc(k, j):
+                        if arc_flags[(k, i)] == PROTECTED:
+                            flag = PROTECTED
+                            break
+                        else:
+                            flag = UNDECIDED
+                        if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
+
+                # check configuration (b) -- acyclicity
+                if flag != PROTECTED:
+                    for k in self._parents[j]:
+                        if i in self._parents[k]:
+                            if arc_flags[(i, k)] == PROTECTED and arc_flags[(k, j)] == PROTECTED:
+                                flag = PROTECTED
+                                break
+                            else:
+                                flag = UNDECIDED
+                            if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
+
+                # check configuration (d)
+                if flag != PROTECTED:
+                    for k1, k2 in itr.combinations(self._parents[j], 2):
+                        if self.has_edge(i, k1) and self.has_edge(i, k2) and not self.has_edge_or_arc(k1, k2):
+                            if arc_flags[(k1, j)] == PROTECTED and arc_flags[(k2, j)] == PROTECTED:
+                                flag = PROTECTED
+                                break
+                            else:
+                                flag = UNDECIDED
+                            if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
+
+                arc_flags[arc] = flag
+
+            for arc in undecided_arcs.copy():
+                if arc_flags[arc] != UNDECIDED or arc_flags[(arc[1], arc[0])] != UNDECIDED:
+                    undecided_arcs.remove(arc)
+                if arc_flags[arc] == PROTECTED:
+                    self._replace_edge_with_arc(arc)
 
     def remove_unprotected_orientations(self, verbose=False):
         """
         Replace with edges those arcs whose orientations cannot be determined by either:
         - prior knowledge, or
-        - Meek's rules
+        - Meek rules
 
         =====
         See Koller & Friedman, Algorithm 3.5
 
-        :param verbose:
-        :return:
         """
         PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
         UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge

@@ -76,53 +76,53 @@ class TestDAG(TestCase):
         self.assertEqual(dag.children[2], set())
         self.assertEqual(dag.children[3], {2})
 
-    def test_cpdag_file(self):
-        curr_folder = os.path.dirname(__file__)
-        random.seed(1729)
-        np.random.seed(1729)
-        dag = cd.rand.directed_erdos(30, .7, 1)
-        np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
-        os.system('Rscript %s/test_dag2cpdag.R' % curr_folder)
-        cpdag = dag.cpdag()
+    # def test_cpdag_file(self):
+    #     curr_folder = os.path.dirname(__file__)
+    #     random.seed(1729)
+    #     np.random.seed(1729)
+    #     dag = cd.rand.directed_erdos(30, .7, 1)
+    #     np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
+    #     os.system('Rscript %s/test_dag2cpdag.R' % curr_folder)
+    #     cpdag = dag.cpdag()
+    #
+    #     true_cpdag_edges = set()
+    #     true_cpdag_arcs = set()
+    #     true_cpdag_amat = np.loadtxt(os.path.join(curr_folder, './cpdag1.txt'))
+    #     for i, j in zip(*np.triu_indices_from(true_cpdag_amat)):
+    #         if true_cpdag_amat[i, j] == 1:
+    #             if true_cpdag_amat[j, i] == 1:
+    #                 true_cpdag_edges.add((i, j))
+    #             else:
+    #                 true_cpdag_arcs.add((i, j))
+    #
+    #     print(len(cpdag.edges))
+    #     self.assertEqual(cpdag.arcs, true_cpdag_arcs)
+    #     self.assertEqual(cpdag.edges, true_cpdag_edges)
 
-        true_cpdag_edges = set()
-        true_cpdag_arcs = set()
-        true_cpdag_amat = np.loadtxt(os.path.join(curr_folder, './cpdag1.txt'))
-        for i, j in zip(*np.triu_indices_from(true_cpdag_amat)):
-            if true_cpdag_amat[i, j] == 1:
-                if true_cpdag_amat[j, i] == 1:
-                    true_cpdag_edges.add((i, j))
-                else:
-                    true_cpdag_arcs.add((i, j))
-
-        print(len(cpdag.edges))
-        self.assertEqual(cpdag.arcs, true_cpdag_arcs)
-        self.assertEqual(cpdag.edges, true_cpdag_edges)
-
-    def test_icpdag_file(self):
-        curr_folder = os.path.dirname(__file__)
-        random.seed(1729)
-        np.random.seed(1729)
-        dag = cd.rand.directed_erdos(30, .7, 1)
-        interventions = [random.sample(list(range(100)), 5) for _ in range(10)]
-        np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
-        np.savetxt(os.path.join(curr_folder, './interventions.txt'), interventions)
-        os.system('Rscript %s/test_dag2icpdag.R' % curr_folder)
-        icpdag = dag.interventional_cpdag(interventions, cpdag=dag.cpdag())
-
-        true_icpdag_edges = set()
-        true_icpdag_arcs = set()
-        true_icpdag_amat = np.loadtxt(os.path.join(curr_folder, './icpdag1.txt'))
-        for i, j in zip(*np.triu_indices_from(true_icpdag_amat)):
-            if true_icpdag_amat[i, j] == 1:
-                if true_icpdag_amat[j, i] == 1:
-                    true_icpdag_edges.add((i, j))
-                else:
-                    true_icpdag_arcs.add((i, j))
-
-        print('icpdag', len(icpdag.edges))
-        self.assertEqual(icpdag.arcs, true_icpdag_arcs)
-        self.assertEqual(icpdag.edges, true_icpdag_edges)
+    # def test_icpdag_file(self):
+    #     curr_folder = os.path.dirname(__file__)
+    #     random.seed(1729)
+    #     np.random.seed(1729)
+    #     dag = cd.rand.directed_erdos(30, .7, 1)
+    #     interventions = [random.sample(list(range(100)), 5) for _ in range(10)]
+    #     np.savetxt(os.path.join(curr_folder, './dag1.txt'), dag.to_amat())
+    #     np.savetxt(os.path.join(curr_folder, './interventions.txt'), interventions)
+    #     os.system('Rscript %s/test_dag2icpdag.R' % curr_folder)
+    #     icpdag = dag.interventional_cpdag(interventions, cpdag=dag.cpdag())
+    #
+    #     true_icpdag_edges = set()
+    #     true_icpdag_arcs = set()
+    #     true_icpdag_amat = np.loadtxt(os.path.join(curr_folder, './icpdag1.txt'))
+    #     for i, j in zip(*np.triu_indices_from(true_icpdag_amat)):
+    #         if true_icpdag_amat[i, j] == 1:
+    #             if true_icpdag_amat[j, i] == 1:
+    #                 true_icpdag_edges.add((i, j))
+    #             else:
+    #                 true_icpdag_arcs.add((i, j))
+    #
+    #     print('icpdag', len(icpdag.edges))
+    #     self.assertEqual(icpdag.arcs, true_icpdag_arcs)
+    #     self.assertEqual(icpdag.edges, true_icpdag_edges)
 
     def test_interventional_cpdag(self):
         dag = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
@@ -301,6 +301,22 @@ class TestDAG(TestCase):
         d2 = cd.PDAG(edges={(1, 0), (2, 0)})
         self.assertEqual(d1.shd(d2), 2)
         self.assertEqual(d2.shd(d1), 2)
+
+    def test_to_complete_pdag(self):
+        g = cd.PDAG(arcs={(0, 1), (0, 2), (3, 0)}, edges={(1, 2), (1, 3), (2, 3)})
+        g.to_complete_pdag()
+        g_comp = cd.PDAG(arcs={(0, 1), (0, 2), (3, 0), (3, 1), (3, 2)}, edges={(1, 2)})
+        self.assertEqual(g, g_comp)
+
+        g = cd.PDAG(arcs={(0, 1), (0, 2), (0, 3)}, edges={(1, 2), (1, 3), (2, 3)})
+        g.to_complete_pdag()
+        g_comp = cd.PDAG(arcs={(0, 1), (0, 2), (0, 3)}, edges={(1, 2), (1, 3), (2, 3)})
+        self.assertEqual(g, g_comp)
+
+        g = cd.PDAG(arcs={(1, 0), (2, 0), (3, 0)}, edges={(1, 2), (1, 3), (2, 3)})
+        g.to_complete_pdag()
+        g_comp = cd.PDAG(arcs={(1, 0), (2, 0), (3, 0)}, edges={(1, 2), (1, 3), (2, 3)})
+        self.assertEqual(g, g_comp)
 
 
 if __name__ == '__main__':
