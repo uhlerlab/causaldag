@@ -209,6 +209,13 @@ class PDAG:
         """
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
+    def assign_parents(self, node, parents, verbose=False):
+        for p in parents:
+            self._replace_edge_with_arc((p, node))
+        for c in self._undirected_neighbors[node] - parents:
+            self._replace_edge_with_arc((node, c))
+        self.to_complete_pdag(verbose=verbose)
+
     def to_complete_pdag(self, verbose=False):
         """
         Replace with arcs those edges whose orientations can be determined by Meek rules:
@@ -237,7 +244,7 @@ class PDAG:
                             break
                         else:
                             flag = UNDECIDED
-                        if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
+                if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
 
                 # check configuration (b) -- acyclicity
                 if flag != PROTECTED:
@@ -248,7 +255,7 @@ class PDAG:
                                 break
                             else:
                                 flag = UNDECIDED
-                            if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
+                    if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
 
                 # check configuration (d)
                 if flag != PROTECTED:
@@ -259,14 +266,15 @@ class PDAG:
                                 break
                             else:
                                 flag = UNDECIDED
-                            if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
+                    if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
 
                 arc_flags[arc] = flag
 
+            if all(arc_flags[arc] == NOT_PROTECTED for arc in undecided_arcs): break
             for arc in undecided_arcs.copy():
-                if arc_flags[arc] != UNDECIDED or arc_flags[(arc[1], arc[0])] != UNDECIDED:
-                    undecided_arcs.remove(arc)
                 if arc_flags[arc] == PROTECTED:
+                    undecided_arcs.remove(arc)
+                    undecided_arcs.remove((arc[1], arc[0]))
                     self._replace_edge_with_arc(arc)
 
     def remove_unprotected_orientations(self, verbose=False):
