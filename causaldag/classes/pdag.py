@@ -9,7 +9,7 @@ import itertools as itr
 import numpy as np
 from typing import Set
 from collections import namedtuple
-from scipy.misc import factorial
+from scipy.special import factorial
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
