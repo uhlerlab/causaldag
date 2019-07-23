@@ -277,6 +277,45 @@ class PDAG:
                     undecided_arcs.remove((arc[1], arc[0]))
                     self._replace_edge_with_arc(arc)
 
+    def _undirected_reachable(self, node, tmp, visited):
+        visited.add(node)
+        tmp.add(node)
+        for nbr in filter(lambda nbr: nbr not in visited, self._undirected_neighbors[node]):
+            tmp = self._undirected_reachable(nbr, tmp, visited)
+        return tmp
+
+    def chain_components(self, rename=False):
+        """Return the chain components of this graph.
+
+        Return
+        ------
+        List[Set[node]]
+            Return the partition of nodes coming from the relation of reachability by undirected edges.
+        """
+        node_queue = self._nodes.copy()
+        components = []
+        visited_nodes = set()
+
+        while node_queue:
+            node = node_queue.pop()
+            if node not in visited_nodes:
+                reachable = self._undirected_reachable(node, set(), visited_nodes)
+                if len(reachable) > 1: components.append(reachable)
+
+        return [self.induced_subgraph(c, rename=rename) for c in components]
+
+    def induced_subgraph(self, nodes, rename=False):
+        if rename:
+            ixs = dict(map(reversed, enumerate(nodes)))
+            new_nodes = set(range(len(nodes)))
+            arcs = {(ixs[i], ixs[j]) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(ixs[i], ixs[j]) for i, j in self._edges if i in nodes and j in nodes}
+        else:
+            new_nodes = nodes
+            arcs = {(i, j) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(i, j) for i, j in self._edges if i in nodes and j in nodes}
+        return PDAG(nodes=new_nodes, arcs=arcs, edges=edges)
+
     def remove_unprotected_orientations(self, verbose=False):
         """
         Replace with edges those arcs whose orientations cannot be determined by either:
