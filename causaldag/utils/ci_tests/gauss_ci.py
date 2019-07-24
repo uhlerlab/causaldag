@@ -96,7 +96,7 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
     # note: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0
     statistic = sqrt(n - n_cond - 3) * abs(.5 * log1p(2*r/(1 - r)))
     # note: erf is much faster than norm.cdf
-    p_value = 1 - .5*(1 + erf(statistic/sqrt(2)))
+    p_value = 2*(1 - .5*(1 + erf(statistic/sqrt(2))))
 
     return dict(statistic=statistic, p_value=p_value, reject=p_value < alpha)
 

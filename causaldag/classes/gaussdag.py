@@ -241,8 +241,8 @@ class GaussDAG(DAG):
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
-        for ix, var in enumerate(self._variances):
-            noise[:, ix] = np.random.normal(scale=var**.5, size=nsamples)
+        for ix, (mean, var) in enumerate(zip(self._means, self._variances)):
+            noise[:, ix] = np.random.normal(loc = mean, scale=var**.5, size=nsamples)
         t = self.topological_sort()
         for node in t:
             ix = self._node2ix[node]
