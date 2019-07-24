@@ -9,6 +9,7 @@ import itertools as itr
 import numpy as np
 from typing import Set
 from collections import namedtuple
+from scipy.special import factorial
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
@@ -201,27 +202,129 @@ class PDAG:
 
     def has_arc(self, i, j):
         """Return True if the graph contains the arc i->j"""
-        return (i,j) in self._arcs
+        return (i, j) in self._arcs
 
     def has_edge_or_arc(self, i, j):
         """Return True if the graph contains the edge i--j or an arc i->j or i<-j
         """
         return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
-    def add_protected_orientations(self):
-        pass
+    def assign_parents(self, node, parents, verbose=False):
+        for p in parents:
+            self._replace_edge_with_arc((p, node))
+        for c in self._undirected_neighbors[node] - parents:
+            self._replace_edge_with_arc((node, c))
+        self.to_complete_pdag(verbose=verbose)
+
+    def to_complete_pdag(self, verbose=False):
+        """
+        Replace with arcs those edges whose orientations can be determined by Meek rules:
+        =====
+        See Koller & Friedman, Algorithm 3.5
+
+        """
+        PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
+        UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge
+        NOT_PROTECTED = 'N'  # indicates no possible configuration that could protect the edge
+
+        undecided_arcs = self._edges.copy() | {(j, i) for i, j in self._edges}
+        arc_flags = {arc: PROTECTED for arc in self._arcs}
+        arc_flags.update({arc: UNDECIDED for arc in undecided_arcs})
+
+        while undecided_arcs:
+            for arc in undecided_arcs:
+                i, j = arc
+                flag = NOT_PROTECTED
+
+                # check configuration (a) -- causal chain
+                for k in self._parents[i]:
+                    if not self.has_edge_or_arc(k, j):
+                        if arc_flags[(k, i)] == PROTECTED:
+                            flag = PROTECTED
+                            break
+                        else:
+                            flag = UNDECIDED
+                if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
+
+                # check configuration (b) -- acyclicity
+                if flag != PROTECTED:
+                    for k in self._parents[j]:
+                        if i in self._parents[k]:
+                            if arc_flags[(i, k)] == PROTECTED and arc_flags[(k, j)] == PROTECTED:
+                                flag = PROTECTED
+                                break
+                            else:
+                                flag = UNDECIDED
+                    if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
+
+                # check configuration (d)
+                if flag != PROTECTED:
+                    for k1, k2 in itr.combinations(self._parents[j], 2):
+                        if self.has_edge(i, k1) and self.has_edge(i, k2) and not self.has_edge_or_arc(k1, k2):
+                            if arc_flags[(k1, j)] == PROTECTED and arc_flags[(k2, j)] == PROTECTED:
+                                flag = PROTECTED
+                                break
+                            else:
+                                flag = UNDECIDED
+                    if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
+
+                arc_flags[arc] = flag
+
+            if all(arc_flags[arc] == NOT_PROTECTED for arc in undecided_arcs): break
+            for arc in undecided_arcs.copy():
+                if arc_flags[arc] == PROTECTED:
+                    undecided_arcs.remove(arc)
+                    undecided_arcs.remove((arc[1], arc[0]))
+                    self._replace_edge_with_arc(arc)
+
+    def _undirected_reachable(self, node, tmp, visited):
+        visited.add(node)
+        tmp.add(node)
+        for nbr in filter(lambda nbr: nbr not in visited, self._undirected_neighbors[node]):
+            tmp = self._undirected_reachable(nbr, tmp, visited)
+        return tmp
+
+    def chain_components(self, rename=False):
+        """Return the chain components of this graph.
+
+        Return
+        ------
+        List[Set[node]]
+            Return the partition of nodes coming from the relation of reachability by undirected edges.
+        """
+        node_queue = self._nodes.copy()
+        components = []
+        visited_nodes = set()
+
+        while node_queue:
+            node = node_queue.pop()
+            if node not in visited_nodes:
+                reachable = self._undirected_reachable(node, set(), visited_nodes)
+                if len(reachable) > 1: components.append(reachable)
+
+        return [self.induced_subgraph(c, rename=rename) for c in components]
+
+    def induced_subgraph(self, nodes, rename=False):
+        if rename:
+            ixs = dict(map(reversed, enumerate(nodes)))
+            new_nodes = set(range(len(nodes)))
+            arcs = {(ixs[i], ixs[j]) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(ixs[i], ixs[j]) for i, j in self._edges if i in nodes and j in nodes}
+        else:
+            new_nodes = nodes
+            arcs = {(i, j) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(i, j) for i, j in self._edges if i in nodes and j in nodes}
+        return PDAG(nodes=new_nodes, arcs=arcs, edges=edges)
 
     def remove_unprotected_orientations(self, verbose=False):
         """
         Replace with edges those arcs whose orientations cannot be determined by either:
         - prior knowledge, or
-        - Meek's rules
+        - Meek rules
 
         =====
         See Koller & Friedman, Algorithm 3.5
 
-        :param verbose:
-        :return:
         """
         PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
         UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge
@@ -342,6 +445,28 @@ class PDAG:
             pdag2.remove_node(sink)
 
         return DAG(arcs=arcs)
+
+    def mec_size(self):
+        """Return the number of DAGs in the MEC represented by this PDAG
+        """
+        raise NotImplementedError
+
+        nnodes = len(self._nodes)
+        n_edges = len(self._edges)
+
+        if len(self._arcs) != 0:
+            pass
+        elif n_edges == nnodes - 1:
+            return nnodes
+        elif n_edges == nnodes*(nnodes-1)/2:
+            return factorial(nnodes)
+        else:
+            pass
+
+    def exact_sample(self, save_sampler=True, nsamples=1):
+        """Return a DAG sampled uniformly at random from the MEC represented by this PDAG
+        """
+        raise NotImplementedError
 
     def all_dags(self, verbose=False):
         """Return all DAGs consistent with this PDAG

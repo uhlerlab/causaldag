@@ -8,6 +8,7 @@ import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
 from typing import Set
+import networkx as nx
 
 
 class CycleError(Exception):
@@ -104,6 +105,11 @@ class DAG:
     @property
     def max_out_degree(self):
         return max(len(self._parents[node]) for node in self._nodes)
+
+    @property
+    def sparsity(self):
+        p = len(self._nodes)
+        return len(self._arcs) / p / (p-1) * 2
 
     def parents_of(self, node):
         return self._parents[node].copy()
@@ -856,6 +862,13 @@ class DAG:
                 g.add_arc(df.index[i], df.columns[j])
         return g
 
+    @classmethod
+    def from_nx(cls, nx_graph):
+        return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
+
+    def to_nx(self):
+        return nx.DiGraph(nodes=self._nodes, edges=self._arcs)
+
     def to_amat(self, node_list=None) -> (np.ndarray, list):
         """Return an adjacency matrix for DAG
 
@@ -897,7 +910,7 @@ class DAG:
     def subgraph(self, nodes):
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
-    # === optimal interventions
+    # === OPTIMAL INTERVENTIONS
     def cpdag(self):
         """Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
         Markov equivalence class of this DAG
@@ -1003,6 +1016,7 @@ class DAG:
         """
         raise NotImplementedError()
 
+    # === SEPARATIONS
     def dsep(self, A, B, C=set(), verbose=False):
         """
         Check if A and B are d-separated given C, using the Bayes ball algorithm.
@@ -1196,9 +1210,14 @@ class DAG:
 
         return self._nodes.difference(A).difference(C).difference(reachable)
 
+
 if __name__ == '__main__':
     d = DAG(arcs={(1, 2), (1, 3), (3, 4), (2, 4), (3, 5)})
     d.save_gml('test_mine.gml')
+
+    def adversarial(p):
+        arcs = set(itr.combinations(2**p, 2))
+
     
 
 
