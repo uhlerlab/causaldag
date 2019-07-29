@@ -923,8 +923,8 @@ class DAG:
         g = nx.Graph()
         g.add_edges_from(self._arcs)
         max_cliques = {frozenset(c) for c in nx.chordal_graph_cliques(g)}
-        weight2directed = defaultdict(set)
-        weight2bidirected = defaultdict(set)
+        overlap_to_edges = defaultdict(set)
+        is_bidirected_dict = dict()
 
         for c1, c2 in itr.combinations(max_cliques, 2):
             s = c1 & c2
@@ -933,61 +933,53 @@ class DAG:
             is_bidirected = all_into_c1 and all_into_c2
             if not is_bidirected:
                 c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)  # switch directions so c1 first
-                weight2directed[len(c1 & c2)].add((c1, c2))
-            else:
-                weight2bidirected[len(c1 & c2)].add((c1, c2))
-        current_threshold = max(max(weight2directed), max(weight2bidirected))
-        clique2ancestors = dict()
+            overlap_to_edges[len(c1 & c2)].add((c1, c2))
+            is_bidirected_dict[(c1, c2)] = is_bidirected
+        current_threshold = max(overlap_to_edges)
 
         clique_tree = nx.DiGraph()
 
         for _ in range(len(max_cliques)-1):
             while True:
-                selected_edge = None
+                candidate_edges = set(overlap_to_edges[current_threshold].values())
 
-                # === try to find a directed edge at the current weight threshold that won't make a cycle
-                candidate_edges = set(weight2directed[current_threshold].values())
+                # === try to find an edge at the current weight threshold that won't make a cycle
+                selected_edge = None
                 for c1, c2 in candidate_edges:
-                    if c2 in clique2ancestors[c1] or c1 in clique2ancestors[c2]:
-                        weight2directed[current_threshold].remove((c1, c2))
+                    clique_tree.add_edge(c1, c2)
+                    if not nx.is_tree(clique_tree):
+                        clique_tree.remove_edge(c1, c2)
+                        overlap_to_edges[current_threshold].remove((c1, c2))
                     else:
                         selected_edge = c1, c2
-                        is_bidirected = False
                         break
-
-                # === if no directed edge, try to find a bidirected edge
-                if selected_edge is None:
-                    candidate_edges = set(weight2bidirected[current_threshold].values())
-                    for c1, c2 in candidate_edges:
-                        if c2 in clique2ancestors[c1] or c1 in clique2ancestors[c2]:
-                            weight2bidirected[current_threshold].remove((c1, c2))
-                        else:
-                            selected_edge = c1, c2
-                            is_bidirected = True
-                            break
 
                 # === if unsuccessful, lower threshold
                 if selected_edge is None:
                     current_threshold -= 1
-                # === otherwise, find upstream-most clique from target clique that is a neighbor to source clique
+                # === otherwise, find upstream-most clique from target adjacent to source clique
                 else:
                     while True:
                         parents = list(clique_tree.predecessors(c2))
                         p = parents[0] if parents else None
-                        if p is not None and (p, c2) in candidate_edges:
-                            c1 = p
-                            selected_edge = (p, c2)
+                        if p is not None:
+                            if (p, c1) in candidate_edges:
+                                c1, c2 = p, c1
+                                break
+                            elif (c1, p) in candidate_edges:
+                                c1, c2 = c1, p
+                            else:
+                                break
                         else:
                             break
 
                     break
 
-            if is_bidirected:
+            if is_bidirected_dict[(c1, c2)]:
                 clique_tree.add_edge(c1, c2)
                 clique_tree.add_edge(c2, c1)
             else:
                 clique_tree.add_edge(c1, c2)
-                clique2ancestors[c2] = clique2ancestors[c1] | {c1}
 
         return clique_tree
 
