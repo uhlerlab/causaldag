@@ -919,67 +919,62 @@ class DAG:
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
     # === OPTIMAL INTERVENTIONS
-    def directed_clique_tree(self):
+    def directed_clique_tree(self, verbose=False):
+        # === get max cliques
         g = nx.Graph()
         g.add_edges_from(self._arcs)
         max_cliques = {frozenset(c) for c in nx.chordal_graph_cliques(g)}
+
+        clique_tree = nx.MultiDiGraph()
+        # === return single node graph if already complete
+        if len(max_cliques) == 1:
+            clique_tree.add_node(max_cliques.pop())
+            return clique_tree
+
+        # === get edge weights and directions b/t cliques
         overlap_to_edges = defaultdict(set)
         is_bidirected_dict = dict()
-
         for c1, c2 in itr.combinations(max_cliques, 2):
-            s = c1 & c2
-            all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(c1, s))
-            all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(c2, s))
-            is_bidirected = all_into_c1 and all_into_c2
-            if not is_bidirected:
-                c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)  # switch directions so c1 first
-            overlap_to_edges[len(c1 & c2)].add((c1, c2))
-            is_bidirected_dict[(c1, c2)] = is_bidirected
+            shared = c1 & c2
+            if shared:
+                all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(shared, c1 - shared))
+                all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(shared, c2 - shared))
+                is_bidirected = all_into_c1 and all_into_c2
+                if not is_bidirected:
+                    c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)  # switch directions so c1 first
+                is_bidirected_dict[(c1, c2)] = is_bidirected
+                overlap_to_edges[len(c1 & c2)].add((c1, c2))
+
+        if verbose: print(overlap_to_edges, is_bidirected_dict)
         current_threshold = max(overlap_to_edges)
 
-        clique_tree = nx.DiGraph()
-
         for _ in range(len(max_cliques)-1):
-            while True:
-                candidate_edges = set(overlap_to_edges[current_threshold].values())
-
-                # === try to find an edge at the current weight threshold that won't make a cycle
-                selected_edge = None
-                for c1, c2 in candidate_edges:
-                    clique_tree.add_edge(c1, c2)
-                    if not nx.is_tree(clique_tree):
-                        clique_tree.remove_edge(c1, c2)
-                        overlap_to_edges[current_threshold].remove((c1, c2))
+            while current_threshold > 0:
+                candidate_edges = list(overlap_to_edges[current_threshold])
+                candidate_trees = [clique_tree.copy() for _ in candidate_edges]
+                for t, (c1, c2) in zip(candidate_trees, candidate_edges):
+                    if is_bidirected_dict[(c1, c2)]:
+                        t.add_edge(c1, c2)
+                        t.add_edge(c2, c1)
                     else:
-                        selected_edge = c1, c2
-                        break
+                        t.add_edge(c1, c2)
 
-                # === if unsuccessful, lower threshold
-                if selected_edge is None:
+                candidate_trees = [t for t in candidate_trees if nx.is_tree(t.to_undirected())]
+                candidate_tree_parent_dicts = [
+                    {node: {p for p in t.predecessors(node) if not t.has_edge(node, p)} for node in t.nodes()}
+                    for t in candidate_trees
+                ]
+                candidate_trees = [
+                    t for t, parent_dict in zip(candidate_trees, candidate_tree_parent_dicts)
+                    if max(map(len, parent_dict.values())) <= 1
+                ]
+
+                if not candidate_trees:
                     current_threshold -= 1
-                # === otherwise, find upstream-most clique from target adjacent to source clique
+                    continue
                 else:
-                    while True:
-                        parents = list(clique_tree.predecessors(c2))
-                        p = parents[0] if parents else None
-                        if p is not None:
-                            if (p, c1) in candidate_edges:
-                                c1, c2 = p, c1
-                                break
-                            elif (c1, p) in candidate_edges:
-                                c1, c2 = c1, p
-                            else:
-                                break
-                        else:
-                            break
-
+                    clique_tree = candidate_trees[0]
                     break
-
-            if is_bidirected_dict[(c1, c2)]:
-                clique_tree.add_edge(c1, c2)
-                clique_tree.add_edge(c2, c1)
-            else:
-                clique_tree.add_edge(c1, c2)
 
         return clique_tree
 
