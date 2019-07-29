@@ -40,6 +40,20 @@ class DAG:
             return False
         return self._nodes == other._nodes and self._arcs == other._arcs
 
+    def __str__(self):
+        t = self.topological_sort()
+        substrings = []
+        for node in t:
+            if self._parents[node]:
+                parents_str = ','.join(map(str, self._parents[node]))
+                substrings.append('[%s|%s]' % (node, parents_str))
+            else:
+                substrings.append('[%s]' % node)
+        return ''.join(substrings)
+
+    def __repr__(self):
+        return str(self)
+
     @classmethod
     def from_amat(cls, amat):
         """Return a DAG with arcs given by amat
@@ -59,6 +73,7 @@ class DAG:
         """
         return DAG(nodes=self._nodes, arcs=self._arcs)
 
+    # === PROPERTIES
     @property
     def nodes(self):
         return set(self._nodes)
@@ -141,20 +156,6 @@ class DAG:
         False
         """
         return desc in self._children[anc] or desc in self.downstream(anc)
-
-    def __str__(self):
-        t = self.topological_sort()
-        substrings = []
-        for node in t:
-            if self._parents[node]:
-                parents_str = ','.join(map(str, self._parents[node]))
-                substrings.append('[%s|%s]' % (node, parents_str))
-            else:
-                substrings.append('[%s]' % node)
-        return ''.join(substrings)
-
-    def __repr__(self):
-        return str(self)
 
     # === MUTATORS
     def add_node(self, node):
@@ -492,6 +493,9 @@ class DAG:
                 if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
                     vstructs.add((p1, node, p2))
         return vstructs
+
+    def induced_graph(self, nodes):
+        return DAG(nodes=nodes, arcs={(i, j) for i, j in self._arcs if (i in nodes) and (j in nodes)})
 
     # === COMPARISON
     def shd(self, other) -> int:
@@ -868,7 +872,10 @@ class DAG:
         return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
 
     def to_nx(self):
-        return nx.DiGraph(nodes=self._nodes, edges=self._arcs)
+        g = nx.DiGraph()
+        g.add_nodes_from(self._nodes)
+        g.add_edges_from(self._arcs)
+        return g
 
     def to_amat(self, node_list=None) -> (np.ndarray, list):
         """Return an adjacency matrix for DAG
@@ -912,6 +919,78 @@ class DAG:
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
     # === OPTIMAL INTERVENTIONS
+    def directed_clique_tree(self):
+        g = nx.Graph()
+        g.add_edges_from(self._arcs)
+        max_cliques = {frozenset(c) for c in nx.chordal_graph_cliques(g)}
+        weight2directed = defaultdict(set)
+        weight2bidirected = defaultdict(set)
+
+        for c1, c2 in itr.combinations(max_cliques, 2):
+            s = c1 & c2
+            all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(c1, s))
+            all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(c2, s))
+            is_bidirected = all_into_c1 and all_into_c2
+            if not is_bidirected:
+                c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)  # switch directions so c1 first
+                weight2directed[len(c1 & c2)].add((c1, c2))
+            else:
+                weight2bidirected[len(c1 & c2)].add((c1, c2))
+        current_threshold = max(max(weight2directed), max(weight2bidirected))
+        clique2ancestors = dict()
+
+        clique_tree = nx.DiGraph()
+
+        for _ in range(len(max_cliques)-1):
+            while True:
+                selected_edge = None
+
+                # === try to find a directed edge at the current weight threshold that won't make a cycle
+                candidate_edges = set(weight2directed[current_threshold].values())
+                for c1, c2 in candidate_edges:
+                    if c2 in clique2ancestors[c1] or c1 in clique2ancestors[c2]:
+                        weight2directed[current_threshold].remove((c1, c2))
+                    else:
+                        selected_edge = c1, c2
+                        is_bidirected = False
+                        break
+
+                # === if no directed edge, try to find a bidirected edge
+                if selected_edge is None:
+                    candidate_edges = set(weight2bidirected[current_threshold].values())
+                    for c1, c2 in candidate_edges:
+                        if c2 in clique2ancestors[c1] or c1 in clique2ancestors[c2]:
+                            weight2bidirected[current_threshold].remove((c1, c2))
+                        else:
+                            selected_edge = c1, c2
+                            is_bidirected = True
+                            break
+
+                # === if unsuccessful, lower threshold
+                if selected_edge is None:
+                    current_threshold -= 1
+                # === otherwise, find upstream-most clique from target clique that is a neighbor to source clique
+                else:
+                    while True:
+                        parents = list(clique_tree.predecessors(c2))
+                        p = parents[0] if parents else None
+                        if p is not None and (p, c2) in candidate_edges:
+                            c1 = p
+                            selected_edge = (p, c2)
+                        else:
+                            break
+
+                    break
+
+            if is_bidirected:
+                clique_tree.add_edge(c1, c2)
+                clique_tree.add_edge(c2, c1)
+            else:
+                clique_tree.add_edge(c1, c2)
+                clique2ancestors[c2] = clique2ancestors[c1] | {c1}
+
+        return clique_tree
+
     def cpdag(self):
         """Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
         Markov equivalence class of this DAG
@@ -950,20 +1029,32 @@ class DAG:
         pdag.remove_unprotected_orientations()
         return pdag
 
-    def optimal_intervention_greedy(self, cpdag=None, num_interventions=1):
+    def greedy_optimal_single_node_intervention(self, cpdag=None, num_interventions=1):
+        """
+        Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy
+        strategy. By submodularity, this will orient at least (1 - 1/e) as many edges as the true optimal intervention
+        set.
+
+        Parameters
+        ----------
+        cpdag:
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+        num_interventions:
+            the number of single-node interventions used. Default is 1.
+
+        Return
+        ------
+        (interventions, cpdags)
+            The selected interventions and the associated cpdags that they induce.
+        """
         if cpdag is None:
             cpdag = self.cpdag()
         if len(cpdag.edges) == 0:
             return [None]*num_interventions, [cpdag]*num_interventions
 
-        max_one_undirected_nbr = all(len(cpdag._undirected_neighbors[node]) <= 1 for node in self._nodes)
-        no_undirected_nbrs = lambda node: cpdag._undirected_neighbors[node] == 0
-        better_neighbor = lambda node: len(cpdag._undirected_neighbors[node]) == 1 and not max_one_undirected_nbr
-        considered_nodes = list(filter(lambda node: not (no_undirected_nbrs(node) or better_neighbor(node)), self._nodes))
-
         nodes2icpdags = {
             node: self.interventional_cpdag([{node}], cpdag=cpdag)
-            for node in considered_nodes
+            for node in self._nodes - cpdag.dominated_nodes
         }
         nodes2num_oriented = {
             node: len(icpdag._arcs)
@@ -976,23 +1067,61 @@ class DAG:
         if num_interventions == 1:
             return [best_iv], [icpdag]
         else:
-            best_ivs, icpdags = self.optimal_intervention_greedy(cpdag=icpdag, num_interventions=num_interventions-1)
+            best_ivs, icpdags = self.greedy_optimal_single_node_intervention(cpdag=icpdag, num_interventions=num_interventions-1)
             return [best_iv] + best_ivs, [icpdag] + icpdags
 
-    def fully_orienting_interventions_greedy(self, cpdag=None):
-        if cpdag is None:
-            cpdag = self.cpdag()
+    def greedy_optimal_fully_orienting_interventions(self, cpdag=None):
+        """
+        Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the
+        interventions. By submodularity, the number of interventions is a (1 + ln K) multiplicative approximation
+        to the true optimal number of interventions, where K is the number of undirected edges in the CPDAG.
+
+        Parameters
+        ----------
+        cpdag
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+
+        Returns
+        -------
+        (interventions, cpdags)
+            The selected interventions and the associated cpdags that they induce.
+        """
+        if cpdag is None: cpdag = self.cpdag()
         curr_cpdag = cpdag
         ivs = []
         icpdags = []
         while len(curr_cpdag.edges) != 0:
-            iv, icpdag = self.optimal_intervention_greedy(cpdag=curr_cpdag)
+            iv, icpdag = self.greedy_optimal_single_node_intervention(cpdag=curr_cpdag)
             iv = iv[0]
             icpdag = icpdag[0]
             curr_cpdag = icpdag
             ivs.append(iv)
             icpdags.append(icpdag)
         return ivs, icpdags
+
+    def optimal_fully_orienting_interventions(self, cpdag=None):
+        """
+        Find the smallest set of interventions which fully orients the CPDAG into this DAG.
+
+        Parameters
+        ----------
+        cpdag
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+
+        Returns
+        -------
+        interventions
+            A minimum-size set of interventions which fully orients the DAG.
+        """
+        cpdag = self.cpdag() if cpdag is None else cpdag
+        node2oriented = {
+            node: self.interventional_cpdag([{node}], cpdag=cpdag).arcs
+            for node in self._nodes - cpdag.dominated_nodes
+        }
+        for ss in core_utils.powerset(self._nodes - cpdag.dominated_nodes, r_min=1):
+            oriented = set.union(*(node2oriented[node] for node in ss))
+            if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
+                return ss
 
     def backdoor(self, i, j):
         """Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.

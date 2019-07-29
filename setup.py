@@ -25,7 +25,8 @@ setuptools.setup(
         'scikit_learn',
         'typing',
         'pygam',
-        'numba'
+        'numba',
+        'networkx'
     ]
 )
 

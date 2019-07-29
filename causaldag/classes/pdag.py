@@ -10,13 +10,14 @@ import numpy as np
 from typing import Set
 from collections import namedtuple
 from scipy.special import factorial
+import networkx as nx
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
 
 class PDAG:
     def __init__(self, nodes: Set=set(), arcs: Set=set(), edges=set(), known_arcs=set()):
-        self._nodes = nodes.copy()
+        self._nodes = set(nodes)
         self._arcs = set()
         self._edges = set()
         self._parents = defaultdict(set)
@@ -46,27 +47,16 @@ class PDAG:
                     arcs.add((i, j))
         return PDAG(set(range(nrows)), arcs, edges)
 
-    def _add_arc(self, i, j):
-        self._nodes.add(i)
-        self._nodes.add(j)
-        self._arcs.add((i, j))
+    def to_nx(self):
+        if self._arcs:
+            raise NotImplementedError
+        g = nx.Graph()
+        g.add_edges_from(self._edges)
+        return g
 
-        self._neighbors[i].add(j)
-        self._neighbors[j].add(i)
-
-        self._children[i].add(j)
-        self._parents[j].add(i)
-
-    def _add_edge(self, i, j):
-        self._nodes.add(i)
-        self._nodes.add(j)
-        self._edges.add(tuple(sorted((i, j))))
-
-        self._neighbors[i].add(j)
-        self._neighbors[j].add(i)
-
-        self._undirected_neighbors[i].add(j)
-        self._undirected_neighbors[j].add(i)
+    @classmethod
+    def from_nx(cls, nx_graph):
+        return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
 
     def __eq__(self, other):
         same_nodes = self._nodes == other._nodes
@@ -89,26 +79,12 @@ class PDAG:
                 substrings.append('[{node}|{parents}:{nbrs}]'.format(node=node, parents=parents_str, nbrs=nbrs_str))
         return ''.join(substrings)
 
-    def remove_node(self, node):
-        """Remove a node from the graph
+    def copy(self):
+        """Return a copy of the graph
         """
-        self._nodes.remove(node)
-        self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
-        self._edges = {(i, j) for i, j in self._edges if i != node and j != node}
-        for child in self._children[node]:
-            self._parents[child].remove(node)
-            self._neighbors[child].remove(node)
-        for parent in self._parents[node]:
-            self._children[parent].remove(node)
-            self._neighbors[parent].remove(node)
-        for u_nbr in self._undirected_neighbors[node]:
-            self._undirected_neighbors[u_nbr].remove(node)
-            self._neighbors[u_nbr].remove(node)
-        del self._parents[node]
-        del self._children[node]
-        del self._neighbors[node]
-        del self._undirected_neighbors[node]
+        return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
 
+    # === PROPERTIES
     @property
     def nodes(self):
         return set(self._nodes)
@@ -141,10 +117,138 @@ class PDAG:
     def skeleton(self):
         return {frozenset({i, j}) for i, j in self._arcs | self._edges}
 
-    def copy(self):
-        """Return a copy of the graph
+    @property
+    def dominated_nodes(self):
+        dominated_nodes = set()
+        for node in self._nodes:
+            num_nbrs = len(self._undirected_neighbors[node])
+            if num_nbrs == 0:
+                dominated_nodes.add(node)
+            elif num_nbrs == 1:
+                max_nbrs_of_nbrs = max(len(self._undirected_neighbors[nbr]) for nbr in self._undirected_neighbors[node])
+                if max_nbrs_of_nbrs > 1:
+                    dominated_nodes.add(node)
+        return dominated_nodes
+
+    def clique_size(self):
+        if len(self._arcs) == 0:
+            g = self.to_nx()
+            return nx.chordal_graph_treewidth(g) + 1
+        else:
+            return max(cc.clique_size() for cc in self.chain_components())
+
+    def max_cliques(self):
+        if len(self._arcs) == 0:
+            g = self.to_nx()
+            m_cliques = nx.chordal_graph_cliques(g)
+            return {frozenset(c) for c in m_cliques}
+        else:
+            return set.union(*(cc.max_cliques() for cc in self.chain_components()))
+
+    # === PROPERTIES W/ ARGUMENTS
+    def parents_of(self, node):
+        return set(self._parents[node])
+
+    def children_of(self, node):
+        return set(self._children[node])
+
+    def neighbors_of(self, node):
+        return set(self._neighbors[node])
+
+    def undirected_neighbors_of(self, node):
+        return set(self._undirected_neighbors[node])
+
+    def has_edge(self, i, j):
+        """Return True if the graph contains the edge i--j
         """
-        return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
+        return (i, j) in self._edges or (j, i) in self._edges
+
+    def has_arc(self, i, j):
+        """Return True if the graph contains the arc i->j"""
+        return (i, j) in self._arcs
+
+    def has_edge_or_arc(self, i, j):
+        """Return True if the graph contains the edge i--j or an arc i->j or i<-j
+        """
+        return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
+
+    def vstructs(self):
+        vstructs = set()
+        for node in self._nodes:
+            for p1, p2 in itr.combinations(self._parents[node], 2):
+                if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
+                    vstructs.add((p1, node))
+                    vstructs.add((p2, node))
+        return vstructs
+
+    def _undirected_reachable(self, node, tmp, visited):
+        visited.add(node)
+        tmp.add(node)
+        for nbr in filter(lambda nbr: nbr not in visited, self._undirected_neighbors[node]):
+            tmp = self._undirected_reachable(nbr, tmp, visited)
+        return tmp
+
+    def chain_components(self, rename=False):
+        """Return the chain components of this graph.
+
+        Return
+        ------
+        List[Set[node]]
+            Return the partition of nodes coming from the relation of reachability by undirected edges.
+        """
+        node_queue = self._nodes.copy()
+        components = []
+        visited_nodes = set()
+
+        while node_queue:
+            node = node_queue.pop()
+            if node not in visited_nodes:
+                reachable = self._undirected_reachable(node, set(), visited_nodes)
+                if len(reachable) > 1: components.append(reachable)
+
+        return [self.induced_subgraph(c, rename=rename) for c in components]
+
+    def induced_subgraph(self, nodes, rename=False):
+        if rename:
+            ixs = dict(map(reversed, enumerate(nodes)))
+            new_nodes = set(range(len(nodes)))
+            arcs = {(ixs[i], ixs[j]) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(ixs[i], ixs[j]) for i, j in self._edges if i in nodes and j in nodes}
+        else:
+            new_nodes = nodes
+            arcs = {(i, j) for i, j in self._arcs if i in nodes and j in nodes}
+            edges = {(i, j) for i, j in self._edges if i in nodes and j in nodes}
+        return PDAG(nodes=new_nodes, arcs=arcs, edges=edges)
+
+    def interventional_cpdag(self, dag, intervened_nodes):
+        cut_edges = set()
+        for node in intervened_nodes:
+            cut_edges.update(dag.incident_arcs(node))
+        known_arcs = cut_edges | self._known_arcs
+        return PDAG(self._nodes, self._arcs, self._edges, known_arcs=known_arcs)
+
+    # === MUTATORS
+    def _add_arc(self, i, j):
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._arcs.add((i, j))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._children[i].add(j)
+        self._parents[j].add(i)
+
+    def _add_edge(self, i, j):
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._edges.add(tuple(sorted((i, j))))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._undirected_neighbors[i].add(j)
+        self._undirected_neighbors[j].add(i)
 
     def remove_edge(self, i, j, ignore_error=False):
         try:
@@ -158,6 +262,26 @@ class PDAG:
                 pass
             else:
                 raise e
+
+    def remove_node(self, node):
+        """Remove a node from the graph
+        """
+        self._nodes.remove(node)
+        self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
+        self._edges = {(i, j) for i, j in self._edges if i != node and j != node}
+        for child in self._children[node]:
+            self._parents[child].remove(node)
+            self._neighbors[child].remove(node)
+        for parent in self._parents[node]:
+            self._children[parent].remove(node)
+            self._neighbors[parent].remove(node)
+        for u_nbr in self._undirected_neighbors[node]:
+            self._undirected_neighbors[u_nbr].remove(node)
+            self._neighbors[u_nbr].remove(node)
+        del self._parents[node]
+        del self._children[node]
+        del self._neighbors[node]
+        del self._undirected_neighbors[node]
 
     def replace_edge_with_arc(self, arc, ignore_error=False):
         try:
@@ -185,29 +309,6 @@ class PDAG:
         self._children[i].add(j)
         self._undirected_neighbors[i].remove(j)
         self._undirected_neighbors[j].remove(i)
-
-    def vstructs(self):
-        vstructs = set()
-        for node in self._nodes:
-            for p1, p2 in itr.combinations(self._parents[node], 2):
-                if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
-                    vstructs.add((p1, node))
-                    vstructs.add((p2, node))
-        return vstructs
-
-    def has_edge(self, i, j):
-        """Return True if the graph contains the edge i--j
-        """
-        return (i, j) in self._edges or (j, i) in self._edges
-
-    def has_arc(self, i, j):
-        """Return True if the graph contains the arc i->j"""
-        return (i, j) in self._arcs
-
-    def has_edge_or_arc(self, i, j):
-        """Return True if the graph contains the edge i--j or an arc i->j or i<-j
-        """
-        return (i, j) in self._arcs or (j, i) in self._arcs or self.has_edge(i, j)
 
     def assign_parents(self, node, parents, verbose=False):
         for p in parents:
@@ -277,45 +378,6 @@ class PDAG:
                     undecided_arcs.remove((arc[1], arc[0]))
                     self._replace_edge_with_arc(arc)
 
-    def _undirected_reachable(self, node, tmp, visited):
-        visited.add(node)
-        tmp.add(node)
-        for nbr in filter(lambda nbr: nbr not in visited, self._undirected_neighbors[node]):
-            tmp = self._undirected_reachable(nbr, tmp, visited)
-        return tmp
-
-    def chain_components(self, rename=False):
-        """Return the chain components of this graph.
-
-        Return
-        ------
-        List[Set[node]]
-            Return the partition of nodes coming from the relation of reachability by undirected edges.
-        """
-        node_queue = self._nodes.copy()
-        components = []
-        visited_nodes = set()
-
-        while node_queue:
-            node = node_queue.pop()
-            if node not in visited_nodes:
-                reachable = self._undirected_reachable(node, set(), visited_nodes)
-                if len(reachable) > 1: components.append(reachable)
-
-        return [self.induced_subgraph(c, rename=rename) for c in components]
-
-    def induced_subgraph(self, nodes, rename=False):
-        if rename:
-            ixs = dict(map(reversed, enumerate(nodes)))
-            new_nodes = set(range(len(nodes)))
-            arcs = {(ixs[i], ixs[j]) for i, j in self._arcs if i in nodes and j in nodes}
-            edges = {(ixs[i], ixs[j]) for i, j in self._edges if i in nodes and j in nodes}
-        else:
-            new_nodes = nodes
-            arcs = {(i, j) for i, j in self._arcs if i in nodes and j in nodes}
-            edges = {(i, j) for i, j in self._edges if i in nodes and j in nodes}
-        return PDAG(nodes=new_nodes, arcs=arcs, edges=edges)
-
     def remove_unprotected_orientations(self, verbose=False):
         """
         Replace with edges those arcs whose orientations cannot be determined by either:
@@ -378,13 +440,6 @@ class PDAG:
                 if arc_flags[arc] == NOT_PROTECTED:
                     self._replace_arc_with_edge(arc)
 
-    def interventional_cpdag(self, dag, intervened_nodes):
-        cut_edges = set()
-        for node in intervened_nodes:
-            cut_edges.update(dag.incident_arcs(node))
-        known_arcs = cut_edges | self._known_arcs
-        return PDAG(self._nodes, self._arcs, self._edges, known_arcs=known_arcs)
-
     def add_known_arc(self, i, j):
         if (i, j) in self._known_arcs:
             return
@@ -395,6 +450,7 @@ class PDAG:
     def add_known_arcs(self, arcs):
         raise NotImplementedError
 
+    # === MUTATORS
     def to_amat(self, node_list=None, mode='dataframe'):
         """Return an adjacency matrix for the graph
         """
@@ -446,6 +502,7 @@ class PDAG:
 
         return DAG(arcs=arcs)
 
+    # === MEC
     def mec_size(self):
         """Return the number of DAGs in the MEC represented by this PDAG
         """
