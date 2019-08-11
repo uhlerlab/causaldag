@@ -164,6 +164,10 @@ class TestDAG(TestCase):
         d = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         self.assertEqual(d.marginal_mag(1), cd.AncestralGraph(directed={(2, 3)}))
 
+    def test_markov_blanket(self):
+        d = cd.DAG(arcs={(1, 2), (2, 3), (2, 4), (3, 5), (6, 3), (7, 4), (8, 4)})
+        self.assertEqual(d.markov_blanket(2), {1, 3, 4, 6, 7, 8})
+
     # def test_vstructs(self):
     #     pass
     #

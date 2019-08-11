@@ -8,7 +8,7 @@ def _coin(p, size=1):
 
 
 def unif_away_zero(low=.25, high=1, size=1):
-    return (_coin(.5, size) - .5)*2 * np.random.uniform(low, high)
+    return (_coin(.5, size) - .5)*2 * np.random.uniform(low, high, size=size)
 
 
 def directed_erdos(n, s, size=1):

@@ -497,6 +497,10 @@ class DAG:
     def induced_graph(self, nodes):
         return DAG(nodes=nodes, arcs={(i, j) for i, j in self._arcs if (i in nodes) and (j in nodes)})
 
+    def markov_blanket(self, node):
+        parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[node] else set()
+        return self._parents[node] | self._children[node] | parents_of_children - {node}
+
     # === COMPARISON
     def shd(self, other) -> int:
         """Compute the structural Hamming distance between this DAG and another graph
@@ -948,6 +952,7 @@ class DAG:
         if verbose: print(overlap_to_edges, is_bidirected_dict)
         current_threshold = max(overlap_to_edges)
 
+        # greedily choose edges to create a directed clique tree
         for _ in range(len(max_cliques)-1):
             while current_threshold > 0:
                 candidate_edges = list(overlap_to_edges[current_threshold])
@@ -959,22 +964,37 @@ class DAG:
                     else:
                         t.add_edge(c1, c2)
 
-                candidate_trees = [t for t in candidate_trees if nx.is_tree(t.to_undirected())]
-                candidate_tree_parent_dicts = [
-                    {node: {p for p in t.predecessors(node) if not t.has_edge(node, p)} for node in t.nodes()}
-                    for t in candidate_trees
-                ]
-                candidate_trees = [
-                    t for t, parent_dict in zip(candidate_trees, candidate_tree_parent_dicts)
-                    if max(map(len, parent_dict.values())) <= 1
-                ]
+                # only keep forests
+                candidate_trees = [t for t in candidate_trees if nx.is_forest(t.to_undirected())]
 
                 if not candidate_trees:
                     current_threshold -= 1
                     continue
-                else:
-                    clique_tree = candidate_trees[0]
-                    break
+
+                # only keep if single source in each component
+                candidate_trees_no_collider = []
+                for t in candidate_trees:
+                    components = nx.strongly_connected_component_subgraphs(t)
+                    components2parents = [set.union(*(set(t.predecessors(node)) - c.nodes() for node in c)) for c in components]
+                    if all(len(parents) <= 1 for parents in components2parents):
+                        candidate_trees_no_collider.append(t)
+                if not candidate_trees_no_collider:
+                    raise Exception("Can't find a collider-free tree")
+
+                # choose clique tree without new -><->, if possible
+                preferred_candidate_trees = []
+                for t in candidate_trees_no_collider:
+                    new_edge = set(t.edges()) - set(clique_tree.edges())
+                    c1, c2 = list(new_edge)[0]
+                    if not t.has_edge(c2, c1):
+                        preferred_candidate_trees.append(t)
+                    else:
+                        if not set(t.predecessors(c1)) - {c2} and not set(t.predecessors(c2)) - {c1}:
+                            preferred_candidate_trees.append(t)
+
+                clique_tree = preferred_candidate_trees[0] if preferred_candidate_trees else candidate_trees_no_collider[0]
+                if verbose: print(clique_tree.edges())
+                break
 
         return clique_tree
 

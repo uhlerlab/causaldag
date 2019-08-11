@@ -30,13 +30,41 @@ def perm2dag(perm, ci_tester: CI_Tester, restricted=True, fixed_adjacencies=set(
     return d
 
 
-def perm2dag2(perm, ci_tester: CI_Tester):
+def perm2dag2(perm, ci_tester: CI_Tester, verbose=False):
     # TODO: test, if works add fixed_adjacencies/fixed_gaps
-    d = DAG(nodes=set(perm), arcs=set(itr.combinations(perm, 2)))
-    for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(reversed(perm)), 2):
-        if ci_tester.is_ci(pi_i, pi_j, d.parents_of(pi_i) | d.parents_of(pi_j) - {pi_j}):
-            d.remove_arc(pi_i, pi_j)
+    d = DAG(nodes=set(perm))
+    ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
+    for i, j in ixs:
+        pi_i, pi_j = perm[i], perm[j]
+        mb = d.markov_blanket(pi_i)
+        is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
+        if not is_ci:
+            d.add_arc(pi_i, pi_j)
+        if verbose: print("%s indep of %s given %s: %s" % (pi_i, pi_j, mb, is_ci))
+
     return d
+
+
+def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gaps=set()):
+    new_dag = dag.copy()
+    parents = dag.parents_of(i)
+
+    new_dag.reverse_arc(i, j)
+    for parent in parents:
+        rest = parents - {parent}
+        i_parent_fixed = (i, parent) in fixed_adjacencies or (parent, i) in fixed_adjacencies
+        j_parent_fixed = (j, parent) in fixed_adjacencies or (parent, j) in fixed_adjacencies
+        if not i_parent_fixed and ci_tester.is_ci(i, parent, new_dag.parents_of(i) - {parent}):
+            new_dag.remove_arc(parent, i)
+        if not j_parent_fixed and ci_tester.is_ci(j, parent, new_dag.parents_of(j) - {parent}):
+            new_dag.remove_arc(parent, j)
+
+    # new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
+    # for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
+    #     if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
+    #         new_covered_arcs.add((k, l))
+    # return new_dag, new_covered_arcs - fixed_orders
+    return new_dag
 
 
 def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
