@@ -420,6 +420,12 @@ class AncestralGraph:
                 ancestors.add(parent)
                 self._add_ancestors(ancestors, parent, exclude_arcs=exclude_arcs)
 
+    def _add_descendants(self, descendants, node, exclude_arcs=set()):
+        for child in self._children[node]:
+            if child not in descendants and (child, node) not in exclude_arcs:
+                descendants.add(child)
+                self._add_descendants(descendants, child, exclude_arcs=exclude_arcs)
+
     def ancestors_of(self, node, exclude_arcs=set()):
         """Return the nodes upstream of node
 
@@ -475,8 +481,30 @@ class AncestralGraph:
 
         return core_utils.defdict2dict(node2ancestors, self._nodes)
 
-    def descendants_of(self, i):
-        raise NotImplementedError
+    def descendants_of(self, node, exclude_arcs=set()):
+        """Return the nodes downstream of node
+
+        Parameters
+        ----------
+        node:
+            The node.
+
+        See Also
+        --------
+        ancestors_of
+
+        Return
+        ------
+        Set[node]
+            Return all nodes j such that there is a directed path from node j.
+
+        Example
+        -------
+        """
+        descendants = set()
+        self._add_descendants(descendants, node, exclude_arcs=exclude_arcs)
+        return descendants
+
 
     def has_directed(self, i, j):
         return (i, j) in self._directed
