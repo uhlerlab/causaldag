@@ -8,6 +8,7 @@ import random
 from causaldag.inference.structural.undirected import threshold_ug
 from causaldag import UndirectedGraph
 from cvxopt import amd
+import numpy as np
 
 
 def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set()):
@@ -45,26 +46,50 @@ def update_minimal_imap(dag, i, j, ci_tester):
     return removed_arcs
 
 
-# def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
+# def min_degree_alg(undirected_graph, ci_tester: CI_Tester, delete=False):
 #     permutation = []
-#     curr_undirected_graph = undirected_graph
+#     curr_undirected_graph = undirected_graph.copy()
 #     while curr_undirected_graph._nodes:
 #         min_degree = min(curr_undirected_graph.degrees.values())
 #         min_degree_nodes = {node for node, degree in curr_undirected_graph.degrees.items() if degree == min_degree}
 #         k = random.choice(list(min_degree_nodes))
 #         nbrs_k = curr_undirected_graph._neighbors[k]
 #
-#         curr_undirected_graph = curr_undirected_graph.copy()  # == Todo: deepcopy
 #         curr_undirected_graph.delete_node(k)
-#         for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
-#             if not curr_undirected_graph.has_edge(nbr1, nbr2):
-#                 curr_undirected_graph.add_edge(nbr1, nbr2)
-#             elif ci_tester.is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
-#                 curr_undirected_graph.delete_edge(nbr1, nbr2)
+#         curr_undirected_graph.add_edges_from(itr.combinations(nbrs_k, 2))
+#         # for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
+#         #     # if not curr_undirected_graph.has_edge(nbr1, nbr2):
+#         #     curr_undirected_graph.add_edge(nbr1, nbr2)
+#             # elif delete and ci_tester.is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
+#             #     curr_undirected_graph.delete_edge(nbr1, nbr2)
 #
 #         permutation.append(k)
 #
 #     return list(reversed(permutation))
+
+
+def min_degree_alg_amat(amat, rnd=True):
+    amat = amat.copy()
+    remaining_nodes = list(range(amat.shape[0]))
+    permutation = []
+    while remaining_nodes:
+        # === PICK A NODE OF MINIMUM DEGREE
+        curr_amat = amat[np.ix_(remaining_nodes, remaining_nodes)]
+        degrees = curr_amat.sum(axis=0)
+        min_degree = degrees.min()
+        min_degree_ixs = np.where(degrees == min_degree)[0]
+        min_degree_ix = random.choice(min_degree_ixs)
+
+        # === ATTACH ITS NEIGHBORS
+        nbrs = {remaining_nodes[ix] for ix in curr_amat[min_degree_ix].nonzero()[0]}
+        for i in nbrs:
+            amat[i, list(nbrs - {i})] = 1
+
+        # === REMOVE IT
+        permutation.append(remaining_nodes[min_degree_ix])
+        del remaining_nodes[min_degree_ix]
+
+    return list(reversed(permutation))
 
 
 # def min_degree_alg2(undirected_graph, ci_tester: CI_Tester, delete=False):
@@ -97,9 +122,9 @@ def update_minimal_imap(dag, i, j, ci_tester):
 #     return list(reversed(permutation))
 
 
-def min_degree_alg(undirected_graph):
-    amat = undirected_graph.to_amat(sparse=True)
-    return list(reversed(amd.order(amat)))
+# def min_degree_alg2(undirected_graph):
+#     amat = undirected_graph.to_amat(sparse=True)
+#     return list(reversed(list(amd.order(amat))))
 
 
 def jci_gsp(
@@ -126,7 +151,8 @@ def jci_gsp(
         else:
             raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
     if initial_undirected:
-        initial_permutations = [context_nodes+min_degree_alg(initial_undirected, combined_ci_tester) for _ in range(nruns)]
+        amat = initial_undirected.to_amat()
+        initial_permutations = [context_nodes+min_degree_alg_amat(amat) for _ in range(nruns)]
     else:
         initial_permutations = [context_nodes+random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
 
@@ -218,7 +244,8 @@ def gsp(
     # === GENERATE CANDIDATE STARTING PERMUTATIONS
     if initial_permutations is None:
         if initial_undirected:
-            initial_permutations = [min_degree_alg(initial_undirected) for _ in range(factor*nruns)]
+            amat = initial_undirected.to_amat()
+            initial_permutations = [min_degree_alg_amat(amat) for _ in range(factor * nruns)]
         else:
             initial_permutations = [random.sample(nodes, len(nodes)) for _ in range(nruns)]
 

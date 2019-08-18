@@ -10,7 +10,7 @@ class UndirectedGraph:
         self._edges = {frozenset({i, j}) for i, j in edges}
         self._neighbors = defaultdict(set)
         self._degrees = defaultdict(int)
-        for i, j in edges:
+        for i, j in self._edges:
             self._nodes.add(i)
             self._nodes.add(j)
             self._neighbors[i].add(j)
@@ -37,6 +37,7 @@ class UndirectedGraph:
         amat = np.zeros([self.num_nodes, self.num_nodes], dtype=int)
         for i, j in self._edges:
             amat[i, j] = True
+            amat[j, i] = True
         return amat
 
     def copy(self, new=True):
@@ -66,11 +67,12 @@ class UndirectedGraph:
 
     # === MUTATORS ===
     def add_edge(self, i, j):
-        self._edges.add(frozenset({i, j}))
-        self._neighbors[i].add(j)
-        self._neighbors[j].add(i)
-        self._degrees[i] += 1
-        self._degrees[j] += 1
+        if frozenset({i, j}) not in self._edges:
+            self._edges.add(frozenset({i, j}))
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+            self._degrees[i] += 1
+            self._degrees[j] += 1
 
     def add_edges_from(self, edges):
         for i, j in edges:
