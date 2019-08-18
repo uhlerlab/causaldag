@@ -1,92 +1,105 @@
 from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester, MemoizedCI_Tester
+from causaldag.utils.ci_tests import CI_Tester
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset
 import random
-import operator as op
 from causaldag.inference.structural.undirected import threshold_ug
 from causaldag import UndirectedGraph
+from cvxopt import amd
 
 
-def perm2dag(perm, ci_tester: CI_Tester, restricted=True, fixed_adjacencies=set(), fixed_gaps=set()):
+def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set()):
     d = DAG(nodes=set(perm))
-    for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
+    ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
+    for i, j in ixs:
+        pi_i, pi_j = perm[i], perm[j]
+
+        # === IF FIXED, DON'T TEST
         if (pi_i, pi_j) in fixed_adjacencies or (pi_j, pi_i) in fixed_adjacencies:
             d.add_arc(pi_i, pi_j)
             continue
         if (pi_i, pi_j) in fixed_gaps or (pi_j, pi_i) in fixed_gaps:
             continue
 
-        if restricted:
-            cond_set = set(perm[i+1:j]) | d.parents_of(pi_i) | d.parents_of(pi_j)
-        else:
-            cond_set = perm[:j]
-            del cond_set[i]
-
-        if not ci_tester.is_ci(pi_i, pi_j, cond_set):
-            d.add_arc(pi_i, pi_j)
-    return d
-
-
-def perm2dag2(perm, ci_tester: CI_Tester, verbose=False):
-    # TODO: test, if works add fixed_adjacencies/fixed_gaps
-    d = DAG(nodes=set(perm))
-    ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
-    for i, j in ixs:
-        pi_i, pi_j = perm[i], perm[j]
+        # === TEST MARKOV BLANKET
         mb = d.markov_blanket(pi_i)
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
-            d.add_arc(pi_i, pi_j)
+            d.add_arc(pi_i, pi_j, unsafe=True)
         if verbose: print("%s indep of %s given %s: %s" % (pi_i, pi_j, mb, is_ci))
 
     return d
 
 
-def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gaps=set()):
-    new_dag = dag.copy()
+def update_minimal_imap(dag, i, j, ci_tester):
+    removed_arcs = set()
     parents = dag.parents_of(i)
-
-    new_dag.reverse_arc(i, j)
     for parent in parents:
         rest = parents - {parent}
-        i_parent_fixed = (i, parent) in fixed_adjacencies or (parent, i) in fixed_adjacencies
-        j_parent_fixed = (j, parent) in fixed_adjacencies or (parent, j) in fixed_adjacencies
-        if not i_parent_fixed and ci_tester.is_ci(i, parent, new_dag.parents_of(i) - {parent}):
-            new_dag.remove_arc(parent, i)
-        if not j_parent_fixed and ci_tester.is_ci(j, parent, new_dag.parents_of(j) - {parent}):
-            new_dag.remove_arc(parent, j)
-
-    # new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
-    # for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
-    #     if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
-    #         new_covered_arcs.add((k, l))
-    # return new_dag, new_covered_arcs - fixed_orders
-    return new_dag
+        if ci_tester.is_ci(i, parent, rest):
+            removed_arcs.add((parent, i))
+        if ci_tester.is_ci(j, parent, rest | {i}):
+            removed_arcs.add((parent, j))
+    return removed_arcs
 
 
-def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
-    permutation = []
-    curr_undirected_graph = undirected_graph
-    while curr_undirected_graph._nodes:
-        min_degree = min(curr_undirected_graph.degrees.items(), key=op.itemgetter(1))[1]
-        min_degree_nodes = {node for node, degree in curr_undirected_graph.degrees.items() if degree == min_degree}
-        k = random.sample(min_degree_nodes, 1)[0]
-        nbrs_k = curr_undirected_graph._neighbors[k]
+# def min_degree_alg(undirected_graph, ci_tester: CI_Tester):
+#     permutation = []
+#     curr_undirected_graph = undirected_graph
+#     while curr_undirected_graph._nodes:
+#         min_degree = min(curr_undirected_graph.degrees.values())
+#         min_degree_nodes = {node for node, degree in curr_undirected_graph.degrees.items() if degree == min_degree}
+#         k = random.choice(list(min_degree_nodes))
+#         nbrs_k = curr_undirected_graph._neighbors[k]
+#
+#         curr_undirected_graph = curr_undirected_graph.copy()  # == Todo: deepcopy
+#         curr_undirected_graph.delete_node(k)
+#         for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
+#             if not curr_undirected_graph.has_edge(nbr1, nbr2):
+#                 curr_undirected_graph.add_edge(nbr1, nbr2)
+#             elif ci_tester.is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
+#                 curr_undirected_graph.delete_edge(nbr1, nbr2)
+#
+#         permutation.append(k)
+#
+#     return list(reversed(permutation))
 
-        curr_undirected_graph = curr_undirected_graph.copy()
-        curr_undirected_graph.delete_node(k)
-        for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
-            if not curr_undirected_graph.has_edge(nbr1, nbr2):
-                curr_undirected_graph.add_edge(nbr1, nbr2)
-            elif ci_tester.is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
-                curr_undirected_graph.delete_edge(nbr1, nbr2)
 
-        permutation.append(k)
+# def min_degree_alg2(undirected_graph, ci_tester: CI_Tester, delete=False):
+#     permutation = []
+#     curr_undirected_graph = undirected_graph.copy()
+#     while curr_undirected_graph._nodes:
+#         nodes2added = {node: set() for node in curr_undirected_graph._nodes}
+#         nodes2removed = {node: set() for node in curr_undirected_graph._nodes}
+#         for k in curr_undirected_graph._nodes:
+#             nbrs_k = curr_undirected_graph._neighbors[k]
+#             for nbr1, nbr2 in itr.combinations(nbrs_k, 2):
+#                 if not curr_undirected_graph.has_edge(nbr1, nbr2):
+#                     nodes2added[k].add((nbr1, nbr2))
+#                 elif delete and ci_tester.is_ci(nbr1, nbr2, curr_undirected_graph._nodes - {nbr1, nbr2, k}):
+#                     nodes2removed[k].add((nbr1, nbr2))
+#
+#         # === PICK A NODE
+#         min_added = min(map(len, nodes2added.values()))
+#         min_added_nodes = {node for node, added in nodes2added.items() if len(added) == min_added}
+#         removed_node = random.choice(list(min_added_nodes))
+#
+#         # === UPDATE GRAPH
+#         curr_undirected_graph.delete_node(removed_node)
+#         curr_undirected_graph.add_edges_from(nodes2added[removed_node])
+#         if delete:
+#             curr_undirected_graph.delete_edges_from(nodes2removed[removed_node])
+#
+#         permutation.append(removed_node)
+#
+#     return list(reversed(permutation))
 
-    return list(reversed(permutation))
+
+def min_degree_alg(undirected_graph):
+    amat = undirected_graph.to_amat(sparse=True)
+    return list(reversed(amd.order(amat)))
 
 
 def jci_gsp(
@@ -147,13 +160,14 @@ def gsp(
         depth: Optional[int]=4,
         nruns: int=5,
         verbose: bool=False,
-        restricted: bool=True,
         initial_undirected: Optional[Union[str, UndirectedGraph]]='threshold',
         initial_permutations: Optional[List]=None,
         fixed_orders=set(),
         fixed_adjacencies=set(),
         fixed_gaps=set(),
-        use_lowest=True
+        use_lowest=True,
+        max_iters=float('inf'),
+        factor=2
 ) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
@@ -195,90 +209,107 @@ def gsp(
     ------
     (est_dag, summaries)
     """
-    def _reverse_arc(dag, covered_arcs, i, j):
-        new_dag = dag.copy()
-        parents = dag.parents_of(i)
-
-        new_dag.reverse_arc(i, j)
-        if parents:
-            for parent in parents:
-                rest = parents - {parent}
-                i_parent_fixed = (i, parent) in fixed_adjacencies or (parent, i) in fixed_adjacencies
-                j_parent_fixed = (j, parent) in fixed_adjacencies or (parent, j) in fixed_adjacencies
-                if not i_parent_fixed and ci_tester.is_ci(i, parent, [*rest, j]):
-                    new_dag.remove_arc(parent, i)
-                if not j_parent_fixed and ci_tester.is_ci(j, parent, [*rest]):
-                    new_dag.remove_arc(parent, j)
-
-        new_covered_arcs = covered_arcs.copy() - dag.incident_arcs(i) - dag.incident_arcs(j)
-        for k, l in new_dag.incident_arcs(i) | new_dag.incident_arcs(j):
-            if new_dag.parents_of(k) == new_dag.parents_of(l) - {k}:
-                new_covered_arcs.add((k, l))
-        return new_dag, new_covered_arcs - fixed_orders
-
     if initial_permutations is None and isinstance(initial_undirected, str):
         if initial_undirected == 'threshold':
             initial_undirected = threshold_ug(nodes, ci_tester)
         else:
             raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
 
+    # === GENERATE CANDIDATE STARTING PERMUTATIONS
+    if initial_permutations is None:
+        if initial_undirected:
+            initial_permutations = [min_degree_alg(initial_undirected) for _ in range(factor*nruns)]
+        else:
+            initial_permutations = [random.sample(nodes, len(nodes)) for _ in range(nruns)]
+
+    # === FIND CANDIDATE STARTING DAGS
+    starting_dags = []
+    for perm in initial_permutations:
+        d = perm2dag(perm, ci_tester, fixed_adjacencies=fixed_adjacencies, fixed_gaps=fixed_gaps)
+        starting_dags.append(d)
+    starting_dags = sorted(starting_dags, key=lambda d: d.num_arcs)
+
     summaries = []
     min_dag = None
+    # all_kept_dags = set()
     for r in range(nruns):
         summary = []
-        # === STARTING VALUES
-        if initial_permutations is not None:
-            starting_perm = initial_permutations[r]
-        elif initial_undirected:
-            starting_perm = min_degree_alg(initial_undirected, ci_tester)
-        else:
-            starting_perm = random.sample(nodes, len(nodes))
-        current_dag = perm2dag(
-            starting_perm,
-            ci_tester,
-            restricted=restricted,
-            fixed_adjacencies=fixed_adjacencies,
-            fixed_gaps=fixed_gaps
-        )
+        current_dag = starting_dags[r]
         if verbose: print("=== STARTING DAG:", current_dag)
+
+        # === FIND NEXT POSSIBLE MOVES
         current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
-        next_dags = [
-            _reverse_arc(current_dag, current_covered_arcs, i, j)
+        covered_arcs2removed_arcs = [
+            (i, j, update_minimal_imap(current_dag, i, j, ci_tester))
             for i, j in current_covered_arcs
         ]
+        covered_arcs2removed_arcs = sorted(covered_arcs2removed_arcs, key=lambda c: len(c[2]))
 
         # === RECORDS FOR DEPTH-FIRST SEARCH
         all_visited_dags = set()
         trace = []
 
         # === SEARCH!
+        iters_since_improvement = 0
         while True:
+            if iters_since_improvement > max_iters:
+                break
+
             summary.append({'dag': current_dag, 'depth': len(trace), 'num_arcs': len(current_dag.arcs)})
             all_visited_dags.add(frozenset(current_dag.arcs))
-            lower_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if len(d.arcs) < len(current_dag.arcs)]
+            max_arcs_removed = len(covered_arcs2removed_arcs[-1][2]) if len(covered_arcs2removed_arcs) > 0 else 0
 
-            if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
-                if len(lower_dags) > 0:  # start over at lower DAG
+            if (len(covered_arcs2removed_arcs) > 0 and len(trace) != depth) or max_arcs_removed > 0:
+                if max_arcs_removed > 0:  # start over at lower DAG
+                    iters_since_improvement = 0
                     all_visited_dags = set()
                     trace = []
-                    # print([len(d.arcs) for d, c i1 c in lower_dags]))
-                    lowest_ix = min(enumerate(lower_dags), key=lambda x: len(x[1][0].arcs))[0] if use_lowest else 0
-                    current_dag, current_covered_arcs = lower_dags.pop(lowest_ix)
+
+                    # === CHOOSE A SPARSER I-MAP
+                    if use_lowest:
+                        candidate_ixs = [
+                            ix for ix, (i, j, rem) in enumerate(covered_arcs2removed_arcs)
+                            if len(rem) == max_arcs_removed
+                        ]
+                    else:
+                        candidate_ixs = [ix for ix, (i, j, rem) in enumerate(covered_arcs2removed_arcs) if len(rem) > 0]
+                    selected_ix = random.choice(candidate_ixs)
+
+                    # === FIND THE DAG CORRESPONDING TO THE SPARSER IMAP
+                    i, j, rem_arcs = covered_arcs2removed_arcs.pop(selected_ix)
+                    current_dag.reverse_arc(i, j, unsafe=True)
+                    current_dag.remove_arcs(rem_arcs)
+                    current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
+
+                    # if frozenset(current_dag.arcs) in all_kept_dags:  # CHECK IF THIS MAKES SENSE
+                    #     print('Break')
+                    #     break
+                    # all_kept_dags.add(frozenset(current_dag.arcs))
                     if verbose: print("=== FOUND DAG WITH FEWER ARCS:", current_dag)
                 else:
-                    trace.append((current_dag, current_covered_arcs, next_dags))
-                    current_dag, current_covered_arcs = next_dags.pop()
+                    iters_since_improvement += 1
+                    trace.append((current_dag.copy(), current_covered_arcs, covered_arcs2removed_arcs))
+                    i, j, _ = covered_arcs2removed_arcs.pop(random.randrange(len(covered_arcs2removed_arcs)))
+                    current_dag.reverse_arc(i, j, unsafe=True)
+                    current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
 
-                next_dags = [
-                    _reverse_arc(current_dag, current_covered_arcs, i, j)
+                # === FIND NEXT POSSIBLE MOVES
+                covered_arcs2removed_arcs = [
+                    (i, j, update_minimal_imap(current_dag, i, j, ci_tester))
                     for i, j in current_covered_arcs
                 ]
-                next_dags = [(d, cov_arcs) for d, cov_arcs in next_dags if frozenset(d.arcs) not in all_visited_dags]
+                covered_arcs2removed_arcs = sorted(covered_arcs2removed_arcs, key=lambda c: len(c[2]))
+                # === REMOVE ANY MOVES WHICH LEAD TO ALREADY-EXPLORED DAGS
+                current_arcs = frozenset(current_dag.arcs)
+                covered_arcs2removed_arcs = [
+                    (i, j, rem_arcs) for i, j, rem_arcs in covered_arcs2removed_arcs if
+                    current_arcs - {(i, j)} | {(j, i)} - rem_arcs not in all_visited_dags
+                ]
             else:
                 if len(trace) == 0:  # reached minimum within search depth
                     break
                 else:  # backtrack
-                    current_dag, current_covered_arcs, next_dags = trace.pop()
+                    current_dag, current_covered_arcs, covered_arcs2removed_arcs = trace.pop()
 
         # === END OF RUN
         summaries.append(summary)

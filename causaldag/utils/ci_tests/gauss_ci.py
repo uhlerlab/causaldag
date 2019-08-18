@@ -27,16 +27,16 @@ def gauss_ci_suffstat(samples, invert=True):
     ------
     dictionary of sufficient statistics
     """
-    n = samples.shape[0]
+    n, p = samples.shape
     C = corrcoef(samples, rowvar=False)
-    if invert:
+    if invert and n >= p:
         K = numba_inv(C)
         rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]
         return dict(C=C, n=n, K=K, rho=rho)
     return dict(C=C, n=n)
 
 
-def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
+def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
     Test the null hypothesis that i and j are conditionally independent given cond_set via Fisher's z-transform.
 
@@ -67,6 +67,7 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=0.01):
     rho = suffstat.get('rho')
     K = suffstat.get('K')
     n_cond = 0 if cond_set is None else len(cond_set)
+    alpha = 1/n if alpha is None else alpha
 
     # === COMPUTE PARTIAL CORRELATION
     # partial correlation is correlation if there is no conditioning

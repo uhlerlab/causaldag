@@ -18,12 +18,10 @@ class GaussDAG(DAG):
     def __init__(self, nodes: List, arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]], means=None,
                  variances=None):
         arcs_set = arcs if isinstance(arcs, set) else set(arcs.keys())
-        super().__init__(set(nodes), arcs_set)
-
+        self._weight_mat = np.zeros((len(nodes), len(nodes)))
         self._node_list = nodes
         self._node2ix = core_utils.ix_map_from_list(self._node_list)
 
-        self._weight_mat = np.zeros((len(nodes), len(nodes)))
         for node1, node2 in arcs:
             w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
             self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
@@ -33,6 +31,8 @@ class GaussDAG(DAG):
 
         self._precision = None
         self._covariance = None
+
+        super().__init__(set(nodes), arcs_set)
 
     def to_dag(self):
         return DAG(nodes=set(self._node_list), arcs=self.arcs)
@@ -127,7 +127,7 @@ class GaussDAG(DAG):
             theta = np.linalg.inv(self.correlation[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
             return -theta[0, 1] / np.sqrt(theta[0, 0] * theta[1, 1])
 
-    def add_arc(self, i, j):
+    def add_arc(self, i, j, unsafe=False):
         """Add an arc to the graph with weight 1
         """
         self.set_arc_weight(i, j, 1)
@@ -151,15 +151,15 @@ class GaussDAG(DAG):
         self._weight_mat = self._weight_mat[np.ix_(self._node_list, self._node_list)]
         super().remove_node(node)
 
-    def add_arcs_from(self, arcs):
-        raise NotImplementedError
-        pass
+    def add_arcs_from(self, arcs, unsafe=False):
+        for i, j in arcs:
+            self.add_arc(i, j, unsafe=unsafe)
 
     def add_nodes_from(self, nodes):
         raise NotImplementedError
         pass
 
-    def reverse_arc(self, i, j, ignore_error=False):
+    def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
         raise NotImplementedError
         pass
 

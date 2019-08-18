@@ -67,6 +67,11 @@ class MemoizedCI_Tester(CI_Tester):
 
         return _is_ci
 
+    def clear(self):
+        self.ci_dict_detailed = dict()
+        self.ci_dict = dict()
+        self.ci_times = dict()
+
 
 class PlainCI_Tester(CI_Tester):
     def __init__(self, ci_test: CI_Test, suffstat: Dict, **kwargs):

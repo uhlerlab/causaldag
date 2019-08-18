@@ -26,14 +26,26 @@ class DAG:
     """
     Base class for causal DAGs.
     """
-    def __init__(self, nodes: Set=set(), arcs: Set=set()):
-        self._nodes = nodes.copy()
-        self._arcs = set()
-        self._neighbors = defaultdict(set)
-        self._parents = defaultdict(set)
-        self._children = defaultdict(set)
-        for i, j in arcs:
-            self._add_arc(i, j)
+    def __init__(self, nodes: Set=set(), arcs: Set=set(), dag=None):
+        if dag is not None:
+            self._nodes = set(dag._nodes)
+            self._arcs = set(dag._arcs)
+            self._neighbors = defaultdict(set)
+            for node, nbrs in dag._neighbors.items():
+                self._neighbors[node] = set(nbrs)
+            self._parents = defaultdict(set)
+            for node, par in dag._parents.items():
+                self._parents[node] = set(par)
+            self._children = defaultdict(set)
+            for node, ch in dag._children.items():
+                self._children[node] = set(ch)
+        else:
+            self._nodes = set(nodes)
+            self._arcs = set()
+            self._neighbors = defaultdict(set)
+            self._parents = defaultdict(set)
+            self._children = defaultdict(set)
+            self.add_arcs_from(arcs, unsafe=True)
 
     def __eq__(self, other):
         if not isinstance(other, DAG):
@@ -71,7 +83,8 @@ class DAG:
 
 
         """
-        return DAG(nodes=self._nodes, arcs=self._arcs)
+        # return DAG(nodes=self._nodes, arcs=self._arcs)
+        return DAG(dag=self)
 
     # === PROPERTIES
     @property
@@ -180,7 +193,7 @@ class DAG:
         """
         self._nodes.add(node)
 
-    def add_arc(self, i, j):
+    def add_arc(self, i, j, unsafe=False):
         """Add an arc to the DAG
 
         Parameters
@@ -201,12 +214,22 @@ class DAG:
         >>> g.arcs
         {(1, 2)}
         """
-        self._add_arc(i, j)
-        try:
-            self._check_acyclic()
-        except CycleError as e:
-            self.remove_arc(i, j)
-            raise e
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._arcs.add((i, j))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._children[i].add(j)
+        self._parents[j].add(i)
+
+        if not unsafe:
+            try:
+                self._check_acyclic()
+            except CycleError as e:
+                self.remove_arc(i, j)
+                raise e
 
     def _check_acyclic(self):
         self.topological_sort()
@@ -248,17 +271,6 @@ class DAG:
                 self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
         return list(reversed(stack))
 
-    def _add_arc(self, i, j):
-        self._nodes.add(i)
-        self._nodes.add(j)
-        self._arcs.add((i, j))
-
-        self._neighbors[i].add(j)
-        self._neighbors[j].add(i)
-
-        self._children[i].add(j)
-        self._parents[j].add(i)
-
     def add_nodes_from(self, nodes):
         """Add nodes to the graph from a collection
 
@@ -282,7 +294,7 @@ class DAG:
         for node in nodes:
             self.add_node(node)
 
-    def add_arcs_from(self, arcs):
+    def add_arcs_from(self, arcs, unsafe=False):
         """Add arcs to the graph from a collection
 
         Parameters
@@ -301,16 +313,28 @@ class DAG:
         >>> g.arcs
         {(1, 2), (1, 3), (2, 3)}
         """
-        for i, j in arcs:
-            self._add_arc(i, j)
-        try:
-            self._check_acyclic()
-        except CycleError as e:
-            for i, j in arcs:
-                self.remove_arc(i, j)
-            raise e
+        if not arcs:
+            return
 
-    def reverse_arc(self, i, j, ignore_error=False):
+        sources, sinks = zip(*arcs)
+        self._nodes.update(sources)
+        self._nodes.update(sinks)
+        self._arcs.update(arcs)
+        for i, j in arcs:
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+            self._children[i].add(j)
+            self._parents[j].add(i)
+
+        if not unsafe:
+            try:
+                self._check_acyclic()
+            except CycleError as e:
+                for i, j in arcs:
+                    self.remove_arc(i, j)
+                raise e
+
+    def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
         """Reverse the arc i->j to i<-j
 
         Parameters
@@ -329,17 +353,8 @@ class DAG:
         >>> g.arcs
         {(2, 1)}
         """
-        try:
-            self._arcs.remove((i, j))
-            self._parents[j].remove(i)
-            self._children[i].remove(j)
-
-            self.add_arc(j, i)
-        except KeyError as e:
-            if ignore_error:
-                pass
-            else:
-                raise e
+        self.remove_arc(i, j, ignore_error=ignore_error)
+        self.add_arc(j, i, unsafe=unsafe)
 
     def remove_arc(self, i, j, ignore_error=False):
         """Remove the arc i->j
@@ -371,6 +386,10 @@ class DAG:
                 pass
             else:
                 raise e
+
+    def remove_arcs(self, arcs, ignore_error=False):
+        for i, j in arcs:
+            self.remove_arc(i, j, ignore_error=ignore_error)
 
     def remove_node(self, node, ignore_error=False):
         """Remove a node from the graph

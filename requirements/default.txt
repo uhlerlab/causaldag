@@ -6,3 +6,4 @@ matplotlib==2.1.0
 pandas==0.21.0
 scikit_learn==0.20.2
 typing==3.6.6
+cvxopt==1.2.3
