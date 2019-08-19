@@ -28,8 +28,10 @@ class PAG:
                 adjacencies.add(frozenset({i, j}))
             if val == 2:
                 arrowheads.add((i, j))
+                adjacencies.add(frozenset({i, j}))
             if val == 3:
                 tails.add((i, j))
+                adjacencies.add(frozenset({i, j}))
         return PAG(set(range(p)), adjacencies, arrowheads, tails)
 
     def to_amat(self):

@@ -17,7 +17,6 @@ class CycleError(Exception):
         message = 'Adding arc(s) causes the cycle ' + path2str(cycle)
         super().__init__(message)
 
-
 def path2str(path):
     return '->'.join(map(str, path))
 
