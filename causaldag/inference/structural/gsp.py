@@ -679,7 +679,7 @@ def unknown_target_igsp(
         if initial_permutations is not None:
             starting_perm = initial_permutations[r]
         elif initial_undirected:
-            starting_perm = min_degree_alg(initial_undirected, ci_tester)
+            starting_perm = min_degree_alg_amat(initial_undirected.to_amat())
         else:
             starting_perm = random.sample(nodes, len(nodes))
         current_dag = perm2dag(starting_perm, ci_tester)

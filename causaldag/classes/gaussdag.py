@@ -22,10 +22,6 @@ class GaussDAG(DAG):
         self._node_list = nodes
         self._node2ix = core_utils.ix_map_from_list(self._node_list)
 
-        for node1, node2 in arcs:
-            w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
-            self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
-
         self._variances = np.ones(len(nodes)) if variances is None else np.array(variances, dtype=float)
         self._means = np.zeros((len(nodes))) if means is None else np.array(means)
 
@@ -33,6 +29,10 @@ class GaussDAG(DAG):
         self._covariance = None
 
         super().__init__(set(nodes), arcs_set)
+
+        for node1, node2 in arcs:
+            w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
+            self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
 
     def to_dag(self):
         return DAG(nodes=set(self._node_list), arcs=self.arcs)
