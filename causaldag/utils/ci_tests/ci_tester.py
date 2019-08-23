@@ -103,3 +103,24 @@ class PlainCI_Tester(CI_Tester):
         return self.ci_test(self.suffstat, i, j, cond_set=cond_set, **self.kwargs)
         
 
+class PooledCI_Tester(CI_Tester):
+    def __init__(self, ci_testers):
+        """
+        Class for returning the results of conditional independence tests.
+
+        Parameters
+        ----------
+        ci_testers
+
+        See Also
+        --------
+        MemoizedCI_Tester
+
+        Example
+        -------
+        """
+        CI_Tester.__init__(self)
+        self.ci_testers = ci_testers
+
+    def is_ci(self, i, j, cond_set=set()):
+        return all(ci_tester.is_ci(i, j, cond_set) for ci_tester in self.ci_testers)

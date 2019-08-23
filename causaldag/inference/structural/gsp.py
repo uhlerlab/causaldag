@@ -34,15 +34,17 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
     return d
 
 
-def update_minimal_imap(dag, i, j, ci_tester):
+def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gaps=set()):
     removed_arcs = set()
     parents = dag.parents_of(i)
     for parent in parents:
         rest = parents - {parent}
-        if ci_tester.is_ci(i, parent, rest):
-            removed_arcs.add((parent, i))
-        if ci_tester.is_ci(j, parent, rest | {i}):
-            removed_arcs.add((parent, j))
+        if (i, parent) not in fixed_adjacencies | fixed_gaps and (parent, i) not in fixed_adjacencies | fixed_gaps:
+            if ci_tester.is_ci(i, parent, rest):
+                removed_arcs.add((parent, i))
+        if (j, parent) not in fixed_adjacencies | fixed_gaps and (parent, j) not in fixed_adjacencies | fixed_gaps:
+            if ci_tester.is_ci(j, parent, rest | {i}):
+                removed_arcs.add((parent, j))
     return removed_arcs
 
 
@@ -142,7 +144,7 @@ def jci_gsp(
     known_iv_adjacencies = set.union(*(
         {('c%s' % i, node) for node in setting['known_interventions']} for i, setting in enumerate(setting_list)
     ))
-    fixed_orders = set(itr.product(context_nodes, nodes))
+    fixed_orders = set(itr.combinations(context_nodes, 2)) | set(itr.product(context_nodes, nodes))
 
     # === DO SMART INITIALIZATION
     if isinstance(initial_undirected, str):
@@ -158,7 +160,7 @@ def jci_gsp(
 
     # === RUN GSP ON FULL DAG
     est_meta_dag, _ = gsp(
-        list(nodes)+context_nodes,
+        nodes | set(context_nodes),
         combined_ci_tester,
         depth=depth,
         nruns=nruns,
@@ -459,7 +461,7 @@ def igsp(
         if initial_permutations is not None:
             starting_perm = initial_permutations[r]
         elif initial_undirected:
-            starting_perm = min_degree_alg(initial_undirected, ci_tester)
+            starting_perm = min_degree_alg_amat(initial_undirected.to_amat())
         else:
             starting_perm = random.sample(nodes, len(nodes))
 

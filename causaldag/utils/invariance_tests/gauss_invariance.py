@@ -81,6 +81,7 @@ def gauss_invariance_test(
     n1, p = obs_samples.shape
     n2 = iv_samples.shape[0]
 
+    # === FIND REGRESSION COEFFICIENTS AND RESIDUALS
     if len(cond_set) != 0:
         cond_ix = cond_set if zero_mean else [*cond_set, -1]
         gram1 = suffstat['obs']['G'][np.ix_(cond_ix, cond_ix)]
@@ -88,86 +89,51 @@ def gauss_invariance_test(
         coefs1 = np.linalg.inv(gram1) @ obs_samples[:, cond_ix].T @ obs_samples[:, i]
         coefs2 = np.linalg.inv(gram2) @ iv_samples[:, cond_ix].T @ iv_samples[:, i]
 
-        # lr.fit(obs_samples[:, cond_set], obs_samples[:, i])
-        # coefs1_ = lr.coef_
-        # lr.fit(iv_samples[:, cond_set], iv_samples[:, i])
-        # coefs2_ = lr.coef_
-
         residuals1 = obs_samples[:, i] - obs_samples[:, cond_ix] @ coefs1
         residuals2 = iv_samples[:, i] - iv_samples[:, cond_ix] @ coefs2
-    else:
+    elif not zero_mean:
         gram1 = n1*np.ones([1, 1])
-        gram2 = n2*np.ones([2,2])
+        gram2 = n2*np.ones([1, 1])
+        cond_ix = [-1]
         coefs1 = np.array([np.mean(obs_samples[:, i])]) if not zero_mean else 0
         coefs2 = np.array([np.mean(iv_samples[:, i])]) if not zero_mean else 0
         residuals1 = obs_samples[:, i] - coefs1
         residuals2 = iv_samples[:, i] - coefs2
-
-    bias1 = coefs1[-1] if not zero_mean else 0
-    bias2 = coefs2[-1] if not zero_mean else 0
-    coefs1 = coefs1[:-1] if not zero_mean else coefs1
-    coefs2 = coefs2[:-1] if not zero_mean else coefs2
+    else:
+        residuals1 = obs_samples[:, i]
+        residuals2 = iv_samples[:, i]
 
     # means and variances of residuals
-    var1, var2 = np.var(residuals1, ddof=len(coefs1)), np.var(residuals2, ddof=len(coefs2))
+    var1, var2 = np.var(residuals1, ddof=len(cond_ix)), np.var(residuals2, ddof=len(cond_ix))
 
     # calculate regression coefficient invariance statistic
-    print('===================')
-    print(i, cond_set)
-    if len(cond_set) != 0:
-        gram1 = suffstat['obs']['G'][np.ix_(cond_set, cond_set)]
-        gram2 = suffstat['contexts'][context]['G'][np.ix_(cond_set, cond_set)]
-        rc_stat = (coefs1 - coefs2) @ inv(var1*inv(gram1) + var2*inv(gram2)) @ (coefs1 - coefs2).T / len(coefs1)
-        rc_pvalue = ncfdtr(len(cond_set), n1 + n2 - len(cond_set), 0, rc_stat)
+    if len(cond_ix) != 0:
+        p = len(cond_ix)
+        rc_stat = (coefs1 - coefs2) @ inv(var1*inv(gram1) + var2*inv(gram2)) @ (coefs1 - coefs2).T / p
+        rc_pvalue = ncfdtr(p, n1 + n2 - p, 0, rc_stat)
         rc_pvalue = 2*min(rc_pvalue, 1-rc_pvalue)
-
-        # sigma = np.eye(n2) + iv_samples[:, cond_ix] @ inv(obs_samples[:, cond_ix].T @ obs_samples[:, cond_ix]) @ iv_samples[:, cond_ix].T
-        # rc_stat = residuals2 @ inv(sigma) @ residuals2.T / var1 / n2
-        # rc_pvalue = ncfdtr(n2, n1 - len(coefs1) - 1, 0, rc_stat)
-        # rc_pvalue = 2*min(rc_pvalue, 1-rc_pvalue)
-
-    # calculate statistic for T-test
-    if not zero_mean:
-        ttest_stat = (bias1 - bias2)/np.sqrt(var1/n1 + var2/n2)
-        dof_num = (var1 / n1 + var2 / 2) ** 2
-        dof_denom = (var1/n1) ** 2 / (n1 - 1) + (var2/n2)**2 / (n2 - 1)
-        dof = dof_num/dof_denom
-        t_pvalue = 2*stdtr(dof, -np.abs(ttest_stat))  # todo: seems wrong
 
     # calculate statistic for F-Test
     ftest_stat = var1/var2
     f_pvalue = ncfdtr(n1-1, n2-1, 0, ftest_stat)
     f_pvalue = 2*min(f_pvalue, 1-f_pvalue)
 
-    print("coefs:", coefs1, coefs2)
-    if len(cond_set) != 0:
-        print("rc pvalue:", rc_pvalue)
-    print("biases:", bias1, bias2)
-    print("t pvalue:", t_pvalue)
-    print("variances:", var1, var2)
-    print("f pvalue:", f_pvalue)
-    # print(i, cond_set)
-    # if len(cond_set) != 0:
-    #     print(f_pvalue, t_pvalue, rc_pvalue)
-    # else:
-    #     print(f_pvalue, t_pvalue)
-
-    if len(cond_set) != 0 and not zero_mean:
-        reject = f_pvalue<alpha/3 or rc_pvalue<alpha/3 or t_pvalue<alpha/3
-    elif len(cond_set) == 0:
-        reject = f_pvalue<alpha/2 or t_pvalue<alpha/2
-    elif not zero_mean:
-        reject = f_pvalue<alpha/2 or t_pvalue<alpha/2
+    # === ACCEPT/REJECT INVARIANCE HYPOTHESIS BASED ON P-VALUES WITH BONFERRONI CORRECTION
+    if len(cond_ix) != 0:
+        reject = f_pvalue<alpha/2 or rc_pvalue<alpha/2
     else:
         reject = f_pvalue<alpha
-    print("Not invariant" if reject else "invariant")
 
-    return dict(
-        # ttest_stat=ttest_stat,
+    # === FORM RESULT DICT AND RETUR
+    result_dict = dict(
         ftest_stat=ftest_stat,
         f_pvalue=f_pvalue,
-        # t_pvalue=t_pvalue,
         reject=reject
     )
+    if len(cond_ix) > 0:
+        result_dict['rc_stat'] = rc_stat
+        result_dict['rc_pvalue'] = rc_pvalue
+
+    return result_dict
 
 
