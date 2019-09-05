@@ -9,6 +9,7 @@ from causaldag.utils import core_utils
 import operator as op
 from typing import Set
 import networkx as nx
+import random
 
 
 class CycleError(Exception):
@@ -480,6 +481,9 @@ class DAG:
                 reversible_arcs.add((i, j))
         return reversible_arcs
 
+    def is_reversible(self, i, j):
+        return self._parents[i] == self._parents[j] - {i}
+
     def arcs_in_vstructures(self):
         """Get all arcs in the graph that participate in a v-structure.
 
@@ -520,6 +524,10 @@ class DAG:
         return self._parents[node] | self._children[node] | parents_of_children - {node}
 
     # === COMPARISON
+    def chickering_distance(self, other):
+        reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
+        return len(reversals) + 2*self.shd_skeleton(other)
+
     def shd(self, other) -> int:
         """Compute the structural Hamming distance between this DAG and another graph
 
@@ -805,7 +813,94 @@ class DAG:
         """
         return len(self._parents[node])
 
+    def upstream_most(self, s):
+        """
+        Parameters
+        ----------
+        s:
+            Set of nodes
+
+        Returns
+        -------
+        The set of nodes in s with no ancestors in s
+        """
+        return {node for node in s if not self.upstream(node) & s}
+
     # === CONVERTERS
+    def resolved_sinks(self, other):
+        res_sinks = set()
+        while True:
+            new_resolved = {
+                node for node in self._nodes - res_sinks
+                if not (self._children[node] - res_sinks) and
+                   not (other._children[node] - res_sinks) and
+                   self._parents[node] == other._parents[node]
+            }
+            res_sinks.update(new_resolved)
+            if not new_resolved:
+                break
+
+        return res_sinks
+
+    def chickering_sequence(self, imap, verbose=False):
+        curr_graph = self
+
+        ch_seq = []
+        while curr_graph != imap:
+            ch_seq.append(curr_graph)
+            curr_graph = curr_graph.apply_edge_operation(imap, verbose=verbose)
+
+        ch_seq.append(imap)
+        return ch_seq
+
+    def apply_edge_operation(self, imap, verbose=False):
+        new_graph = self.copy()
+
+        # STEP 2: REMOVE RESOLVED SINKS
+        resolved_sinks = self.resolved_sinks(imap)
+        self_subgraph = self.induced_graph(self._nodes - resolved_sinks)
+        imap_subgraph = imap.induced_graph(imap._nodes - resolved_sinks)
+
+        # STEP 3: PICK A SINK IN THE IMAP
+        sink = random.choice(list(imap_subgraph.sinks()))
+        if verbose: print(f"Step 3: Picked {sink}")
+
+        # STEP 4: ADD A PARENT IF Y IS A SINK IN G
+        if sink in self_subgraph.sinks():
+            x = random.choice(list(imap_subgraph._parents[sink] - self_subgraph._parents[sink]))
+            new_graph.add_arc(x, sink)
+            if verbose: print(f"Step 4: Added {x}->{sink}")
+            return new_graph
+
+        # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
+        d = list(imap_subgraph.upstream_most(self_subgraph.downstream(sink)))[0]
+        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (self_subgraph.upstream(d) | {d})
+        z = random.choice(list(valid_children))
+        if verbose: print(f"Step 5: Picked z={z}")
+
+        # STEP 6
+        if self_subgraph.is_reversible(sink, z):
+            new_graph.reverse_arc(sink, z)
+            if verbose: print(f"Step 6: Reversing {sink}->{z}")
+            return new_graph
+
+        # STEP 7
+        par_z = self_subgraph._parents[z] - self_subgraph._parents[sink] - {sink}
+        if par_z:
+            x = random.choice(list(par_z))
+            if verbose: print(f"Step 7: Picked x={x}")
+            new_graph.add_arc(x, sink)
+            if verbose: print(f"Step 7: Adding {x}->{sink}")
+            return new_graph
+
+        # STEP 8
+        par_sink = self_subgraph._parents[sink] - self_subgraph._parents[z]
+        x = random.choice(list(par_sink))
+        if verbose: print(f"Step 8: Picked x={x}")
+        new_graph.add_arc(x, z)
+        if verbose: print(f"Step 8: Adding {x}->{z}")
+        return new_graph
+
     def marginal_mag(self, latent_nodes, relabel=False):
         latent_nodes = core_utils.to_set(latent_nodes)
         from .ancestral_graph import AncestralGraph

@@ -632,6 +632,16 @@ class AncestralGraph:
         return any(results)
 
     # === ???
+    def pairwise_markov_statements(self):
+        statements = set()
+        for i, j in itr.combinations(self._nodes, 2):
+            if not self.has_any_edge(i, j):
+                statements.add((i, j, self.ancestors_of(i) | self.ancestors_of(j) - {i, j}))
+        return statements
+
+    def is_imap(self, other):
+        return all(other.msep(i, j, S) for i, j, S in self.pairwise_markov_statements())
+
     def to_maximal(self, new=False):
         if new:
             # === NEED DICTIONARY OF ANCESTORS AND C-COMPONENTS TO CHECK INDUCING PATHS
