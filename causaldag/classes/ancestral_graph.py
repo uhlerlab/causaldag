@@ -642,6 +642,24 @@ class AncestralGraph:
     def is_imap(self, other):
         return all(other.msep(i, j, S) for i, j, S in self.pairwise_markov_statements())
 
+    def markov_blanket(self, node):
+        return {d: self._parents[d] for d in self.district_of(node)}
+
+    def resolved_quasisinks(self, other):
+        res_qsinks = set()
+        while True:
+            new_resolved = {
+                node for node in self._nodes - res_qsinks
+                if not (self._children[node] - res_qsinks) and
+                   not (other._children[node] - res_qsinks) and
+                   self.markov_blanket(node) == other.markov_blanket(node)
+            }
+            res_qsinks.update(new_resolved)
+            if not new_resolved:
+                break
+
+        return res_qsinks
+
     def to_maximal(self, new=False):
         if new:
             # === NEED DICTIONARY OF ANCESTORS AND C-COMPONENTS TO CHECK INDUCING PATHS

@@ -846,14 +846,17 @@ class DAG:
         curr_graph = self
 
         ch_seq = []
+        moves = []
+        last_sink = None
         while curr_graph != imap:
             ch_seq.append(curr_graph)
-            curr_graph = curr_graph.apply_edge_operation(imap, verbose=verbose)
+            curr_graph, last_sink, move = curr_graph.apply_edge_operation(imap, seed_sink=last_sink, verbose=verbose)
+            moves.append(move)
 
         ch_seq.append(imap)
-        return ch_seq
+        return ch_seq, moves
 
-    def apply_edge_operation(self, imap, verbose=False):
+    def apply_edge_operation(self, imap, seed_sink=None, verbose=False):
         new_graph = self.copy()
 
         # STEP 2: REMOVE RESOLVED SINKS
@@ -862,7 +865,8 @@ class DAG:
         imap_subgraph = imap.induced_graph(imap._nodes - resolved_sinks)
 
         # STEP 3: PICK A SINK IN THE IMAP
-        sink = random.choice(list(imap_subgraph.sinks()))
+        imap_sinks = imap_subgraph.sinks()
+        sink = random.choice(list(imap_sinks)) if seed_sink is None or seed_sink not in imap_sinks else seed_sink
         if verbose: print(f"Step 3: Picked {sink}")
 
         # STEP 4: ADD A PARENT IF Y IS A SINK IN G
@@ -870,7 +874,7 @@ class DAG:
             x = random.choice(list(imap_subgraph._parents[sink] - self_subgraph._parents[sink]))
             new_graph.add_arc(x, sink)
             if verbose: print(f"Step 4: Added {x}->{sink}")
-            return new_graph
+            return new_graph, sink, 4
 
         # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
         d = list(imap_subgraph.upstream_most(self_subgraph.downstream(sink)))[0]
@@ -882,7 +886,7 @@ class DAG:
         if self_subgraph.is_reversible(sink, z):
             new_graph.reverse_arc(sink, z)
             if verbose: print(f"Step 6: Reversing {sink}->{z}")
-            return new_graph
+            return new_graph, sink, 6
 
         # STEP 7
         par_z = self_subgraph._parents[z] - self_subgraph._parents[sink] - {sink}
@@ -891,7 +895,7 @@ class DAG:
             if verbose: print(f"Step 7: Picked x={x}")
             new_graph.add_arc(x, sink)
             if verbose: print(f"Step 7: Adding {x}->{sink}")
-            return new_graph
+            return new_graph, sink, 7
 
         # STEP 8
         par_sink = self_subgraph._parents[sink] - self_subgraph._parents[z]
@@ -899,34 +903,63 @@ class DAG:
         if verbose: print(f"Step 8: Picked x={x}")
         new_graph.add_arc(x, z)
         if verbose: print(f"Step 8: Adding {x}->{z}")
-        return new_graph
+        return new_graph, sink, 8
 
-    def marginal_mag(self, latent_nodes, relabel=False):
-        latent_nodes = core_utils.to_set(latent_nodes)
+    def marginal_mag(self, latent_nodes, relabel=False, new=True):
         from .ancestral_graph import AncestralGraph
 
-        new_nodes = self._nodes - latent_nodes
-        directed = set()
-        bidirected = set()
-        for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
-            adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
-            if adjacent:
-                if self.is_upstream_of(i, j):
-                    directed.add((i, j))
-                elif self.is_upstream_of(j, i):
-                    directed.add((j, i))
-                else:
-                    bidirected.add((i, j))
+        if not new:
+            latent_nodes = core_utils.to_set(latent_nodes)
 
-        if relabel:
-            t = self.topological_sort()
-            t_new = [node for node in t if node not in latent_nodes]
-            node2new_label = dict(map(reversed, enumerate(t_new)))
-            new_nodes = {node2new_label[node] for node in new_nodes}
-            directed = {(node2new_label[i], node2new_label[j]) for i, j in directed}
-            bidirected = {(node2new_label[i], node2new_label[j]) for i, j in bidirected}
+            new_nodes = self._nodes - latent_nodes
+            directed = set()
+            bidirected = set()
+            for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
+                adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
+                if adjacent:
+                    if self.is_upstream_of(i, j):
+                        directed.add((i, j))
+                    elif self.is_upstream_of(j, i):
+                        directed.add((j, i))
+                    else:
+                        bidirected.add((i, j))
 
-        return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
+            if relabel:
+                t = self.topological_sort()
+                t_new = [node for node in t if node not in latent_nodes]
+                node2new_label = dict(map(reversed, enumerate(t_new)))
+                new_nodes = {node2new_label[node] for node in new_nodes}
+                directed = {(node2new_label[i], node2new_label[j]) for i, j in directed}
+                bidirected = {(node2new_label[i], node2new_label[j]) for i, j in bidirected}
+
+            return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
+
+        else:
+            ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
+            curr_directed = ag.directed
+            curr_bidirected = ag.bidirected
+
+            while True:
+                for node in latent_nodes:
+                    for j, i in itr.product(ag._parents[node], ag._children[node]):
+                        ag._add_directed(j, i, ignore_error=True)
+                    for i, j in itr.combinations(ag._children[node], 2):
+                        ag._add_bidirected(i, j, ignore_error=True)
+                    for i, j in itr.product(ag._children[node], ag._spouses[node]):
+                        ag._add_bidirected(i, j, ignore_error=True)
+
+                last_directed = curr_directed
+                last_bidirected = curr_bidirected
+                curr_directed = ag.directed
+                curr_bidirected = ag.bidirected
+                if curr_directed == last_directed and curr_bidirected == last_bidirected:
+                    break
+            for node in latent_nodes:
+                ag.remove_node(node, ignore_error=True)
+
+            return ag
+
+
 
     def save_gml(self, filename):
         tab = '  '
