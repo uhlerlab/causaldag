@@ -11,7 +11,7 @@ from cvxopt import amd
 import numpy as np
 
 
-def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set()):
+def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None, older=False):
     d = DAG(nodes=set(perm))
     ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
     for i, j in ixs:
@@ -25,13 +25,26 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
             continue
 
         # === TEST MARKOV BLANKET
-        mb = d.markov_blanket(pi_i)
+        mb = d.markov_blanket(pi_i) if node2nbrs is None else (set(perm[:j]) - {pi_i}) & (node2nbrs[pi_i] | node2nbrs[pi_j])
+        mb = mb if not older else set(perm[:j]) - {pi_i}
+
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
             d.add_arc(pi_i, pi_j, unsafe=True)
         if verbose: print("%s indep of %s given %s: %s" % (pi_i, pi_j, mb, is_ci))
 
     return d
+
+
+def perm2dag2(perm, ci_tester, node2nbrs=None):
+    arcs = set()
+    for (i, pi_i), (j, pi_j) in itr.combinations(enumerate(perm), 2):
+        c = set(perm[:j]) - {pi_i}
+        c = c if node2nbrs is None else c & (node2nbrs[pi_i] | node2nbrs[pi_j])
+        print(pi_i, pi_j, c)
+        if not ci_tester.is_ci(pi_i, pi_j, c):
+            arcs.add((pi_i, pi_j))
+    return DAG(nodes=set(perm), arcs=arcs)
 
 
 def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gaps=set()):

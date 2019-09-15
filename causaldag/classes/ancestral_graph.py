@@ -2,6 +2,7 @@ from collections import defaultdict
 from causaldag.utils import core_utils
 import itertools as itr
 import numpy as np
+import random
 
 
 class CycleError(Exception):
@@ -361,6 +362,18 @@ class AncestralGraph:
             else:
                 raise e
 
+    def remove_edge(self, i, j, ignore_error=False):
+        if self.has_bidirected(i, j):
+            self.remove_bidirected(i, j)
+        elif self.has_directed(i, j):
+            self.remove_directed(i, j)
+        elif self.has_directed(j, i):
+            self.remove_directed(j, i)
+        elif self.has_undirected(i, j):
+            self.remove_undirected(i, j)
+        elif not ignore_error:
+            raise KeyError
+
     # === PROPERTIES
     @property
     def nodes(self):
@@ -505,7 +518,6 @@ class AncestralGraph:
         self._add_descendants(descendants, node, exclude_arcs=exclude_arcs)
         return descendants
 
-
     def has_directed(self, i, j):
         return (i, j) in self._directed
 
@@ -636,14 +648,133 @@ class AncestralGraph:
         statements = set()
         for i, j in itr.combinations(self._nodes, 2):
             if not self.has_any_edge(i, j):
-                statements.add((i, j, self.ancestors_of(i) | self.ancestors_of(j) - {i, j}))
+                statements.add((i, j, frozenset(self.ancestors_of(i) | self.ancestors_of(j) - {i, j})))
         return statements
 
-    def is_imap(self, other):
-        return all(other.msep(i, j, S) for i, j, S in self.pairwise_markov_statements())
+    def is_imap(self, other, certify=False):
+        if not self.is_maximal():
+            raise Exception("Your graph is not maximal")
 
-    def markov_blanket(self, node):
-        return {d: self._parents[d] for d in self.district_of(node)}
+        certificate = next(
+            ((i, j, S) for i, j, S in self.pairwise_markov_statements() if not other.msep(i, j, S)),
+            None)
+        is_imap_ = certificate is None
+        if certify: return is_imap_, certificate
+        else: return is_imap_
+
+    # def is_minimal_imap(self, other, certify=False):
+    #     print("THIS HAS NOT BEEN TESTED")
+    #     certificate = next((
+    #         i, j for i, j in self._directed | self._bidirected
+    #         if other.msep(i, j, self.ancestors_of(i) | self.ancestors_of(j) - {i, j})
+    #     ), False)
+    #     res = not certificate and self.is_imap(other)
+    #     if not certify:
+    #         return res
+    #     else:
+    #         return res, certificate
+
+    def is_minimal_imap(self, other, certify=False, check_imap=True):
+        if check_imap and not self.is_imap(other):
+            return False, None
+
+        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_bidirected+self.num_directed):
+            new_mag = self.copy()
+            if self.has_bidirected(i, j):
+                new_mag.remove_bidirected(i, j)
+            if self.has_directed(i, j):
+                new_mag.remove_directed(i, j)
+            if new_mag.is_imap(other) and new_mag.is_maximal():
+                if certify: return False, (i, j)
+                else: return False
+        if certify: return True, None
+        else: return True
+
+    def is_minimal_imap2(self, other, certify=False, check_imap=True, validate=False):
+        if check_imap and not self.is_imap(other):
+            return False, None
+
+        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+            if other.msep(i, j, self.ancestors_of(i) | self.ancestors_of(j) - {i, j}):
+                new_mag = self.copy()
+                if self.has_bidirected(i, j):
+                    new_mag.remove_bidirected(i, j)
+                else:
+                    new_mag.remove_directed(i, j)
+                if new_mag.is_maximal():
+                    if validate:
+                        if not new_mag.is_imap(other):
+                            raise Exception
+                    if certify: return False, (i, j)
+                    else: return False
+        if certify: return True, None
+        else: return True
+
+    def is_minimal_imap3(self, other, certify=False, check_imap=True, validate=False, verbose=False):
+        if check_imap and not self.is_imap(other):
+            return False, None
+
+        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+            new_mag = self.copy()
+            if self.has_bidirected(i, j):
+                new_mag.remove_bidirected(i, j)
+            else:
+                new_mag.remove_directed(i, j)
+            current_markov_blanket = set.union(*(set(v) for v in self.markov_blanket(j).values())) | self.district_of(j)
+            new_markov_blanket = set.union(*(set(v) for v in new_mag.markov_blanket(j).values())) | new_mag.district_of(j)
+            mb_difference = (current_markov_blanket - new_markov_blanket - {j}) | {i}
+            rest = new_markov_blanket - {i, j}
+            if verbose: print(f'i={i}, j={j}, mb_diff={mb_difference}, rest={rest}')
+            if verbose: print("H", self)
+            if verbose: print("G", other)
+
+            if other.msep(i, mb_difference, rest) and new_mag.is_maximal():
+                print('here')
+                if validate:
+                    if not new_mag.is_imap(other):
+                        raise Exception
+                if certify: return False, (i, j)
+                else: return False
+        if certify: return True, None
+        else: return True
+
+    def is_minimal_imap4(self, other, certify=False, check_imap=True, validate=False, verbose=False):
+        if check_imap and not self.is_imap(other):
+            raise Exception("Not an IMAP")
+            print("isn't imap")
+            return False, None
+
+        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+            change = False
+            new_mag = self.copy()
+            new_mag.remove_edge(i, j)
+
+            if other.msep(i, j, (new_mag.markov_blanket(j, flat=True) & new_mag.ancestors_of(i)) | new_mag.parents_of(j)):
+                change = True
+            # if self.has_bidirected(i, j) and other.msep(i, j, self.parents_of(j)) and other.msep(i, j, self.parents_of(i)):
+            #     new_mag = self.copy()
+            #     new_mag.remove_bidirected(i, j)
+            #     change = True
+            # elif self.has_directed(i, j) and other.msep(i, j, self.parents_of(j) - {i}):
+            #     new_mag = self.copy()
+            #     new_mag.remove_directed(i, j)
+            #     change = True
+            if change and new_mag.is_maximal():
+                if validate:
+                    if not new_mag.is_imap(other):
+                        raise Exception
+                if certify: return False, (i, j)
+                else: return False
+
+        if certify: return True, None
+        else: return True
+
+    def markov_blanket(self, node, flat=False):
+        if not flat:
+            return {d: self._parents[d] for d in self.district_of(node)}
+        else:
+            district = self.district_of(node)
+            return district | set.union(*(self._parents[d] for d in district))
 
     def resolved_quasisinks(self, other):
         res_qsinks = set()
@@ -659,6 +790,11 @@ class AncestralGraph:
                 break
 
         return res_qsinks
+
+    def is_maximal(self):
+        new_mag = self.copy()
+        new_mag.to_maximal()
+        return new_mag == self
 
     def to_maximal(self, new=False):
         if new:
@@ -830,7 +966,8 @@ class AncestralGraph:
             if not parents_condition:
                 if verbose: print('Failed parents condition')
                 continue
-            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i] if spouse != j)
+            # spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i] if spouse != j)
+            spouses_condition = all(self.has_directed(spouse, j) or self.has_bidirected(spouse, j) for spouse in self._spouses[i] if spouse != j)
             if not spouses_condition:
                 if verbose: print('Failed spouses condition')
                 continue

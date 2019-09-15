@@ -606,6 +606,9 @@ class DAG:
     def is_imap(self, other):
         return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
+    def is_minimal_imap(self, other):
+        return self.is_imap(other) and not any(other.dsep(i, j, self._parents[j] - {i}) for i, j in self._arcs)
+
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
         for child in self._children[node]:
@@ -957,6 +960,15 @@ class DAG:
             for node in latent_nodes:
                 ag.remove_node(node, ignore_error=True)
 
+            if relabel:
+                t = self.topological_sort()
+                t_new = [node for node in t if node not in latent_nodes]
+                node2new_label = dict(map(reversed, enumerate(t_new)))
+                new_nodes = {node2new_label[node] for node in self._nodes - set(latent_nodes)}
+                directed = {(node2new_label[i], node2new_label[j]) for i, j in ag.directed}
+                bidirected = {(node2new_label[i], node2new_label[j]) for i, j in ag.bidirected}
+                return AncestralGraph(new_nodes, directed=directed, bidirected=bidirected)
+
             return ag
 
 
@@ -1300,7 +1312,7 @@ class DAG:
         raise NotImplementedError()
 
     # === SEPARATIONS
-    def dsep(self, A, B, C=set(), verbose=False):
+    def dsep(self, A, B, C=set(), verbose=False, certify=False):
         """
         Check if A and B are d-separated given C, using the Bayes ball algorithm.
 
@@ -1352,7 +1364,8 @@ class DAG:
                 print('Current schedule:', schedule)
 
             node, _dir = schedule.pop()
-            if node in B: return False
+            if node in B and not certify: return False
+            if node in B and certify: return False, node
             if (node, _dir) in visited: continue
             visited.add((node, _dir))
 
