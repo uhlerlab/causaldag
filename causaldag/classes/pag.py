@@ -17,6 +17,10 @@ class PAG:
     def copy(self):
         raise NotImplementedError
 
+    @property
+    def nnodes(self):
+        return len(self._nodes)
+
     @classmethod
     def from_amat(cls, amat):
         p = amat.shape[0]
@@ -35,7 +39,16 @@ class PAG:
         return PAG(set(range(p)), adjacencies, arrowheads, tails)
 
     def to_amat(self):
-        raise NotImplementedError
+        # TODO: check
+        amat = np.zeros([self.nnodes, self.nnodes])
+        for i, j in self._adjacencies:
+            amat[i, j] = 1
+            amat[j, i] = 1
+        for i, j in self._tails:
+            amat[i, j] = 3
+        for i, j in self._arrowheads:
+            amat[i, j] = 2
+        return amat
 
     def add_adjacency(self, i, j):
         """Add the adjacency (i, j)

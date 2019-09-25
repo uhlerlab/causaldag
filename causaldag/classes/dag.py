@@ -606,8 +606,14 @@ class DAG:
     def is_imap(self, other):
         return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
-    def is_minimal_imap(self, other):
-        return self.is_imap(other) and not any(other.dsep(i, j, self._parents[j] - {i}) for i, j in self._arcs)
+    def is_minimal_imap(self, other, certify=False, check_imap=True):
+        if check_imap and not self.is_imap(other):
+            if certify: return False, None
+            else: return False
+
+        certificate = next(((i, j) for i, j in self._arcs if other.dsep(i, j, self._parents[j] - {i})), None)
+        if certify: return certificate is None, certificate
+        else: return certificate is None
 
     # === CONVENIENCE
     def _add_downstream(self, downstream, node):
@@ -908,7 +914,7 @@ class DAG:
         if verbose: print(f"Step 8: Adding {x}->{z}")
         return new_graph, sink, 8
 
-    def marginal_mag(self, latent_nodes, relabel=False, new=True):
+    def marginal_mag(self, latent_nodes, relabel=None, new=True):
         from .ancestral_graph import AncestralGraph
 
         if not new:
@@ -960,13 +966,12 @@ class DAG:
             for node in latent_nodes:
                 ag.remove_node(node, ignore_error=True)
 
-            if relabel:
-                t = self.topological_sort()
-                t_new = [node for node in t if node not in latent_nodes]
-                node2new_label = dict(map(reversed, enumerate(t_new)))
-                new_nodes = {node2new_label[node] for node in self._nodes - set(latent_nodes)}
-                directed = {(node2new_label[i], node2new_label[j]) for i, j in ag.directed}
-                bidirected = {(node2new_label[i], node2new_label[j]) for i, j in ag.bidirected}
+            if relabel is not None:
+                if relabel == 'default':
+                    relabel = {node: ix for ix, node in enumerate(sorted(self._nodes - set(latent_nodes)))}
+                new_nodes = {relabel[node] for node in self._nodes - set(latent_nodes)}
+                directed = {(relabel[i], relabel[j]) for i, j in ag.directed}
+                bidirected = {(relabel[i], relabel[j]) for i, j in ag.bidirected}
                 return AncestralGraph(new_nodes, directed=directed, bidirected=bidirected)
 
             return ag

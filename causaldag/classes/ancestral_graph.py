@@ -97,6 +97,13 @@ class AncestralGraph:
         """
         return AncestralGraph(self.nodes, self.directed, self.bidirected, self.undirected)
 
+    def induced_subgraph(self, nodes):
+        new_directed = {(i, j) for i, j in self._directed if i in nodes and j in nodes}
+        new_bidirected = {(i, j) for i, j in self._bidirected if i in nodes and j in nodes}
+        new_undirected = {(i, j) for i, j in self._undirected if i in nodes and j in nodes}
+
+        return AncestralGraph(nodes, directed=new_directed, bidirected=new_bidirected, undirected=new_undirected)
+
     def __str__(self):
         return 'Directed edges: %s, Bidirected edges: %s, Undirected edges: %s' % (self._directed, self._bidirected, self._undirected)
 
@@ -439,7 +446,7 @@ class AncestralGraph:
                 descendants.add(child)
                 self._add_descendants(descendants, child, exclude_arcs=exclude_arcs)
 
-    def ancestors_of(self, node, exclude_arcs=set()):
+    def ancestors_of(self, nodes, exclude_arcs=set()):
         """Return the nodes upstream of node
 
         Parameters
@@ -460,7 +467,10 @@ class AncestralGraph:
         -------
         """
         ancestors = set()
-        self._add_ancestors(ancestors, node, exclude_arcs=exclude_arcs)
+        if not isinstance(nodes, set):
+            self._add_ancestors(ancestors, nodes, exclude_arcs=exclude_arcs)
+        else:
+            return set.union(*(self.ancestors_of(node) for node in nodes))
         return ancestors
 
     def ancestor_dict(self):
@@ -684,7 +694,7 @@ class AncestralGraph:
                 new_mag.remove_bidirected(i, j)
             if self.has_directed(i, j):
                 new_mag.remove_directed(i, j)
-            if new_mag.is_imap(other) and new_mag.is_maximal():
+            if new_mag.is_maximal() and new_mag.is_imap(other):
                 if certify: return False, (i, j)
                 else: return False
         if certify: return True, None
@@ -738,18 +748,41 @@ class AncestralGraph:
         if certify: return True, None
         else: return True
 
-    def is_minimal_imap4(self, other, certify=False, check_imap=True, validate=False, verbose=False):
+    def is_minimal_imap4(self, other, certify=False, check_imap=True, validate=False, extra_validate=False, verbose=False):
         if check_imap and not self.is_imap(other):
             raise Exception("Not an IMAP")
             print("isn't imap")
             return False, None
+
+        if extra_validate:
+            for i, j in self._directed | self._bidirected:
+                new_mag = self.copy()
+                new_mag.remove_edge(i, j)
+                s = new_mag.induced_subgraph(new_mag.ancestors_of({i, j}) | {i, j}).markov_blanket(j, flat=True) - {j}
+                if other.msep(i, j, s) and new_mag.is_maximal():
+                    if not new_mag.is_imap(other):
+                        raise Exception("CI test not sufficient", new_mag, other, i, j, s)
+            print('extra validated')
 
         for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
             change = False
             new_mag = self.copy()
             new_mag.remove_edge(i, j)
 
-            if other.msep(i, j, (new_mag.markov_blanket(j, flat=True) & new_mag.ancestors_of(i)) | new_mag.parents_of(j)):
+            # works:
+            set1 = (new_mag.markov_blanket(j, flat=True) & new_mag.ancestors_of(i)) | new_mag.parents_of(j)
+            remove_edge = other.msep(i, j, set1)
+
+            # new:
+            set2 = new_mag.induced_subgraph(new_mag.ancestors_of({i, j}) | {i, j}).markov_blanket(j, flat=True) - {i, j}
+            remove_edge2 = other.msep(i, j, set2)
+            # print(i, j, set2)
+            set3 = new_mag.markov_blanket(j, flat=True) & new_mag.ancestors_of({j}) - {j}
+
+            # if set2 != set3:
+            #     print(new_mag, j, set2, set3)
+
+            if remove_edge2:
                 change = True
             # if self.has_bidirected(i, j) and other.msep(i, j, self.parents_of(j)) and other.msep(i, j, self.parents_of(i)):
             #     new_mag = self.copy()
@@ -762,7 +795,7 @@ class AncestralGraph:
             if change and new_mag.is_maximal():
                 if validate:
                     if not new_mag.is_imap(other):
-                        raise Exception
+                        raise Exception("CI test isn't sufficient: new MAG is not an IMAP")
                 if certify: return False, (i, j)
                 else: return False
 
@@ -770,11 +803,24 @@ class AncestralGraph:
         else: return True
 
     def markov_blanket(self, node, flat=False):
+        """
+        Return the Markov blanket of a node with respect to the whole graph.
+
+        Parameters
+        ----------
+        node: The node whose Markov blanket to find.
+        flat: if True, return the Markov blanket as a set, otherwise return a dictionary mapping nodes in the district
+            of node to their parents.
+
+        Returns
+        -------
+        The Markov blanket of node, including the node itself.
+        """
         if not flat:
             return {d: self._parents[d] for d in self.district_of(node)}
         else:
             district = self.district_of(node)
-            return district | set.union(*(self._parents[d] for d in district))
+            return district | set.union(*(self._parents[d] for d in district)) | {node}
 
     def resolved_quasisinks(self, other):
         res_qsinks = set()
@@ -908,10 +954,21 @@ class AncestralGraph:
         else:
             return False
 
-    def legitimate_mark_changes(self, verbose=False):
+    def _no_other_path(self, i, j, ancestor_dict):
+        """
+        Check if there is any path from i to j other than possibly the direct edge i->j.
+        """
+        other_ancestors_j = ancestor_dict[j] - {i}
+        return other_ancestors_j & self._children[i] == set()
+
+    def legitimate_mark_changes(self, verbose=False, strict=True):
         """
         Return directed edges that can be changed to bidirected edges, and bidirected edges that can be changed to
         directed edges.
+
+        Parameters
+        ----------
+        strict: If True, check discriminating path condition. Otherwise, check only equality of parents and spouses.
 
         Return
         ------
@@ -928,66 +985,67 @@ class AncestralGraph:
         if self._undirected:
             raise ValueError('Only defined for DMAGs')
 
-        disc_paths = self.discriminating_paths()
+        if not strict:
+            print("TODO: CHECK")
+            ancestor_dict = self.ancestor_dict()
+            mark_changes_dir = {
+                (i, j) for i, j in self._directed
+                if self._parents[i] - self._parents[j] == set() and
+                   self._spouses[i] - self._parents[j] - self._spouses[j] == set()
+                   and self._no_other_path(i, j, ancestor_dict)
+            }
+            mark_changes_bidir = {
+                (i, j) for i, j in self._bidirected
+                if self._parents[i] - self._parents[j] == set() and
+                   self._spouses[i] - self._parents[j] - self._spouses[j] == set()
+            }
+            return mark_changes_dir, mark_changes_bidir
 
-        mark_changes_dir = set()
-        for i, j in self._directed:
-            if verbose: print(f'{i}->{j} => {i}<->{j} ?')
-            # FIRST CONDITIONS
-            parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
-            if not parents_condition:
-                if verbose: print('Failed parents condition')
-                continue
-            spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i])
-            if not spouses_condition:
-                if verbose: print('Failed spouses condition')
-                continue
+        if strict:
+            disc_paths = self.discriminating_paths()
+            ancestor_dict = self.ancestor_dict()
 
-            # SECOND CONDITION
-            disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-            disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
-            if not disc_paths_condition:
-                if verbose: print('Failed discriminating path condition')
-                continue
+            mark_changes_dir = set()
+            for i, j in self._directed:
+                if verbose: print(f'{i}->{j} => {i}<->{j} ?')
+                parents_condition = self._parents[i] - self._parents[j] == set()
+                if not parents_condition: continue
+                spouses_condition = self._spouses[i] - self._spouses[j] - self._parents[j] == set()
+                if not spouses_condition: continue
+                ancestral_condition = self._no_other_path(i, j, ancestor_dict)
+                if not ancestral_condition: continue
 
-            # FINAL CONDITION
-            if i in self.ancestors_of(j, exclude_arcs={(i, j)}):
-                if verbose: print('Failed ancestral condition')
-                continue
+                # SECOND CONDITION
+                disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
+                disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
+                if not disc_paths_condition:
+                    if verbose: print('Failed discriminating path condition')
+                    continue
 
-            if verbose: print('Passed')
-            mark_changes_dir.add((i, j))
+                if verbose: print('Passed')
+                mark_changes_dir.add((i, j))
 
-        mark_changes_bidir = set()
-        for i, j in self._bidirected | set(map(reversed, self._bidirected)):
-            if verbose: print(f'{i}<->{j} => {i}->{j} ?')
-            # FIRST CONDITIONS
-            parents_condition = all(self.has_directed(parent, j) for parent in self._parents[i])
-            if not parents_condition:
-                if verbose: print('Failed parents condition')
-                continue
-            # spouses_condition = all(self.has_any_edge(spouse, j) for spouse in self._spouses[i] if spouse != j)
-            spouses_condition = all(self.has_directed(spouse, j) or self.has_bidirected(spouse, j) for spouse in self._spouses[i] if spouse != j)
-            if not spouses_condition:
-                if verbose: print('Failed spouses condition')
-                continue
+            mark_changes_bidir = set()
+            for i, j in self._bidirected | set(map(reversed, self._bidirected)):
+                if verbose: print(f'{i}<->{j} => {i}->{j} ?')
+                parents_condition = self._parents[i] - self._parents[j] == set()
+                if not parents_condition: continue
+                spouses_condition = self._spouses[i] - {i} - self._spouses[j] - self._parents[j] == set()
+                if not spouses_condition: continue
+                ancestral_condition = self._no_other_path(i, j, ancestor_dict)
+                if not ancestral_condition: continue
 
-            # SECOND CONDITION
-            disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-            disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
-            if not disc_paths_condition:
-                if verbose: print('Failed discriminating path condition')
-                continue
+                # SECOND CONDITION
+                disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
+                disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
+                if not disc_paths_condition:
+                    if verbose: print('Failed discriminating path condition')
+                    continue
 
-            # FINAL CONDITION
-            if i in self.ancestors_of(j):
-                if verbose: print('Failed ancestral condition')
-                continue
+                if verbose: print('Passed')
+                mark_changes_bidir.add((i, j))
 
-            if verbose: print('Passed')
-            mark_changes_bidir.add((i, j))
-
-        return mark_changes_dir, mark_changes_bidir
+            return mark_changes_dir, mark_changes_bidir
 
     def msep(self, A, B, C=set()):
         """

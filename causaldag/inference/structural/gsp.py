@@ -217,7 +217,7 @@ def gsp(
     Parameters
     ----------
     nodes:
-        Number of nodes in the graph.
+        Labels of nodes in the graph.
     ci_tester:
         A conditional independence tester, which has a method is_ci taking two sets A and B, and a conditioning set C,
         and returns True/False.
