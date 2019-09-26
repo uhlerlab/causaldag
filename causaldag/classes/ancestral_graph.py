@@ -381,6 +381,10 @@ class AncestralGraph:
         elif not ignore_error:
             raise KeyError
 
+    def remove_edges(self, edges):
+        for i, j in edges:
+            self.remove_edge(i, j)
+
     # === PROPERTIES
     @property
     def nodes(self):
@@ -986,7 +990,7 @@ class AncestralGraph:
             raise ValueError('Only defined for DMAGs')
 
         if not strict:
-            print("TODO: CHECK")
+            # print("TODO: CHECK")
             ancestor_dict = self.ancestor_dict()
             mark_changes_dir = {
                 (i, j) for i, j in self._directed

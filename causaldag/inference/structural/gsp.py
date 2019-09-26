@@ -290,6 +290,7 @@ def gsp(
         # === RECORDS FOR DEPTH-FIRST SEARCH
         all_visited_dags = set()
         trace = []
+        graph_counter = 0
 
         # === SEARCH!
         iters_since_improvement = 0
@@ -302,9 +303,11 @@ def gsp(
             max_arcs_removed = len(covered_arcs2removed_arcs[-1][2]) if len(covered_arcs2removed_arcs) > 0 else 0
 
             if (len(covered_arcs2removed_arcs) > 0 and len(trace) != depth) or max_arcs_removed > 0:
-                if max_arcs_removed > 0:  # start over at lower DAG
+                graph_counter += 1
+                print(graph_counter, len(all_visited_dags))
+                if max_arcs_removed > 0:  # start over at sparser DAG
                     iters_since_improvement = 0
-                    all_visited_dags = set()
+                    # all_visited_dags = set()
                     trace = []
 
                     # === CHOOSE A SPARSER I-MAP
@@ -768,8 +771,16 @@ def unknown_target_igsp(
     return min_dag, learned_intervention_targets
 
 
+if __name__ == '__main__':
+    import causaldag as cd
+    from causaldag.utils.ci_tests.ci_tester import MemoizedCI_Tester
+    from causaldag.utils.ci_tests.oracle import dsep_test
+    p = 10
+    d = cd.rand.directed_erdos(p, .2)
+    ci_tester = MemoizedCI_Tester(dsep_test, d)
+    est_dag, _ = gsp(set(range(p)), ci_tester, nruns=1, depth=float('inf'))
 
-
+    print(est_dag.shd_skeleton(d))
 
 
 
