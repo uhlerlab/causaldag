@@ -7,7 +7,7 @@ import numpy as np
 
 
 def threshold_ug(nodes: set, ci_tester: CI_Tester) -> UndirectedGraph:
-    if ci_tester.ci_test == gauss_ci_test:
+    if hasattr(ci_tester, 'ci_test') and ci_tester.ci_test == gauss_ci_test:
         return threshold_ug_gauss(ci_tester)
     edges = {(i, j) for i, j in itr.combinations(nodes, 2) if not ci_tester.is_ci(i, j, nodes - {i, j})}
     return UndirectedGraph(nodes, edges)
