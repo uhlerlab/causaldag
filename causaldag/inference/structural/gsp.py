@@ -304,7 +304,6 @@ def gsp(
 
             if (len(covered_arcs2removed_arcs) > 0 and len(trace) != depth) or max_arcs_removed > 0:
                 graph_counter += 1
-                print(graph_counter, len(all_visited_dags))
                 if max_arcs_removed > 0:  # start over at sparser DAG
                     iters_since_improvement = 0
                     # all_visited_dags = set()

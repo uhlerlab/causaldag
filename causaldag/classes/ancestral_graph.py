@@ -209,7 +209,7 @@ class AncestralGraph:
             return
 
         # === CHECK REMAINS ANCESTRAL
-        if self._neighbors[j]:
+        if not ignore_error and self._neighbors[j]:
             raise NeighborError(j, self._neighbors[j])
 
         # === CHECK i AND j NOT ALREADY ADJACENT
@@ -238,9 +238,9 @@ class AncestralGraph:
             return
 
         # === CHECK REMAINS ANCESTRAL
-        if self._neighbors[i]:
+        if not ignore_error and self._neighbors[i]:
             raise NeighborError(i, neighbors=self._neighbors[i])
-        if self._neighbors[j]:
+        if not ignore_error and self._neighbors[j]:
             raise NeighborError(j, neighbors=self._neighbors[j])
 
         # === CHECK i AND j NOT ALREADY ADJACENT
@@ -592,13 +592,16 @@ class AncestralGraph:
         """
         return self._bidirected_reachable(node, set(), set())
 
-    def discriminating_paths(self):
+    def discriminating_paths(self, verbose=False):
         colliders = self.colliders()
         discriminating_paths = {}
+        if verbose: print("Checking discriminating paths")
         for j, parents in self._parents.items():  # potential endpoints of discriminating paths
+            if verbose: print(j)
             if not parents:
-                break
+                continue
             nonadjacent = self._nodes - parents - self._children[j] - self._spouses[j] - {j}
+            if verbose: print(f"Checking node {j} and non-adjacent nodes {nonadjacent}")
             for i in nonadjacent:  # potential start points of discriminating paths
                 # search all paths that satisfy discriminating path criteria
                 path_queue = [
@@ -907,13 +910,13 @@ class AncestralGraph:
         for i, j in itr.combinations(set(range(p)), 2):
             vij = amat[i, j]
             vji = amat[j, i]
-            if vij == 2 and vji == 3:
+            if vij == 2 and vji == 3:  # arrowhead at j
                 directed.add((i, j))
-            if vij == 3 and vji == 2:
+            elif vij == 3 and vji == 2:  # arrowhead at i
                 directed.add((j, i))
-            if vij == 2 and vji == 2:
+            elif vij == 2 and vji == 2:  # arrowheads at both
                 bidirected.add((i, j))
-            if vij == 3 and vji == 3:
+            elif vij == 3 and vji == 3:  # no arrowhead
                 undirected.add((i, j))
         return AncestralGraph(set(range(p)), directed, bidirected, undirected)
 
@@ -998,10 +1001,12 @@ class AncestralGraph:
                    self._spouses[i] - self._parents[j] - self._spouses[j] == set()
                    and self._no_other_path(i, j, ancestor_dict)
             }
+            bidirected = [tuple(e) for e in self._bidirected]
+            bidirected_reversed = [tuple(reversed(e)) for e in self._bidirected]
             mark_changes_bidir = {
-                (i, j) for i, j in self._bidirected
+                (i, j) for i, j in bidirected + bidirected_reversed
                 if self._parents[i] - self._parents[j] == set() and
-                   self._spouses[i] - self._parents[j] - self._spouses[j] == set()
+                   self._spouses[i] - {j} - self._parents[j] - self._spouses[j] == set()
             }
             return mark_changes_dir, mark_changes_bidir
 
@@ -1034,7 +1039,7 @@ class AncestralGraph:
                 if verbose: print(f'{i}<->{j} => {i}->{j} ?')
                 parents_condition = self._parents[i] - self._parents[j] == set()
                 if not parents_condition: continue
-                spouses_condition = self._spouses[i] - {i} - self._spouses[j] - self._parents[j] == set()
+                spouses_condition = self._spouses[i] - {j} - self._spouses[j] - self._parents[j] == set()
                 if not spouses_condition: continue
                 ancestral_condition = self._no_other_path(i, j, ancestor_dict)
                 if not ancestral_condition: continue

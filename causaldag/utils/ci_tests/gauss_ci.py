@@ -87,10 +87,10 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
         if len(rest) == 1:
             theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ K[ix_(rest, [i, j])] / K[rest[0], rest[0]]
         else:
-            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ numba_inv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]
+            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ numba_inv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]  # TODO: what to do if not invertible?
         r = -theta_ij[0, 1] / sqrt(theta_ij[0, 0] * theta_ij[1, 1])
     else:
-        theta = numba_inv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])
+        theta = numba_inv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])  # TODO: what to do if not invertible?
         r = -theta[0, 1]/sqrt(theta[0, 0] * theta[1, 1])
 
     # === COMPUTE STATISTIC AND P-VALUE

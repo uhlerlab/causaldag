@@ -40,6 +40,11 @@ class UndirectedGraph:
             amat[j, i] = True
         return amat
 
+    @classmethod
+    def from_amat(self, amat):
+        edges = {(i, j) for (i, j), val in np.ndenumerate(amat) if val != 0}
+        return UndirectedGraph(nodes=set(range(amat.shape[0])), edges=edges)
+
     def copy(self, new=True):
         return UndirectedGraph(self._nodes, self._edges)
 
@@ -58,6 +63,10 @@ class UndirectedGraph:
     @property
     def nodes(self):
         return self._nodes.copy()
+
+    @property
+    def skeleton(self):
+        return self.edges
 
     def has_edge(self, i, j):
         return frozenset({i, j}) in self._edges
