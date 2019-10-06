@@ -493,20 +493,18 @@ class AncestralGraph:
         -------
         """
         visited = set()
-        node2ancestors = defaultdict(set)
-        node_queue = [node for node in self._nodes if not self._parents[node]]
+        top_sort = self.topological_sort()
 
-        while node_queue:
-            node = node_queue.pop()
-            if node in visited:
-                continue
-            visited.add(node)
+        node2ancestors_plus_self = defaultdict(set)
+        for node in top_sort:
+            node2ancestors_plus_self[node].add(node)
             for child in self._children[node]:
-                node2ancestors[child].add(node)
-                node2ancestors[child].update(node2ancestors[node])
-                node_queue.append(child)
+                node2ancestors_plus_self[child].update(node2ancestors_plus_self[node])
 
-        return core_utils.defdict2dict(node2ancestors, self._nodes)
+        for node in self._nodes:
+            node2ancestors_plus_self[node] -= {node}
+
+        return core_utils.defdict2dict(node2ancestors_plus_self, self._nodes)
 
     def descendants_of(self, node, exclude_arcs=set()):
         """Return the nodes downstream of node
@@ -966,7 +964,7 @@ class AncestralGraph:
         Check if there is any path from i to j other than possibly the direct edge i->j.
         """
         other_ancestors_j = ancestor_dict[j] - {i}
-        return other_ancestors_j & self._children[i] == set()
+        return (other_ancestors_j & self._children[i]) == set()
 
     def legitimate_mark_changes(self, verbose=False, strict=True):
         """
@@ -1022,6 +1020,10 @@ class AncestralGraph:
                 spouses_condition = self._spouses[i] - self._spouses[j] - self._parents[j] == set()
                 if not spouses_condition: continue
                 ancestral_condition = self._no_other_path(i, j, ancestor_dict)
+                # ancestral_condition2 = i not in self.ancestors_of(j, exclude_arcs={(i, j)})
+                # print(ancestral_condition == ancestral_condition2)
+                # if ancestral_condition != ancestral_condition2:
+                #     print(self, i, j, (ancestor_dict[j] - {i}) & self._children[i], ancestor_dict[j], self._children[i])
                 if not ancestral_condition: continue
 
                 # SECOND CONDITION
@@ -1042,6 +1044,7 @@ class AncestralGraph:
                 spouses_condition = self._spouses[i] - {j} - self._spouses[j] - self._parents[j] == set()
                 if not spouses_condition: continue
                 ancestral_condition = self._no_other_path(i, j, ancestor_dict)
+
                 if not ancestral_condition: continue
 
                 # SECOND CONDITION
