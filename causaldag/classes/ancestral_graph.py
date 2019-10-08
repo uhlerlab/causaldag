@@ -548,7 +548,7 @@ class AncestralGraph:
             for p1, p2 in itr.combinations(self._parents[node] | self._spouses[node], 2):
                 if not self.has_any_edge(p1, p2):
                     p1_, p2_ = sorted((p1, p2))
-                    vstructs.add((p1_, node, p2))
+                    vstructs.add((p1_, node, p2_))
         return vstructs
 
     def colliders(self):
@@ -634,7 +634,7 @@ class AncestralGraph:
                             path_queue.append(new_path)
         return discriminating_paths
 
-    def _reachable(self, start_node, end_node, visited=set(), allowed_edges={'b', 'u', 'c', 'p'}, predicate=lambda node: True):
+    def _reachable(self, start_node, end_node, visited=set(), allowed_edges={'b', 'u', 'c', 'p'}, predicate=lambda node: True, verbose=False):
         allowed_nbrs = set()
         if 'b' in allowed_edges:
             allowed_nbrs.update(self._spouses[start_node])
@@ -646,6 +646,8 @@ class AncestralGraph:
             allowed_nbrs.update(self._parents[start_node])
 
         allowed_nbrs = {nbr for nbr in allowed_nbrs if predicate(nbr)}
+        if verbose: print(f"Allowed neighbors of {start_node}: {allowed_nbrs}")
+        if verbose: print(f"Visited: {visited}")
 
         results = []
         for nbr in allowed_nbrs:
@@ -653,9 +655,11 @@ class AncestralGraph:
                 continue
             visited.add(nbr)
             if nbr == end_node:
+                if verbose: print("Reached end node")
                 return True
-            results.append(self._reachable(nbr, end_node, visited, allowed_edges, predicate))
+            results.append(self._reachable(nbr, end_node, visited=visited, allowed_edges=allowed_edges, predicate=predicate, verbose=verbose))
 
+        if verbose: print("reachability results:", results)
         return any(results)
 
     # === ???
@@ -842,40 +846,53 @@ class AncestralGraph:
 
         return res_qsinks
 
-    def is_maximal(self):
+    def is_maximal(self, new=True, verbose=False):
         new_mag = self.copy()
-        new_mag.to_maximal()
+        new_mag.to_maximal(new=new, verbose=verbose)
         return new_mag == self
 
-    def to_maximal(self, new=False):
+    def to_maximal(self, new=True, verbose=False):
         if new:
-            # === NEED DICTIONARY OF ANCESTORS AND C-COMPONENTS TO CHECK INDUCING PATHS
-            ancestor_dict = self.ancestor_dict()
-            c_components = self.c_components()
-            node2component = dict()
-            for ix, component in enumerate(c_components):
-                for node in component:
-                    node2component[node] = ix
+            converged = False
+            while not converged:
+                # === NEED DICTIONARY OF ANCESTORS AND C-COMPONENTS TO CHECK INDUCING PATHS
+                ancestor_dict = self.ancestor_dict()
+                c_components = self.c_components()
+                node2component = dict()
+                for ix, component in enumerate(c_components):
+                    for node in component:
+                        node2component[node] = ix
+                if verbose: print('==========')
+                if verbose: print('Ancestor dict:', ancestor_dict)
+                if verbose: print('C components', c_components)
 
-            # === FIND INDUCING PATHS BETWEEN PAIRS OF NODE
-            induced_pairs = []
+                # === FIND INDUCING PATHS BETWEEN PAIRS OF NODE
+                induced_pairs = []
 
-            non_adjacent_pairs = ((i, j) for i, j in itr.combinations(self._nodes, 2) if not self.has_any_edge(i, j))
-            for node1, node2 in non_adjacent_pairs:
-                check_ancestry = lambda node: node in ancestor_dict[node1] or node in ancestor_dict[node2]
-                nbrs1 = self._children[node1] | self._spouses[node1]
-                nbrs2 = self._children[node2] | self._spouses[node2]
+                non_adjacent_pairs = ((i, j) for i, j in itr.combinations(self._nodes, 2) if not self.has_any_edge(i, j))
+                for node1, node2 in non_adjacent_pairs:
+                    check_ancestry = lambda node: node in ancestor_dict[node1] or node in ancestor_dict[node2]
+                    nbrs1 = self._children[node1] | self._spouses[node1]
+                    nbrs2 = self._children[node2] | self._spouses[node2]
+                    if verbose: print(f"-------------\nChecking {node1} and {node2}")
 
-                # ONLY CHECK PATHS BETWEEN SPOUSES/CHILDREN THAT ARE IN THE SAME C-COMPONENT
-                for nbr1, nbr2 in itr.product(nbrs1, nbrs2):
-                    same_component = node2component[nbr1] == node2component[nbr2]
-                    if same_component and nbr1 in ancestor_dict[node2] and nbr2 in ancestor_dict[node1]:
-                        if self._reachable(nbr1, nbr2, allowed_edges={'b'}, predicate=check_ancestry):
-                            induced_pairs.append((node1, node2))
-                            continue
+                    # ONLY CHECK PATHS BETWEEN SPOUSES/CHILDREN THAT ARE IN THE SAME C-COMPONENT
+                    for nbr1, nbr2 in itr.product(nbrs1, nbrs2):
+                        same_component = node2component[nbr1] == node2component[nbr2]
+                        if same_component and nbr1 in ancestor_dict[node2] and nbr2 in ancestor_dict[node1]:
+                            if verbose: print(f"Checking neighbors {nbr1} (for {node1}) and {nbr2} (for {node2})")
+                            if self._reachable(nbr1, nbr2, visited=set(), allowed_edges={'b'}, predicate=check_ancestry, verbose=verbose):
+                                if verbose: print("Reachable")
+                                induced_pairs.append((node1, node2))
+                                continue
+                            elif verbose:
+                                print("No path")
+                if verbose: print(f"found induced pairs: {induced_pairs}")
+                for node1, node2 in induced_pairs:
+                    self.add_bidirected(node1, node2)
 
-            for node1, node2 in induced_pairs:
-                self._add_bidirected(node1, node2)
+                converged = len(induced_pairs) == 0
+                # print('converged:', converged)
         else:
             for i, j in itr.combinations(self._nodes, r=2):
                 if not self.has_any_edge(i, j):
@@ -932,6 +949,36 @@ class AncestralGraph:
         )
 
         return same_skeleton and same_vstructures and same_discriminating
+
+    def get_all_mec(self):
+        visited = set()
+        queue = [self]
+        mags = []
+
+        while queue:
+            mag = queue.pop()
+            mags.append(mag)
+            curr_dir, curr_bidir = frozenset(mag._directed), frozenset({frozenset({*e}) for e in mag._bidirected})
+            visited.add((curr_dir, curr_bidir))
+            lmcs_dir, lmcs_bidir = mag.legitimate_mark_changes()
+            for i, j in lmcs_dir:
+                new_dir = curr_dir - {(i, j)}
+                new_bidir = curr_bidir | {frozenset({i, j})}
+                if (new_dir, new_bidir) not in visited:
+                    new_mag = mag.copy()
+                    new_mag.remove_directed(i, j)
+                    new_mag.add_bidirected(i, j)
+                    queue.append(new_mag)
+            for i, j in lmcs_bidir:
+                new_dir = curr_dir | {(i, j)}
+                new_bidir = curr_bidir - {frozenset({i, j})}
+                if (new_dir, new_bidir) not in visited:
+                    new_mag = mag.copy()
+                    new_mag.remove_bidirected(i, j)
+                    new_mag.add_directed(i, j)
+                    queue.append(new_mag)
+
+        return mags
 
     def shd_skeleton(self, other):
         return len(self.skeleton.symmetric_difference(other.skeleton))
@@ -1015,22 +1062,28 @@ class AncestralGraph:
             mark_changes_dir = set()
             for i, j in self._directed:
                 if verbose: print(f'{i}->{j} => {i}<->{j} ?')
-                parents_condition = self._parents[i] - self._parents[j] == set()
-                if not parents_condition: continue
-                spouses_condition = self._spouses[i] - self._spouses[j] - self._parents[j] == set()
-                if not spouses_condition: continue
+                parents_condition = self._parents[i] - self._parents[j]
+                if parents_condition != set():
+                    if verbose: print(f'Failed parents condition on {parents_condition}')
+                    continue
+                spouses_condition = self._spouses[i] - self._spouses[j] - self._parents[j]
+                if spouses_condition != set():
+                    if verbose: print(f'Failed spouses condition on {spouses_condition}')
+                    continue
                 ancestral_condition = self._no_other_path(i, j, ancestor_dict)
                 # ancestral_condition2 = i not in self.ancestors_of(j, exclude_arcs={(i, j)})
                 # print(ancestral_condition == ancestral_condition2)
                 # if ancestral_condition != ancestral_condition2:
                 #     print(self, i, j, (ancestor_dict[j] - {i}) & self._children[i], ancestor_dict[j], self._children[i])
-                if not ancestral_condition: continue
+                if not ancestral_condition:
+                    if verbose: print(f'Failed ancestral condition')
+                    continue
 
                 # SECOND CONDITION
                 disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-                disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
-                if not disc_paths_condition:
-                    if verbose: print('Failed discriminating path condition')
+                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j), None) if disc_paths_for_i else None
+                if disc_paths_condition is not None:
+                    if verbose: print(f'Failed discriminating path condition on {disc_paths_condition}')
                     continue
 
                 if verbose: print('Passed')
@@ -1039,19 +1092,25 @@ class AncestralGraph:
             mark_changes_bidir = set()
             for i, j in self._bidirected | set(map(reversed, self._bidirected)):
                 if verbose: print(f'{i}<->{j} => {i}->{j} ?')
-                parents_condition = self._parents[i] - self._parents[j] == set()
-                if not parents_condition: continue
-                spouses_condition = self._spouses[i] - {j} - self._spouses[j] - self._parents[j] == set()
-                if not spouses_condition: continue
+                parents_condition = self._parents[i] - self._parents[j]
+                if parents_condition != set():
+                    if verbose: print(f'Failed parents condition on {parents_condition}')
+                    continue
+                spouses_condition = self._spouses[i] - {j} - self._spouses[j] - self._parents[j]
+                if spouses_condition != set():
+                    if verbose: print(f'Failed spouses condition on {spouses_condition}')
+                    continue
                 ancestral_condition = self._no_other_path(i, j, ancestor_dict)
 
-                if not ancestral_condition: continue
+                if not ancestral_condition:
+                    if verbose: print('failed ancestral condition')
+                    continue
 
                 # SECOND CONDITION
                 disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-                disc_paths_condition = all(path[-1] != j for path in disc_paths_for_i)
-                if not disc_paths_condition:
-                    if verbose: print('Failed discriminating path condition')
+                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j), None) if disc_paths_for_i else None
+                if disc_paths_condition is not None:
+                    if verbose: print(f'Failed discriminating path condition on {disc_paths_condition}')
                     continue
 
                 if verbose: print('Passed')

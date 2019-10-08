@@ -933,7 +933,7 @@ class DAG:
                     else:
                         bidirected.add((i, j))
 
-            if relabel:
+            if relabel is not None:
                 t = self.topological_sort()
                 t_new = [node for node in t if node not in latent_nodes]
                 node2new_label = dict(map(reversed, enumerate(t_new)))
@@ -944,25 +944,42 @@ class DAG:
             return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
 
         else:
+            # ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
+            # curr_directed = ag.directed
+            # curr_bidirected = ag.bidirected
+            #
+            # while True:
+            #     for node in latent_nodes:
+            #         parents = ag._parents[node]
+            #         children = ag._children[node]
+            #         spouses = ag._spouses[node]
+            #         for j, i in itr.product(parents, children):
+            #             ag._add_directed(j, i, ignore_error=True)
+            #         for i, j in itr.combinations(children, 2):
+            #             ag._add_bidirected(i, j, ignore_error=True)
+            #         for i, j in itr.product(children, spouses):
+            #             ag._add_bidirected(i, j, ignore_error=True)
+            #
+            #     last_directed = curr_directed
+            #     last_bidirected = curr_bidirected
+            #     curr_directed = ag.directed
+            #     curr_bidirected = ag.bidirected
+            #     if curr_directed == last_directed and curr_bidirected == last_bidirected:
+            #         break
+            # for node in latent_nodes:
+            #     ag.remove_node(node, ignore_error=True)
+
             ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
-            curr_directed = ag.directed
-            curr_bidirected = ag.bidirected
-
-            while True:
-                for node in latent_nodes:
-                    for j, i in itr.product(ag._parents[node], ag._children[node]):
-                        ag._add_directed(j, i, ignore_error=True)
-                    for i, j in itr.combinations(ag._children[node], 2):
-                        ag._add_bidirected(i, j, ignore_error=True)
-                    for i, j in itr.product(ag._children[node], ag._spouses[node]):
-                        ag._add_bidirected(i, j, ignore_error=True)
-
-                last_directed = curr_directed
-                last_bidirected = curr_bidirected
-                curr_directed = ag.directed
-                curr_bidirected = ag.bidirected
-                if curr_directed == last_directed and curr_bidirected == last_bidirected:
-                    break
+            ancestor_dict = ag.ancestor_dict()
+            for i, j in itr.combinations(self._nodes - latent_nodes, 2):
+                S = (ancestor_dict[i] | ancestor_dict[j]) - {i, j} - latent_nodes
+                if not ag.has_any_edge(i, j) and not ag.msep(i, j, S):
+                    if i in ancestor_dict[j]:
+                        ag._add_directed(i, j)
+                    elif j in ancestor_dict[i]:
+                        ag._add_directed(j, i)
+                    else:
+                        ag._add_bidirected(i, j)
             for node in latent_nodes:
                 ag.remove_node(node, ignore_error=True)
 
@@ -975,8 +992,6 @@ class DAG:
                 return AncestralGraph(new_nodes, directed=directed, bidirected=bidirected)
 
             return ag
-
-
 
     def save_gml(self, filename):
         tab = '  '
