@@ -12,6 +12,17 @@ def hsic_invariance_test(
         cond_set: Optional[Union[List[int], int]]=None,
         alpha: float=0.05
 ):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     cond_set = to_list(cond_set)
     obs_samples = suffstat['obs_samples']
     iv_samples = suffstat[context]

@@ -18,6 +18,7 @@ class CycleError(Exception):
         message = 'Adding arc(s) causes the cycle ' + path2str(cycle)
         super().__init__(message)
 
+
 def path2str(path):
     return '->'.join(map(str, path))
 
@@ -68,7 +69,14 @@ class DAG:
 
     @classmethod
     def from_amat(cls, amat):
-        """Return a DAG with arcs given by amat
+        """
+        Return a DAG with arcs given by amat, i.e. i->j if amat[i,j] != 0
+
+        Examples
+        --------
+        >>> amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])
+        >>> cd.DAG.from_amat(amat)
+        TODO
         """
         nodes = set(range(amat.shape[0]))
         arcs = set()
@@ -79,9 +87,8 @@ class DAG:
         return d
 
     def copy(self):
-        """Return a copy of the current DAG
-
-
+        """
+        Return a copy of the current DAG
         """
         # return DAG(nodes=self._nodes, arcs=self._arcs)
         return DAG(dag=self)
@@ -141,15 +148,59 @@ class DAG:
         return len(self._arcs) / p / (p-1) * 2
 
     def parents_of(self, node):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return self._parents[node].copy()
 
     def children_of(self, node):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return self._children[node].copy()
 
     def neighbors_of(self, node):
+        """
+        Return all nodes that are adjacent to `node`.
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return self._neighbors[node].copy()
 
     def has_arc(self, source, target):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return (source, target) in self._arcs
 
     def is_upstream_of(self, anc, desc):
@@ -172,7 +223,8 @@ class DAG:
 
     # === MUTATORS
     def add_node(self, node):
-        """Add a node to the DAG
+        """
+        Add a node to the DAG
 
         Parameters
         ----------
@@ -194,7 +246,8 @@ class DAG:
         self._nodes.add(node)
 
     def add_arc(self, i, j, unsafe=False):
-        """Add an arc to the DAG
+        """
+        Add an arc to the DAG
 
         Parameters
         ----------
@@ -249,7 +302,8 @@ class DAG:
         stack.append(node)
 
     def topological_sort(self):
-        """Return a topological sort of the nodes in the graph
+        """
+        Return a topological sort of the nodes in the graph
 
         Returns
         -------
@@ -272,7 +326,8 @@ class DAG:
         return list(reversed(stack))
 
     def add_nodes_from(self, nodes):
-        """Add nodes to the graph from a collection
+        """
+        Add nodes to the graph from a collection
 
         Parameters
         ----------
@@ -295,7 +350,8 @@ class DAG:
             self.add_node(node)
 
     def add_arcs_from(self, arcs, unsafe=False):
-        """Add arcs to the graph from a collection
+        """
+        Add arcs to the graph from a collection
 
         Parameters
         ----------
@@ -335,7 +391,8 @@ class DAG:
                 raise e
 
     def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
-        """Reverse the arc i->j to i<-j
+        """
+        Reverse the arc i->j to i<-j
 
         Parameters
         ----------
@@ -357,7 +414,8 @@ class DAG:
         self.add_arc(j, i, unsafe=unsafe)
 
     def remove_arc(self, i, j, ignore_error=False):
-        """Remove the arc i->j
+        """
+        Remove the arc i->j
 
         Parameters
         ----------
@@ -388,11 +446,23 @@ class DAG:
                 raise e
 
     def remove_arcs(self, arcs, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         for i, j in arcs:
             self.remove_arc(i, j, ignore_error=ignore_error)
 
     def remove_node(self, node, ignore_error=False):
-        """Remove a node from the graph
+        """
+        Remove a node from the graph
 
         Parameters
         ----------
@@ -429,7 +499,8 @@ class DAG:
 
     # === GRAPH PROPERTIES
     def sources(self):
-        """Get all nodes in the graph that have no parents
+        """
+        Get all nodes in the graph that have no parents
 
         Return
         ------
@@ -445,7 +516,8 @@ class DAG:
         return {node for node in self._nodes if len(self._parents[node]) == 0}
 
     def sinks(self):
-        """Get all nodes in the graph that have no children
+        """
+        Get all nodes in the graph that have no children
 
         Return
         ------
@@ -460,12 +532,13 @@ class DAG:
         """
         return {node for node in self._nodes if len(self._children[node]) == 0}
 
-    def reversible_arcs(self):
-        """Get all reversible (aka covered) arcs in the DAG.
+    def reversible_arcs(self) -> set:
+        """
+        Get all reversible (aka covered) arcs in the DAG.
 
         Return
         ------
-        List[arc]
+        Set[arc]
             Return all reversible (aka covered) arcs in the DAG. An arc i -> j is *covered* if the :math:`Pa(j) = Pa(i) \cup {i}`.
             Reversing a reversible arc results in a DAG in the same Markov equivalence class.
 
@@ -481,15 +554,36 @@ class DAG:
                 reversible_arcs.add((i, j))
         return reversible_arcs
 
-    def is_reversible(self, i, j):
+    def is_reversible(self, i, j) -> bool:
+        """
+        Check if the arc i->j is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`
+
+        Parameters
+        ----------
+        i: source of the arc
+        j: target of the arc
+
+        Returns
+        -------
+        True if the arc is reversible, otherwise False.
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.is_reversible(1, 2)
+        True
+        >>> g.is_reversible(1, 3)
+        False
+        """
         return self._parents[i] == self._parents[j] - {i}
 
     def arcs_in_vstructures(self):
-        """Get all arcs in the graph that participate in a v-structure.
+        """
+        Get all arcs in the graph that participate in a v-structure.
 
         Return
         ------
-        List[arc]
+        Set[arc]
             Return all arcs in the graph in a v-structure (aka an immorality). A v-structure is formed when i->j<-k but
             there is no arc between i and k. Arcs that participate in a v-structure are identifiable from observational
             data.
@@ -509,6 +603,17 @@ class DAG:
         return vstruct_arcs
 
     def vstructures(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         vstructs = set()
         for node in self._nodes:
             for p1, p2 in itr.combinations(self._parents[node], 2):
@@ -516,10 +621,26 @@ class DAG:
                     vstructs.add((p1, node, p2))
         return vstructs
 
-    def induced_graph(self, nodes):
-        return DAG(nodes=nodes, arcs={(i, j) for i, j in self._arcs if (i in nodes) and (j in nodes)})
+    def markov_blanket(self, node) -> set:
+        """
+        Return the Markov blanket of `node`, i.e., the parents of the node, its children, and the parents of its children.
 
-    def markov_blanket(self, node):
+        Parameters
+        ----------
+        node:
+            Node whose Markov blanket to return.
+
+        Returns
+        -------
+        mb:
+            the Markov blanket of `node`.
+
+        Example
+        -------
+        >>> g = cd.DAG(arcs={(0, 1), (1, 3), (2, 3), (3, 4})
+        >>> g.markov_blanket(1)
+        {0, 2, 3}
+        """
         parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[node] else set()
         return self._parents[node] | self._children[node] | parents_of_children - {node}
 
@@ -529,7 +650,8 @@ class DAG:
         return len(reversals) + 2*self.shd_skeleton(other)
 
     def shd(self, other) -> int:
-        """Compute the structural Hamming distance between this DAG and another graph
+        """
+        Compute the structural Hamming distance between this DAG and another graph
 
         Parameters
         ----------
@@ -559,7 +681,8 @@ class DAG:
             return len(additions) + len(deletions) + len(reversals)
 
     def shd_skeleton(self, other) -> int:
-        """Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of another graph
+        """
+        Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of another graph
 
         Parameters
         ----------
@@ -588,7 +711,18 @@ class DAG:
             return len(self.skeleton.symmetric_difference(other.skeleton))
 
     def markov_equivalent(self, other, interventions=None) -> bool:
-        """Check if this DAG is (interventionally) Markov equivalent to some other DAG
+        """
+        Check if this DAG is (interventionally) Markov equivalent to some other DAG
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         if interventions is None:
             return self.cpdag() == other.cpdag()
@@ -596,6 +730,17 @@ class DAG:
             return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
 
     def local_markov_statements(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         statements = set()
         for node in self._nodes:
             parents = self._parents[node]
@@ -604,9 +749,31 @@ class DAG:
         return statements
 
     def is_imap(self, other):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
     def is_minimal_imap(self, other, certify=False, check_imap=True):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if check_imap and not self.is_imap(other):
             if certify: return False, None
             else: return False
@@ -623,7 +790,8 @@ class DAG:
                 self._add_downstream(downstream, child)
 
     def downstream(self, node):
-        """Return the nodes downstream of node
+        """
+        Return the nodes downstream of node
 
         Parameters
         ----------
@@ -656,7 +824,8 @@ class DAG:
                 self._add_upstream(upstream, parent)
 
     def upstream(self, node):
-        """Return the nodes upstream of node
+        """
+        Return the nodes upstream of node
 
         Parameters
         ----------
@@ -683,7 +852,8 @@ class DAG:
         return upstream
 
     def incident_arcs(self, node):
-        """Return all arcs adjacent to node
+        """
+        Return all arcs adjacent to node
 
         Parameters
         ----------
@@ -713,7 +883,8 @@ class DAG:
         return incident_arcs
 
     def incoming_arcs(self, node):
-        """Return all arcs with target node
+        """
+        Return all arcs with target node
 
         Parameters
         ----------
@@ -741,7 +912,8 @@ class DAG:
         return incoming_arcs
 
     def outgoing_arcs(self, node):
-        """Return all arcs with source node
+        """
+        Return all arcs with source node
 
         Parameters
         ----------
@@ -769,7 +941,8 @@ class DAG:
         return outgoing_arcs
 
     def outdegree(self, node):
-        """Return the outdegree of node
+        """
+        Return the outdegree of node
 
         Parameters
         ----------
@@ -796,7 +969,8 @@ class DAG:
         return len(self._children[node])
 
     def indegree(self, node):
-        """Return the indegree of node
+        """
+        Return the indegree of node
 
         Parameters
         ----------
@@ -870,8 +1044,8 @@ class DAG:
 
         # STEP 2: REMOVE RESOLVED SINKS
         resolved_sinks = self.resolved_sinks(imap)
-        self_subgraph = self.induced_graph(self._nodes - resolved_sinks)
-        imap_subgraph = imap.induced_graph(imap._nodes - resolved_sinks)
+        self_subgraph = self.induced_subgraph(self._nodes - resolved_sinks)
+        imap_subgraph = imap.induced_subgraph(imap._nodes - resolved_sinks)
 
         # STEP 3: PICK A SINK IN THE IMAP
         imap_sinks = imap_subgraph.sinks()
@@ -915,6 +1089,20 @@ class DAG:
         return new_graph, sink, 8
 
     def marginal_mag(self, latent_nodes, relabel=None, new=True):
+        """
+        Return the maximal ancestral graph (MAG) that results from marginalizing out `latent_nodes`.
+
+        Parameters
+        ----------
+        latent_nodes: nodes to marginalize over.
+        relabel: if relabel='default', relabel the nodes to have labels 1,2,...,(#nodes).
+        new
+
+        Returns
+        -------
+        m:
+            cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.
+        """
         from .ancestral_graph import AncestralGraph
 
         if not new:
@@ -1051,9 +1239,30 @@ class DAG:
 
     @classmethod
     def from_nx(cls, nx_graph):
+        """
+        Convert a networkx DiGraph into a DAG.
+
+        Parameters
+        ----------
+        nx_graph:
+            networkx DiGraph
+
+        Returns
+        -------
+        d:
+            cd.DAG
+        """
         return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
 
     def to_nx(self):
+        """
+        Convert DAG to a networkx DiGraph.
+
+        Returns
+        -------
+        g:
+            networkx.DiGraph
+        """
         g = nx.DiGraph()
         g.add_nodes_from(self._nodes)
         g.add_edges_from(self._arcs)
@@ -1097,7 +1306,19 @@ class DAG:
 
         return amat, node_list
 
-    def subgraph(self, nodes):
+    def induced_subgraph(self, nodes: set):
+        """
+        Return the induced subgraph over only `nodes`
+
+        Parameters
+        ----------
+        nodes:
+            Set of nodes for the induced subgraph.
+
+        Returns
+        -------
+
+        """
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
     # === OPTIMAL INTERVENTIONS
@@ -1177,8 +1398,20 @@ class DAG:
         return clique_tree
 
     def cpdag(self):
-        """Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
-        Markov equivalence class of this DAG
+        """
+        Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
+        Markov equivalence class of this DAG.
+
+        Return
+        ------
+        pdag:
+            CPDAG representing the MEC of this DAG.
+
+        Examples
+        --------
+        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
+        >>> g.cpdag()
+
         """
         from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
@@ -1186,6 +1419,20 @@ class DAG:
         return pdag
 
     def moral_graph(self):
+        """
+        Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.
+
+        Returns
+        -------
+        u:
+            Moral graph of this DAG.
+
+        Examples
+        --------
+        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
+        >>> g.moral_graph()
+        TODO
+        """
         from causaldag import UndirectedGraph
         edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
         return UndirectedGraph(self._nodes, edges)

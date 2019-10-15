@@ -12,7 +12,18 @@ def unif_away_zero(low=.25, high=1, size=1):
 
 
 def directed_erdos(n, s, size=1):
-    """Generate random Erdos-Renyi DAGs
+    """
+    Generate random Erdos-Renyi DAGs.
+
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
     """
     if size == 1:
         bools = _coin(s, size=int(n*(n-1)/2))
@@ -23,7 +34,18 @@ def directed_erdos(n, s, size=1):
 
 
 def rand_weights(dag, rand_weight_fn=unif_away_zero):
-    """Generate random arc weights for a DAG
+    """
+    Generate random arc weights for a DAG.
+
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
     """
     weights = rand_weight_fn(size=len(dag.arcs))
     return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))

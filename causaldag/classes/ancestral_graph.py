@@ -98,6 +98,17 @@ class AncestralGraph:
         return AncestralGraph(self.nodes, self.directed, self.bidirected, self.undirected)
 
     def induced_subgraph(self, nodes):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         new_directed = {(i, j) for i, j in self._directed if i in nodes and j in nodes}
         new_bidirected = {(i, j) for i, j in self._bidirected if i in nodes and j in nodes}
         new_undirected = {(i, j) for i, j in self._undirected if i in nodes and j in nodes}
@@ -112,7 +123,8 @@ class AncestralGraph:
 
     # === MUTATORS
     def add_node(self, node):
-        """Add a node to the ancestral graph.
+        """
+        Add a node to the ancestral graph.
 
         Parameters
         ----------
@@ -134,7 +146,8 @@ class AncestralGraph:
         self._nodes.add(node)
 
     def add_nodes_from(self, nodes):
-        """Add a node to the ancestral graph.
+        """
+        Add a node to the ancestral graph.
 
         Parameters
         ----------
@@ -176,6 +189,17 @@ class AncestralGraph:
         stack.append(node)
 
     def topological_sort(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         any_visited = {node: False for node in self._nodes}
         curr_path_visited = {node: False for node in self._nodes}
         curr_path = []
@@ -186,6 +210,17 @@ class AncestralGraph:
         return list(reversed(stack))
 
     def add_directed(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         self._add_directed(i, j)
         try:
             self._check_ancestral()
@@ -194,6 +229,17 @@ class AncestralGraph:
             raise e
 
     def add_bidirected(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         self._add_bidirected(i, j)
         try:
             self._add_bidirected(i, j)
@@ -202,6 +248,17 @@ class AncestralGraph:
             raise e
 
     def add_undirected(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         self._add_undirected(i, j)
 
     def _add_directed(self, i, j, ignore_error=False):
@@ -300,6 +357,17 @@ class AncestralGraph:
         self._adjacent[j].add(i)
 
     def remove_node(self, node, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         try:
             self._nodes.remove(node)
             for parent in self._parents[node]:
@@ -331,6 +399,17 @@ class AncestralGraph:
                 raise e
 
     def remove_directed(self, i, j, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         try:
             self._directed.remove((i, j))
             self._children[i].remove(j)
@@ -344,6 +423,17 @@ class AncestralGraph:
                 raise e
 
     def remove_bidirected(self, i, j, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         try:
             self._bidirected.remove(tuple(sorted((i, j))))
             self._spouses[i].remove(j)
@@ -357,6 +447,17 @@ class AncestralGraph:
                 raise e
 
     def remove_undirected(self, i, j, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         try:
             self._undirected.remove(tuple(sorted((i, j))))
             self._neighbors[i].remove(j)
@@ -370,6 +471,17 @@ class AncestralGraph:
                 raise e
 
     def remove_edge(self, i, j, ignore_error=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if self.has_bidirected(i, j):
             self.remove_bidirected(i, j)
         elif self.has_directed(i, j):
@@ -382,6 +494,17 @@ class AncestralGraph:
             raise KeyError
 
     def remove_edges(self, edges):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         for i, j in edges:
             self.remove_edge(i, j)
 
@@ -451,7 +574,8 @@ class AncestralGraph:
                 self._add_descendants(descendants, child, exclude_arcs=exclude_arcs)
 
     def ancestors_of(self, nodes, exclude_arcs=set()):
-        """Return the nodes upstream of node
+        """
+        Return the nodes upstream of node
 
         Parameters
         ----------
@@ -478,7 +602,8 @@ class AncestralGraph:
         return ancestors
 
     def ancestor_dict(self):
-        """Return a dictionary from each node to its ancestors
+        """
+        Return a dictionary from each node to its ancestors
 
         See Also
         --------
@@ -507,7 +632,8 @@ class AncestralGraph:
         return core_utils.defdict2dict(node2ancestors_plus_self, self._nodes)
 
     def descendants_of(self, node, exclude_arcs=set()):
-        """Return the nodes downstream of node
+        """
+        Return the nodes downstream of node
 
         Parameters
         ----------
@@ -531,18 +657,73 @@ class AncestralGraph:
         return descendants
 
     def has_directed(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return (i, j) in self._directed
 
     def has_bidirected(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return tuple(sorted((i, j))) in self._bidirected
 
     def has_undirected(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return tuple(sorted((i, j))) in self._undirected
 
     def has_any_edge(self, i, j):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return self.has_directed(i, j) or self.has_directed(j, i) or self.has_bidirected(i, j) or self.has_undirected(i, j)
 
     def vstructures(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         vstructs = set()
         for node in self._nodes:
             for p1, p2 in itr.combinations(self._parents[node] | self._spouses[node], 2):
@@ -552,6 +733,17 @@ class AncestralGraph:
         return vstructs
 
     def colliders(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return {node for node in self._nodes if len(self._parents[node] | self._spouses[node]) >= 2}
 
     def _bidirected_reachable(self, node, tmp, visited):
@@ -562,7 +754,8 @@ class AncestralGraph:
         return tmp
 
     def c_components(self):
-        """Return the c-components of this graph.
+        """
+        Return the c-components of this graph.
 
         Return
         ------
@@ -581,7 +774,8 @@ class AncestralGraph:
         return components
 
     def district_of(self, node):
-        """Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
+        """
+        Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
 
         Return
         ------
@@ -591,6 +785,17 @@ class AncestralGraph:
         return self._bidirected_reachable(node, set(), set())
 
     def discriminating_paths(self, verbose=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         colliders = self.colliders()
         discriminating_paths = {}
         if verbose: print("Checking discriminating paths")
@@ -664,6 +869,17 @@ class AncestralGraph:
 
     # === ???
     def pairwise_markov_statements(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         statements = set()
         for i, j in itr.combinations(self._nodes, 2):
             if not self.has_any_edge(i, j):
@@ -671,6 +887,17 @@ class AncestralGraph:
         return statements
 
     def is_imap(self, other, certify=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if not self.is_maximal():
             raise Exception("Your graph is not maximal")
 
@@ -694,6 +921,17 @@ class AncestralGraph:
     #         return res, certificate
 
     def is_minimal_imap(self, other, certify=False, check_imap=True):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if check_imap and not self.is_imap(other):
             return False, None
 
@@ -847,11 +1085,33 @@ class AncestralGraph:
         return res_qsinks
 
     def is_maximal(self, new=True, verbose=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         new_mag = self.copy()
         new_mag.to_maximal(new=new, verbose=verbose)
         return new_mag == self
 
     def to_maximal(self, new=True, verbose=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if new:
             converged = False
             while not converged:
@@ -904,6 +1164,17 @@ class AncestralGraph:
 
     # === CONVERTERS
     def to_amat(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         amat = np.zeros([self.nnodes, self.nnodes])
         for i, j in self.directed:
             amat[i, j] = 2
@@ -918,6 +1189,17 @@ class AncestralGraph:
 
     @staticmethod
     def from_amat(amat):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         p = amat.shape[0]
         directed = set()
         bidirected = set()
@@ -937,6 +1219,17 @@ class AncestralGraph:
 
     # === COMPARISON
     def markov_equivalent(self, other):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         same_skeleton = self.skeleton == other.skeleton
         same_vstructures = self.vstructures() == other.vstructures()
 
@@ -951,6 +1244,17 @@ class AncestralGraph:
         return same_skeleton and same_vstructures and same_discriminating
 
     def get_all_mec(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         visited = set()
         queue = [self]
         mags = []
@@ -981,9 +1285,31 @@ class AncestralGraph:
         return mags
 
     def shd_skeleton(self, other):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return len(self.skeleton.symmetric_difference(other.skeleton))
 
     def as_hashed(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return frozenset(self._directed), frozenset(self._bidirected), frozenset(self._undirected)
 
     # === Algorithms
@@ -1122,7 +1448,15 @@ class AncestralGraph:
         """
         Check whether A and B are m-separated given C, using the Bayes ball algorithm.
 
+        TODO
 
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         # type coercion
         A = core_utils.to_set(A)
@@ -1168,8 +1502,20 @@ class AncestralGraph:
         return True
 
     def msep_from_given(self, A, C=set()):
-        """Find all nodes m-seperated from A given C using algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990). Identifying independence in Bayesian networks. Networks, 20(5), 507-534."""
+        """
+        Find all nodes m-seperated from A given C.
 
+        Uses algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990).
+        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         A = core_utils.to_set(A)
         C = core_utils.to_set(C)
 

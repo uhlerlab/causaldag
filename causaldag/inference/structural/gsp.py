@@ -7,11 +7,21 @@ from causaldag.utils.core_utils import powerset
 import random
 from causaldag.inference.structural.undirected import threshold_ug
 from causaldag import UndirectedGraph
-from cvxopt import amd
 import numpy as np
 
 
 def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None, older=False):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     d = DAG(nodes=set(perm))
     ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
     for i, j in ixs:
@@ -48,6 +58,17 @@ def perm2dag2(perm, ci_tester, node2nbrs=None):
 
 
 def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gaps=set()):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     removed_arcs = set()
     parents = dag.parents_of(i)
     for parent in parents:
@@ -84,6 +105,17 @@ def update_minimal_imap(dag, i, j, ci_tester, fixed_adjacencies=set(), fixed_gap
 
 
 def min_degree_alg_amat(amat, rnd=True):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     amat = amat.copy()
     remaining_nodes = list(range(amat.shape[0]))
     permutation = []
@@ -151,6 +183,17 @@ def jci_gsp(
         verbose: bool=False,
         initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
 ):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     # CREATE NEW NODES AND OTHER INPUT TO ALGORITHM
     context_nodes = ['c%d' % i for i in range(len(setting_list))]
     context_adjacencies = set(itr.permutations(context_nodes, r=2))
@@ -374,6 +417,17 @@ def igsp(
         initial_permutations: Optional[List]=None,
         verbose: bool = False,
 ):
+    """
+    TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Examples
+    --------
+    TODO
+    """
     only_single_node = all(len(setting['interventions']) <= 1 for setting in setting_list)
     interventions2setting_nums = {
         frozenset(setting['interventions']): setting_num
