@@ -190,11 +190,7 @@ class AncestralGraph:
 
     def topological_sort(self):
         """
-        TODO
-
-        Parameters
-        ----------
-        TODO
+        Return a linear order that is consistent with the partial order implied by ancestral relations of this graph.
 
         Examples
         --------
@@ -314,7 +310,7 @@ class AncestralGraph:
 
         self._nodes.add(i)
         self._nodes.add(j)
-        self._bidirected.add(tuple(sorted((i, j))))
+        self._bidirected.add(frozenset({i, j}))
         self._spouses[j].add(i)
         self._spouses[i].add(j)
 
@@ -349,7 +345,7 @@ class AncestralGraph:
 
         self._nodes.add(i)
         self._nodes.add(j)
-        self._undirected.add(tuple(sorted((i, j))))
+        self._undirected.add(frozenset({i, j}))
         self._neighbors[j].add(i)
         self._neighbors[i].add(j)
 
@@ -381,11 +377,11 @@ class AncestralGraph:
             for spouse in self._spouses[node]:
                 self._spouses[spouse].remove(node)
                 self._adjacent[spouse].remove(node)
-                self._bidirected.remove(tuple(sorted((spouse, node))))
+                self._bidirected.remove(frozenset({spouse, node}))
             for nbr in self._neighbors[node]:
                 self._neighbors[nbr].remove(node)
                 self._adjacent[nbr].remove(node)
-                self._undirected.remove(tuple(sorted((nbr, node))))
+                self._undirected.remove(frozenset({nbr, node}))
 
             del self._children[node]
             del self._parents[node]
@@ -435,7 +431,7 @@ class AncestralGraph:
         TODO
         """
         try:
-            self._bidirected.remove(tuple(sorted((i, j))))
+            self._bidirected.remove(frozenset({i, j}))
             self._spouses[i].remove(j)
             self._spouses[j].remove(i)
             self._adjacent[i].remove(j)
@@ -459,7 +455,7 @@ class AncestralGraph:
         TODO
         """
         try:
-            self._undirected.remove(tuple(sorted((i, j))))
+            self._undirected.remove(frozenset({i, j}))
             self._neighbors[i].remove(j)
             self._neighbors[j].remove(i)
             self._adjacent[i].remove(j)
@@ -579,8 +575,10 @@ class AncestralGraph:
 
         Parameters
         ----------
-        node:
-            The node.
+        nodes:
+            Set of nodes.
+        exclude_arcs:
+            TODO
 
         See Also
         --------
@@ -603,7 +601,7 @@ class AncestralGraph:
 
     def ancestor_dict(self):
         """
-        Return a dictionary from each node to its ancestors
+        Return a dictionary from each node to its ancestors.
 
         See Also
         --------
@@ -617,7 +615,6 @@ class AncestralGraph:
         Example
         -------
         """
-        visited = set()
         top_sort = self.topological_sort()
 
         node2ancestors_plus_self = defaultdict(set)
@@ -658,11 +655,20 @@ class AncestralGraph:
 
     def has_directed(self, i, j):
         """
-        TODO
+        Check if this graph has the directed edge i->j.
+
+        See Also
+        --------
+        has_bidirected
+        has_undirected
+        has_any_edge
 
         Parameters
         ----------
-        TODO
+        i:
+            Node.
+        j:
+            Node.
 
         Examples
         --------
@@ -672,39 +678,66 @@ class AncestralGraph:
 
     def has_bidirected(self, i, j):
         """
-        TODO
+        Check if this graph has a bidirected edge between `i` and `j`.
+
+        See Also
+        --------
+        has_directed
+        has_undirected
+        has_any_edge
 
         Parameters
         ----------
-        TODO
+        i:
+            Node.
+        j:
+            Node.
 
         Examples
         --------
         TODO
         """
-        return tuple(sorted((i, j))) in self._bidirected
+        return frozenset({i, j}) in self._bidirected
 
     def has_undirected(self, i, j):
         """
-        TODO
+        Check if this graph has an undirected edge between `i` and `j`.
+
+        See Also
+        --------
+        has_directed
+        has_bidirected
+        has_any_edge
 
         Parameters
         ----------
-        TODO
+        i:
+            Node.
+        j:
+            Node.
 
         Examples
         --------
         TODO
         """
-        return tuple(sorted((i, j))) in self._undirected
+        return frozenset({i, j}) in self._undirected
 
     def has_any_edge(self, i, j):
         """
-        TODO
+        Check if i and j are adjacent in this graph.
+
+        See Also
+        --------
+        has_directed
+        has_bidirected
+        has_undirected
 
         Parameters
         ----------
-        TODO
+        i:
+            Node.
+        j:
+            Node.
 
         Examples
         --------
@@ -761,6 +794,10 @@ class AncestralGraph:
         ------
         List[Set[node]]
             Return the partition of nodes coming from the relation of reachability by bidirected edges.
+
+        Examples
+        --------
+        TODO
         """
         node_queue = self._nodes.copy()
         components = []
@@ -781,6 +818,10 @@ class AncestralGraph:
         ------
         Set[node]
             The district of node.
+
+        Examples
+        --------
+        TODO
         """
         return self._bidirected_reachable(node, set(), set())
 
@@ -888,14 +929,23 @@ class AncestralGraph:
 
     def is_imap(self, other, certify=False):
         """
-        TODO
+        Check if this graph is an IMAP of the `other` graph, i.e., all m-separation statements in this graph
+        are also m-separation statements in `other`.
 
         Parameters
         ----------
-        TODO
+        other:
+            Another DAG.
+        certify:
+            TODO
+
+        See Also
+        --------
+        is_minimal_imap
 
         Examples
         --------
+        >>> g = cd.AncestralGraph(arcs={(1, 2), (3, 2)})
         TODO
         """
         if not self.is_maximal():
@@ -1220,11 +1270,15 @@ class AncestralGraph:
     # === COMPARISON
     def markov_equivalent(self, other):
         """
-        TODO
+        Check if this graph is Markov equivalent to the graph `other`. Two graphs are Markov equivalent iff.
+        they have the same skeleton, same v-structures, and if whenever there is the same discriminating path for some
+        node in both graphs, the node is a collider on that path in one graph iff. it is a collider on that path in
+        the other graph.
 
         Parameters
         ----------
-        TODO
+        other:
+            Another AncestralGraph.
 
         Examples
         --------
@@ -1286,15 +1340,22 @@ class AncestralGraph:
 
     def shd_skeleton(self, other):
         """
-        TODO
+        Compute the structure Hamming distance between the skeleton of this graph and the skeleton of another graph.
 
         Parameters
         ----------
-        TODO
+        other:
+            the graph to which the SHD of the skeleton will be computed.
 
-        Examples
-        --------
-        TODO
+        Return
+        ------
+        int
+            The structural Hamming distance between :math:`G_1` and :math:`G_2` is the minimum number of arc additions,
+            deletions, and reversals required to transform :math:`G_1` into :math:`G_2` (and vice versa).
+
+        Example
+        -------
+        >>> TODO
         """
         return len(self.skeleton.symmetric_difference(other.skeleton))
 
@@ -1448,11 +1509,14 @@ class AncestralGraph:
         """
         Check whether A and B are m-separated given C, using the Bayes ball algorithm.
 
-        TODO
-
         Parameters
         ----------
-        TODO
+        A:
+            Set
+        B:
+            Set
+        C:
+            Set
 
         Examples
         --------

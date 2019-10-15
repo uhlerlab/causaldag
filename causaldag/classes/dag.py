@@ -731,15 +731,14 @@ class DAG:
 
     def local_markov_statements(self):
         """
-        TODO
-
-        Parameters
-        ----------
-        TODO
+        Return the local Markov statements of this DAG, i.e., those of the form `i` independent nondescendants(i) given
+        the parents of `i`.
 
         Examples
         --------
-        TODO
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> g.local_markov_statements()
+        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}
         """
         statements = set()
         for node in self._nodes:
@@ -750,29 +749,57 @@ class DAG:
 
     def is_imap(self, other):
         """
-        TODO
+        Check if this DAG is an IMAP of the `other` DAG, i.e., all d-separation statements in this graph
+        are also d-separation statements in `other`.
 
         Parameters
         ----------
-        TODO
+        other:
+            Another DAG.
+
+        See Also
+        --------
+        is_minimal_imap
 
         Examples
         --------
-        TODO
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> other = cd.DAG(arcs={(1, 2)})
+        >>> g.is_imap(other)
+        True
+        >>> other = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.is_imap(other)
+        False
         """
         return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
     def is_minimal_imap(self, other, certify=False, check_imap=True):
         """
-        TODO
+        Check if this DAG is a minimal IMAP of `other`, i.e., it is an IMAP and no proper subgraph of this DAG
+        is an IMAP of other. Deleting the arc i->j retains IMAPness when `i` is d-separated from `j` in `other`
+        given the parents of `j` besides `i` in this DAG.
 
         Parameters
         ----------
-        TODO
+        other:
+            Another DAG.
+        certify:
+            If True and this DAG is not an IMAP of other, return a certificate of non-minimality in the form
+            of an edge i->j that can be deleted while retaining IMAPness.
+        check_imap:
+            If True, first check whether this DAG is an IMAP of other, if False, this DAG is assumed to be an IMAP
+            of other.
+
+        See Also
+        --------
+        is_imap
 
         Examples
         --------
-        TODO
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> other = cd.DAG(arcs={(1, 2)})
+        >>> g.is_minimal_imap(other)
+        False
         """
         if check_imap and not self.is_imap(other):
             if certify: return False, None
@@ -791,7 +818,7 @@ class DAG:
 
     def downstream(self, node):
         """
-        Return the nodes downstream of node
+        Return the nodes downstream of node.
 
         Parameters
         ----------
