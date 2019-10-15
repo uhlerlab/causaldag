@@ -99,14 +99,22 @@ class AncestralGraph:
 
     def induced_subgraph(self, nodes):
         """
-        TODO
+        Return the induced subgraph over only `nodes`
 
         Parameters
         ----------
-        TODO
+        nodes:
+            Set of nodes for the induced subgraph.
+
+        Returns
+        -------
+        g:
+            Induced subgraph over `nodes`.
 
         Examples
         --------
+        >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
+        >>> g.induced_subgraph()
         TODO
         """
         new_directed = {(i, j) for i, j in self._directed if i in nodes and j in nodes}
@@ -927,7 +935,7 @@ class AncestralGraph:
                 statements.add((i, j, frozenset(self.ancestors_of(i) | self.ancestors_of(j) - {i, j})))
         return statements
 
-    def is_imap(self, other, certify=False):
+    def is_imap(self, other, certify: bool=False) -> bool:
         """
         Check if this graph is an IMAP of the `other` graph, i.e., all m-separation statements in this graph
         are also m-separation statements in `other`.
@@ -970,7 +978,7 @@ class AncestralGraph:
     #     else:
     #         return res, certificate
 
-    def is_minimal_imap(self, other, certify=False, check_imap=True):
+    def is_minimal_imap(self, other, certify: bool=False, check_imap=True) -> bool:
         """
         TODO
 
@@ -1099,7 +1107,7 @@ class AncestralGraph:
         if certify: return True, None
         else: return True
 
-    def markov_blanket(self, node, flat=False):
+    def markov_blanket(self, node, flat: bool=False) -> set:
         """
         Return the Markov blanket of a node with respect to the whole graph.
 
@@ -1268,7 +1276,7 @@ class AncestralGraph:
         return AncestralGraph(set(range(p)), directed, bidirected, undirected)
 
     # === COMPARISON
-    def markov_equivalent(self, other):
+    def markov_equivalent(self, other) -> bool:
         """
         Check if this graph is Markov equivalent to the graph `other`. Two graphs are Markov equivalent iff.
         they have the same skeleton, same v-structures, and if whenever there is the same discriminating path for some
@@ -1338,7 +1346,7 @@ class AncestralGraph:
 
         return mags
 
-    def shd_skeleton(self, other):
+    def shd_skeleton(self, other) -> int:
         """
         Compute the structure Hamming distance between the skeleton of this graph and the skeleton of another graph.
 
@@ -1407,7 +1415,10 @@ class AncestralGraph:
 
         Parameters
         ----------
-        strict: If True, check discriminating path condition. Otherwise, check only equality of parents and spouses.
+        verbose:
+            If True, print each possible mark change and which condition it fails, if any.
+        strict:
+            If True, check discriminating path condition. Otherwise, check only equality of parents and spouses.
 
         Return
         ------
@@ -1505,7 +1516,7 @@ class AncestralGraph:
 
             return mark_changes_dir, mark_changes_bidir
 
-    def msep(self, A, B, C=set()):
+    def msep(self, A, B, C=set()) -> bool:
         """
         Check whether A and B are m-separated given C, using the Bayes ball algorithm.
 
@@ -1517,6 +1528,10 @@ class AncestralGraph:
             Set
         C:
             Set
+
+        See Also
+        --------
+        msep_from_given
 
         Examples
         --------
@@ -1565,16 +1580,23 @@ class AncestralGraph:
 
         return True
 
-    def msep_from_given(self, A, C=set()):
+    def msep_from_given(self, A, C=set()) -> set:
         """
-        Find all nodes m-seperated from A given C.
+        Find all nodes m-separated from A given C.
 
         Uses algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990).
         Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
 
         Parameters
         ----------
-        TODO
+        A:
+            Set
+        B:
+            Set
+
+        See Also
+        --------
+        msep
 
         Examples
         --------

@@ -7,7 +7,7 @@ import numpy as np
 import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
-from typing import Set
+from typing import Set, Union, Tuple, Any
 import networkx as nx
 import random
 
@@ -712,13 +712,14 @@ class DAG:
 
     def markov_equivalent(self, other, interventions=None) -> bool:
         """
-        Check if this DAG is (interventionally) Markov equivalent to some other DAG
-
-        TODO
+        Check if this DAG is (interventionally) Markov equivalent to some other DAG.
 
         Parameters
         ----------
-        TODO
+        other:
+            Another DAG.
+        interventions:
+            TODO
 
         Examples
         --------
@@ -729,7 +730,7 @@ class DAG:
         else:
             return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
 
-    def local_markov_statements(self):
+    def local_markov_statements(self) -> Set[Tuple[Any, Set, Set]]:
         """
         Return the local Markov statements of this DAG, i.e., those of the form `i` independent nondescendants(i) given
         the parents of `i`.
@@ -747,7 +748,7 @@ class DAG:
             statements.add((node, frozenset(nondescendants), frozenset(parents)))
         return statements
 
-    def is_imap(self, other):
+    def is_imap(self, other) -> bool:
         """
         Check if this DAG is an IMAP of the `other` DAG, i.e., all d-separation statements in this graph
         are also d-separation statements in `other`.
@@ -773,7 +774,7 @@ class DAG:
         """
         return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
 
-    def is_minimal_imap(self, other, certify=False, check_imap=True):
+    def is_minimal_imap(self, other, certify=False, check_imap=True) -> Union[bool, Tuple[bool, Any]]:
         """
         Check if this DAG is a minimal IMAP of `other`, i.e., it is an IMAP and no proper subgraph of this DAG
         is an IMAP of other. Deleting the arc i->j retains IMAPness when `i` is d-separated from `j` in `other`
@@ -1265,7 +1266,7 @@ class DAG:
         return g
 
     @classmethod
-    def from_nx(cls, nx_graph):
+    def from_nx(cls, nx_graph: nx.DiGraph):
         """
         Convert a networkx DiGraph into a DAG.
 
@@ -1281,7 +1282,7 @@ class DAG:
         """
         return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
 
-    def to_nx(self):
+    def to_nx(self) -> nx.DiGraph:
         """
         Convert DAG to a networkx DiGraph.
 
@@ -1296,7 +1297,8 @@ class DAG:
         return g
 
     def to_amat(self, node_list=None) -> (np.ndarray, list):
-        """Return an adjacency matrix for DAG
+        """
+        Return an adjacency matrix for DAG.
 
         Parameters
         ----------
@@ -1344,7 +1346,14 @@ class DAG:
 
         Returns
         -------
+        g:
+            Induced subgraph over `nodes`.
 
+        Examples
+        --------
+        >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})
+        >>> d.induced_subgraph({1, 2, 3})
+        TODO
         """
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
@@ -1606,7 +1615,7 @@ class DAG:
         raise NotImplementedError()
 
     # === SEPARATIONS
-    def dsep(self, A, B, C=set(), verbose=False, certify=False):
+    def dsep(self, A, B, C=set(), verbose=False, certify=False) -> bool:
         """
         Check if A and B are d-separated given C, using the Bayes ball algorithm.
 
@@ -1682,7 +1691,7 @@ class DAG:
 
         return True
 
-    def is_invariant(self, A, intervened_nodes, cond_set=set(), verbose=False):
+    def is_invariant(self, A, intervened_nodes, cond_set=set(), verbose=False) -> bool:
         """
         Check if the distribution of A given cond_set is invariant to an intervention on intervened_nodes.
 
@@ -1750,7 +1759,7 @@ class DAG:
 
         return True
 
-    def dsep_from_given(self, A, C=set()):
+    def dsep_from_given(self, A, C=set()) -> set:
         """
         Find all nodes d-separated from A given C .
 
