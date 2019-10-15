@@ -35,11 +35,33 @@ class GaussDAG(DAG):
             self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
 
     def to_dag(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return DAG(nodes=set(self._node_list), arcs=self.arcs)
 
     @classmethod
     def from_amat(cls, weight_mat, nodes=None, means=None, variances=None):
-        """Return a GaussDAG with arc weights specified by weight mat
+        """
+        Return a GaussDAG with arc weights specified by weight mat.
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         nodes = nodes if nodes is not None else list(range(weight_mat.shape[0]))
         arcs = {(i, j): w for (i, j), w in np.ndenumerate(weight_mat) if w != 0}
@@ -47,7 +69,18 @@ class GaussDAG(DAG):
 
     @classmethod
     def from_precision(cls, precision_mat, node_order):
-        """Return a GaussDAG with the specified precision matrix and topological ordering of nodes
+        """
+        Return a GaussDAG with the specified precision matrix and topological ordering of nodes.
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         p = precision_mat.shape[0]
 
@@ -76,7 +109,18 @@ class GaussDAG(DAG):
         return GaussDAG.from_amat(amat, variances=variances)
 
     def set_arc_weight(self, i, j, val):
-        """Change the weight of the arc i->j to val
+        """
+        Change the weight of the arc i->j to val
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         self._weight_mat[self._node2ix[i], self._node2ix[j]] = val
         if val == 0 and (i, j) in self._arcs:
@@ -85,7 +129,18 @@ class GaussDAG(DAG):
             super().add_arc(i, j)
 
     def set_node_variance(self, i, var):
-        """Change the variance of node i to var
+        """
+        Change the variance of node i to var
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         self._variances[i] = var
 
@@ -121,6 +176,17 @@ class GaussDAG(DAG):
         return self._covariance/np.sqrt(np.diag(self._covariance))/np.sqrt(np.diag(self._covariance)).reshape([-1, 1])
 
     def partial_correlation(self, i, j, cond_set):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         if len(cond_set) == 0:
             return self.correlation[i, j]
         else:
@@ -128,30 +194,79 @@ class GaussDAG(DAG):
             return -theta[0, 1] / np.sqrt(theta[0, 0] * theta[1, 1])
 
     def add_arc(self, i, j, unsafe=False):
-        """Add an arc to the graph with weight 1
+        """
+        Add an arc to the graph with weight 1.
+
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         self.set_arc_weight(i, j, 1)
 
     def remove_arc(self, i, j, ignore_error=False):
-        """Remove an arc from the graph
+        """
+        Remove an arc from the graph
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         self.set_arc_weight(i, j, 0)
 
     def add_node(self, node):
-        """Add a node to the graph
+        """
+        Add a node to the graph
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         self._node_list.append(node)
         self._weight_mat = np.zeros((len(self._node_list), len(self._node_list)))
         self._weight_mat[:-1, :-1] = None
 
     def remove_node(self, node, ignore_error=False):
-        """Remove a node from the graph
+        """
+        Remove a node from the graph.
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         del self._node_list[self._node2ix[node]]
         self._weight_mat = self._weight_mat[np.ix_(self._node_list, self._node_list)]
         super().remove_node(node)
 
     def add_arcs_from(self, arcs, unsafe=False):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         for i, j in arcs:
             self.add_arc(i, j, unsafe=unsafe)
 
@@ -200,6 +315,17 @@ class GaussDAG(DAG):
         raise NotImplementedError
 
     def to_amat(self):
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         return self.weight_mat
 
     def cpdag(self):
@@ -237,7 +363,16 @@ class GaussDAG(DAG):
                 self._covariance = id_min_a_inv.T @ np.diag(self._variances) @ id_min_a_inv
 
     def sample(self, nsamples: int = 1) -> np.array:
-        """Return samples from the graph
+        """
+        Return `nsamples` samples from the graph
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
@@ -256,7 +391,8 @@ class GaussDAG(DAG):
         return samples
 
     def sample_interventional_perfect(self, interventions: PerfectIntervention, nsamples: int = 1) -> np.array:
-        """Return samples from the graph under a perfect intervention
+        """
+        Return `nsamples` samples from the graph under a perfect intervention
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
@@ -282,7 +418,8 @@ class GaussDAG(DAG):
         return samples
 
     def sample_interventional_soft(self, intervention: SoftIntervention, nsamples: int = 1) -> np.array:
-        """Return samples from the graph under a soft intervention
+        """
+        Return samples from the graph under a soft intervention
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
@@ -306,6 +443,17 @@ class GaussDAG(DAG):
         return samples
 
     def sample_interventional(self, intervention: Intervention, nsamples: int = 1) -> np.ndarray:
+        """
+        TODO
+
+        Parameters
+        ----------
+        TODO
+
+        Examples
+        --------
+        TODO
+        """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.random.normal(size=[nsamples, len(self._nodes)])
         noise = noise * np.array(self._variances)**.5 + self._means
