@@ -1,18 +1,20 @@
 import itertools as itr
 from ...classes import UndirectedGraph
 from ...utils.ci_tests import CI_Tester, gauss_ci_test
-from numpy import sqrt, log1p
+from numpy import sqrt, log1p, ndenumerate, errstate
 from scipy.special import erf
-import numpy as np
 
 
 def threshold_ug(nodes: set, ci_tester: CI_Tester) -> UndirectedGraph:
     """
-    TODO
+    Estimate an undirected graph by testing whether each pair of nodes is independent given all others.
 
     Parameters
     ----------
-    TODO
+    nodes:
+        Nodes in the graph.
+    ci_tester:
+        Conditional independence tester.
 
     Examples
     --------
@@ -26,11 +28,14 @@ def threshold_ug(nodes: set, ci_tester: CI_Tester) -> UndirectedGraph:
 
 def threshold_ug_gauss(ci_tester):
     """
-    TODO
+    Estimate an undirected graph by testing whether each pair of nodes is independent given all others,
+    which reduces to thresholding partial correlations (after the Fisher z-transform) for multivariate Gaussian
+    data.
 
     Parameters
     ----------
-    TODO
+    ci_tester:
+        Conditional independence tester.
 
     Examples
     --------
@@ -45,11 +50,16 @@ def threshold_ug_gauss(ci_tester):
     n = ci_tester.suffstat['n']
     p = ci_tester.suffstat['C'].shape[0]
     n_cond = p-2
-    statistic = sqrt(n - n_cond - 3) * abs(.5 * log1p(2*r/(1 - r)))
+
+    # note: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0
+    # r = 1 causes warnings but gives the correct answer
+    with errstate(divide='ignore', invalid='ignore'):
+        statistic = sqrt(n - n_cond - 3) * abs(.5 * log1p(2*r/(1 - r)))
+
     p_values = 1 - .5*(1 + erf(statistic/sqrt(2)))
     alpha = ci_tester.kwargs.get('alpha')
     alpha = alpha if alpha is not None else 1e-5
-    edges = {(i, j) for (i, j), p in np.ndenumerate(p_values) if p < alpha if i != j}
+    edges = {(i, j) for (i, j), p in ndenumerate(p_values) if p < alpha if i != j}
 
     return UndirectedGraph(set(range(p)), edges)
 

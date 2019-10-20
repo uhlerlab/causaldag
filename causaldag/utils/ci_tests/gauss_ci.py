@@ -1,7 +1,7 @@
 from typing import Dict
 from math import erf
 import numba
-from numpy import sqrt, log1p, abs, ix_, diag, corrcoef
+from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate
 from numpy.linalg import inv
 from . import MemoizedCI_Tester
 
@@ -95,7 +95,9 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
 
     # === COMPUTE STATISTIC AND P-VALUE
     # note: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0
-    statistic = sqrt(n - n_cond - 3) * abs(.5 * log1p(2*r/(1 - r))) if r != 1 else float('inf')
+    # r = 1 causes warnings but gives the correct answer
+    with errstate(divide='ignore', invalid='ignore'):
+        statistic = sqrt(n - n_cond - 3) * abs(.5 * log1p(2*r/(1 - r)))
     # note: erf is much faster than norm.cdf
     p_value = 2*(1 - .5*(1 + erf(statistic/sqrt(2))))
 
