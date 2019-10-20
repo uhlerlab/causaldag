@@ -707,8 +707,7 @@ class DAG:
         >>> g1.shd_skeleton(g2)
         1
         """
-        if isinstance(other, DAG):
-            return len(self.skeleton.symmetric_difference(other.skeleton))
+        return len(self.skeleton.symmetric_difference(other.skeleton))
 
     def markov_equivalent(self, other, interventions=None) -> bool:
         """

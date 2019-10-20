@@ -601,6 +601,9 @@ class PDAG:
         }
         return nadditions + ndeletions + len(diff_type)
 
+    def shd_skeleton(self, other) -> int:
+        return len(self.skeleton.symmetric_difference(other.skeleton))
+
 
 if __name__ == '__main__':
     from causaldag.rand import directed_erdos

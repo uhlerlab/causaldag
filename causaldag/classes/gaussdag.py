@@ -340,8 +340,8 @@ class GaussDAG(DAG):
     def frontdoor(self, i, j):
         return super().frontdoor(i, j)
 
-    def dsep(self, i, j, c=None):
-        return super().dsep(i, j, c=c)
+    def dsep(self, i, j, C=None, verbose=False, certify=False):
+        return super().dsep(i, j, C=C, verbose=verbose, certify=certify)
 
     def _ensure_precision(self):
         if self._precision is None:
