@@ -36,6 +36,61 @@ def gauss_ci_suffstat(samples, invert=True):
     return dict(C=C, n=n)
 
 
+def compute_partial_correlation(suffstat, i, j, cond_set=None):
+    """
+    Compute the partial correlation between i and j given C
+
+    Parameters
+    ----------
+    suffstat:
+        dictionary containing:
+        'n' -- number of samples
+        'C' -- correlation matrix
+        'K' (optional) -- inverse correlation matrix
+        'rho' (optional) -- partial correlation matrix (K, normalized so diagonals are 1).
+    i:
+        position of first variable in correlation matrix.
+    j:
+        position of second variable in correlation matrix.
+    cond_set:
+        positions of conditioning set in correlation matrix.
+
+    Return
+    ------
+    partial correlation
+    """
+    C = suffstat.get('C')
+    p = C.shape[0]
+    rho = suffstat.get('rho')
+    K = suffstat.get('K')
+
+    # === COMPUTE PARTIAL CORRELATION
+    # partial correlation is correlation if there is no conditioning
+    if cond_set is None or len(cond_set) == 0:
+        r = C[i, j]
+    # used closed-form
+    elif len(cond_set) == 1:
+        k = list(cond_set)[0]
+        r = (C[i, j] - C[i, k]*C[j, k]) / sqrt((1 - C[j, k]**2) * (1 - C[i, k]**2))
+    # when conditioning on everything, partial correlation comes from normalized precision matrix
+    elif len(cond_set) == p - 2 and rho is not None:
+        r = -rho[i, j]
+    # faster to use Schur complement if conditioning set is large and precision matrix is pre-computed
+    elif len(cond_set) >= p/2 and K is not None:
+        rest = list(set(range(C.shape[0])) - {i, j, *cond_set})
+
+        if len(rest) == 1:
+            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ K[ix_(rest, [i, j])] / K[rest[0], rest[0]]
+        else:
+            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ numba_inv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]  # TODO: what to do if not invertible?
+        r = -theta_ij[0, 1] / sqrt(theta_ij[0, 0] * theta_ij[1, 1])
+    else:
+        theta = numba_inv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])  # TODO: what to do if not invertible?
+        r = -theta[0, 1]/sqrt(theta[0, 0] * theta[1, 1])
+
+    return r
+
+
 def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
     Test the null hypothesis that i and j are conditionally independent given cond_set via Fisher's z-transform.
@@ -62,36 +117,10 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     dictionary containing statistic, p_value, and reject.
     """
     n = suffstat['n']
-    C = suffstat.get('C')
-    p = C.shape[0]
-    rho = suffstat.get('rho')
-    K = suffstat.get('K')
     n_cond = 0 if cond_set is None else len(cond_set)
     alpha = 1/n if alpha is None else alpha
 
-    # === COMPUTE PARTIAL CORRELATION
-    # partial correlation is correlation if there is no conditioning
-    if cond_set is None or len(cond_set) == 0:
-        r = C[i, j]
-    # used closed-form
-    elif len(cond_set) == 1:
-        k = list(cond_set)[0]
-        r = (C[i, j] - C[i, k]*C[j, k]) / sqrt((1 - C[j, k]**2) * (1 - C[i, k]**2))
-    # when conditioning on everything, partial correlation comes from normalized precision matrix
-    elif len(cond_set) == p - 2 and rho is not None:
-        r = -rho[i, j]
-    # faster to use Schur complement if conditioning set is large and precision matrix is pre-computed
-    elif len(cond_set) >= p/2 and K is not None:
-        rest = list(set(range(C.shape[0])) - {i, j, *cond_set})
-
-        if len(rest) == 1:
-            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ K[ix_(rest, [i, j])] / K[rest[0], rest[0]]
-        else:
-            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ numba_inv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]  # TODO: what to do if not invertible?
-        r = -theta_ij[0, 1] / sqrt(theta_ij[0, 0] * theta_ij[1, 1])
-    else:
-        theta = numba_inv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])  # TODO: what to do if not invertible?
-        r = -theta[0, 1]/sqrt(theta[0, 0] * theta[1, 1])
+    r = compute_partial_correlation(suffstat, i, j, cond_set=cond_set)
 
     # === COMPUTE STATISTIC AND P-VALUE
     # note: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0
