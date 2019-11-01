@@ -287,7 +287,7 @@ def gsp(
 
     See Also
     --------
-    igsp, unknown_target_igsp
+    pcalg, igsp, unknown_target_igsp
 
     Return
     ------

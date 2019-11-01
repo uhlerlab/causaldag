@@ -90,6 +90,22 @@ class PDAG:
         return set(self._nodes)
 
     @property
+    def nnodes(self):
+        return len(self._nodes)
+
+    @property
+    def num_arcs(self):
+        return len(self._arcs)
+
+    @property
+    def num_edges(self):
+        return len(self._edges)
+
+    @property
+    def num_adjacencies(self):
+        return self.num_arcs + self.num_edges
+
+    @property
     def arcs(self):
         return set(self._arcs)
 
@@ -484,6 +500,17 @@ class PDAG:
         return {node2: self.neighbors[node2] - {node} == self.neighbors[node] for node2 in self._nodes}
 
     def to_dag(self):
+        """
+        Return a DAG that is consistent with this CPDAG.
+
+        Returns
+        -------
+        d
+
+        Examples
+        --------
+        TODO
+        """
         from causaldag import DAG
 
         pdag2 = self.copy()
@@ -494,7 +521,7 @@ class PDAG:
                 (pdag2._neighbors[n] - {u_nbr}).issubset(pdag2._neighbors[u_nbr])
                 for u_nbr in pdag2._undirected_neighbors[n]
             )
-            sink = next(n for n in pdag2._nodes if is_sink(n) and no_vstructs(n))
+            sink = next((n for n in pdag2._nodes if is_sink(n) and no_vstructs(n)), None)
             if sink is None:
                 break
             arcs.update((nbr, sink) for nbr in pdag2._neighbors[sink])

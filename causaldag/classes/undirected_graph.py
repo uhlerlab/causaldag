@@ -25,6 +25,10 @@ class UndirectedGraph:
     def num_nodes(self):
         return len(self._nodes)
 
+    @property
+    def num_edges(self):
+        return len(self._edges)
+
     def to_amat(self, sparse=False):
         """
         TODO
