@@ -21,26 +21,27 @@ class UndirectedGraph:
     def __eq__(self, other):
         return self._nodes == other._nodes and self._edges == other._edges
 
-    @property
-    def num_nodes(self):
-        return len(self._nodes)
-
-    @property
-    def num_edges(self):
-        return len(self._edges)
-
-    def to_amat(self, sparse=False):
+    def to_amat(self, node_list=None, sparse=False) -> np.ndarray:
         """
-        TODO
+        Return an adjacency matrix for this undirected graph.
 
         Parameters
         ----------
-        TODO
+        node_list:
+            List indexing the rows/columns of the matrix.
+
+        Return
+        ------
+        amat
 
         Examples
         --------
         TODO
         """
+        if not node_list:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
         if sparse:
             raise NotImplementedError
             # js, ks = [], []
@@ -51,29 +52,44 @@ class UndirectedGraph:
             #     ks.append(j)
             # return spmatrix(1, js, ks)
         amat = np.zeros([self.num_nodes, self.num_nodes], dtype=int)
+
         for i, j in self._edges:
-            amat[i, j] = True
-            amat[j, i] = True
+            amat[node2ix[i], node2ix[j]] = True
+            amat[node2ix[j], node2ix[i]] = True
         return amat
 
     @classmethod
     def from_amat(self, amat):
         """
-        TODO
+        Return an undirected graph with edges given by amat, i.e. i-j if amat[i,j] != 0
 
         Parameters
         ----------
-        TODO
+        amat:
+            Numpy matrix representing edges in the undirected graph.
 
         Examples
         --------
+        >>> amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])
+        >>> cd.UndirectedGraph.from_amat(amat)
         TODO
         """
         edges = {(i, j) for (i, j), val in np.ndenumerate(amat) if val != 0}
         return UndirectedGraph(nodes=set(range(amat.shape[0])), edges=edges)
 
     def copy(self, new=True):
+        """
+        Return a copy of this undirected graph.
+        """
         return UndirectedGraph(self._nodes, self._edges)
+
+    @property
+    def num_nodes(self) -> int:
+        return len(self._nodes)
+
+    @property
+    def num_edges(self) -> int:
+        return len(self._edges)
 
     @property
     def degrees(self):
@@ -84,24 +100,27 @@ class UndirectedGraph:
         return {node: self._neighbors[node] for node in self._nodes}
 
     @property
-    def edges(self):
+    def edges(self) -> set:
         return self._edges.copy()
 
     @property
-    def nodes(self):
+    def nodes(self) -> set:
         return self._nodes.copy()
 
     @property
-    def skeleton(self):
+    def skeleton(self) -> set:
         return self.edges
 
-    def has_edge(self, i, j):
+    def has_edge(self, i, j) -> bool:
         """
-        TODO
+        Check if the undirected graph has an edge.
 
         Parameters
         ----------
-        TODO
+        i:
+            first endpoint of edge.
+        j:
+            second endpoint of edge.
 
         Examples
         --------
@@ -109,13 +128,13 @@ class UndirectedGraph:
         """
         return frozenset({i, j}) in self._edges
 
-    def neighbors_of(self, node):
+    def neighbors_of(self, node) -> set:
         """
-        TODO
+        Return the neighbors of a node.
 
         Parameters
         ----------
-        TODO
+        node
 
         Examples
         --------
@@ -126,11 +145,19 @@ class UndirectedGraph:
     # === MUTATORS ===
     def add_edge(self, i, j):
         """
-        TODO
+        Add an edge.
 
         Parameters
         ----------
-        TODO
+        i:
+            first endpoint of edge to be added.
+        j:
+            second endpoint of edge to be added.
+
+        See Also
+        --------
+        add_edges_from
+        delete_edge
 
         Examples
         --------
@@ -145,11 +172,17 @@ class UndirectedGraph:
 
     def add_edges_from(self, edges):
         """
-        TODO
+        Add a set of edges.
 
         Parameters
         ----------
-        TODO
+        edges:
+            Edges to be added.
+
+        See Also
+        --------
+        add_edge
+        delete_edges_from
 
         Examples
         --------
@@ -160,11 +193,17 @@ class UndirectedGraph:
 
     def delete_edges_from(self, edges):
         """
-        TODO
+        Delete a set of edges.
 
         Parameters
         ----------
-        TODO
+        edges:
+            Edges to be deleted.
+
+        See Also
+        --------
+        add_edges_from
+        delete_edge
 
         Examples
         --------
@@ -175,11 +214,19 @@ class UndirectedGraph:
 
     def delete_edge(self, i, j):
         """
-        TODO
+        Delete an edge.
 
         Parameters
         ----------
-        TODO
+        i:
+            first endpoint of edge to be deleted.
+        j:
+            second endpoint of edge to be deleted.
+
+        See Also
+        --------
+        add_edge
+        delete_edges_from
 
         Examples
         --------
@@ -193,7 +240,7 @@ class UndirectedGraph:
 
     def delete_node(self, i):
         """
-        TODO
+        Delete a node.
 
         Parameters
         ----------

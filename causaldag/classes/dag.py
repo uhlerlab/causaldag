@@ -72,6 +72,11 @@ class DAG:
         """
         Return a DAG with arcs given by amat, i.e. i->j if amat[i,j] != 0
 
+        Parameters
+        ----------
+        amat:
+            Numpy matrix representing arcs in the DAG.
+
         Examples
         --------
         >>> amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])
@@ -95,19 +100,19 @@ class DAG:
 
     # === PROPERTIES
     @property
-    def nodes(self):
+    def nodes(self) -> set:
         return set(self._nodes)
 
     @property
-    def nnodes(self):
+    def nnodes(self) -> int:
         return len(self._nodes)
 
     @property
-    def arcs(self):
+    def arcs(self) -> set:
         return set(self._arcs)
 
     @property
-    def num_arcs(self):
+    def num_arcs(self) -> int:
         return len(self._arcs)
 
     @property
@@ -135,11 +140,11 @@ class DAG:
         return {node: len(self._children[node]) for node in self._nodes}
 
     @property
-    def max_in_degree(self):
+    def max_in_degree(self) -> int:
         return max(len(self._parents[node]) for node in self._nodes)
 
     @property
-    def max_out_degree(self):
+    def max_out_degree(self) -> int:
         return max(len(self._parents[node]) for node in self._nodes)
 
     @property
@@ -147,13 +152,17 @@ class DAG:
         p = len(self._nodes)
         return len(self._arcs) / p / (p-1) * 2
 
-    def parents_of(self, node):
+    def parents_of(self, node) -> set:
         """
-        TODO
+        Return all nodes that are parents of `node`.
 
         Parameters
         ----------
-        TODO
+        node
+
+        See Also
+        --------
+        children_of, neighbors_of, markov_blanket
 
         Examples
         --------
@@ -161,13 +170,17 @@ class DAG:
         """
         return self._parents[node].copy()
 
-    def children_of(self, node):
+    def children_of(self, node) -> set:
         """
-        TODO
+        Return all nodes that are children of `node`.
 
         Parameters
         ----------
         TODO
+
+        See Also
+        --------
+        parents_of, neighbors_of, markov_blanket
 
         Examples
         --------
@@ -175,7 +188,7 @@ class DAG:
         """
         return self._children[node].copy()
 
-    def neighbors_of(self, node):
+    def neighbors_of(self, node) -> set:
         """
         Return all nodes that are adjacent to `node`.
 
@@ -183,19 +196,26 @@ class DAG:
         ----------
         TODO
 
+        See Also
+        --------
+        parents_of, children_of, markov_blanket
+
         Examples
         --------
         TODO
         """
         return self._neighbors[node].copy()
 
-    def has_arc(self, source, target):
+    def has_arc(self, source, target) -> bool:
         """
-        TODO
+        Check if this DAG has an arc.
 
         Parameters
         ----------
-        TODO
+        source:
+            Source node of arc.
+        target:
+            Target node of arc.
 
         Examples
         --------
@@ -203,7 +223,7 @@ class DAG:
         """
         return (source, target) in self._arcs
 
-    def is_upstream_of(self, anc, desc):
+    def is_upstream_of(self, anc, desc) -> bool:
         """Check if `anc` is upstream from `desc`
 
         Return
@@ -498,7 +518,7 @@ class DAG:
                 raise e
 
     # === GRAPH PROPERTIES
-    def sources(self):
+    def sources(self) -> set:
         """
         Get all nodes in the graph that have no parents
 
@@ -515,7 +535,7 @@ class DAG:
         """
         return {node for node in self._nodes if len(self._parents[node]) == 0}
 
-    def sinks(self):
+    def sinks(self) -> set:
         """
         Get all nodes in the graph that have no children
 
@@ -629,6 +649,10 @@ class DAG:
         ----------
         node:
             Node whose Markov blanket to return.
+
+        See Also
+        --------
+        parents_of, children_of, neighbors_of
 
         Returns
         -------
@@ -816,7 +840,7 @@ class DAG:
                 downstream.add(child)
                 self._add_downstream(downstream, child)
 
-    def downstream(self, node):
+    def downstream(self, node) -> set:
         """
         Return the nodes downstream of node.
 
@@ -850,7 +874,7 @@ class DAG:
                 upstream.add(parent)
                 self._add_upstream(upstream, parent)
 
-    def upstream(self, node):
+    def upstream(self, node) -> set:
         """
         Return the nodes upstream of node
 
@@ -878,7 +902,7 @@ class DAG:
         self._add_upstream(upstream, node)
         return upstream
 
-    def incident_arcs(self, node):
+    def incident_arcs(self, node) -> set:
         """
         Return all arcs adjacent to node
 
@@ -909,7 +933,7 @@ class DAG:
             incident_arcs.add((parent, node))
         return incident_arcs
 
-    def incoming_arcs(self, node):
+    def incoming_arcs(self, node) -> set:
         """
         Return all arcs with target node
 
@@ -938,7 +962,7 @@ class DAG:
             incoming_arcs.add((parent, node))
         return incoming_arcs
 
-    def outgoing_arcs(self, node):
+    def outgoing_arcs(self, node) -> set:
         """
         Return all arcs with source node
 
@@ -967,7 +991,7 @@ class DAG:
             outgoing_arcs.add((node, child))
         return outgoing_arcs
 
-    def outdegree(self, node):
+    def outdegree(self, node) -> int:
         """
         Return the outdegree of node
 
@@ -995,7 +1019,7 @@ class DAG:
         """
         return len(self._children[node])
 
-    def indegree(self, node):
+    def indegree(self, node) -> int:
         """
         Return the indegree of node
 
@@ -1297,7 +1321,7 @@ class DAG:
 
     def to_amat(self, node_list=None) -> (np.ndarray, list):
         """
-        Return an adjacency matrix for DAG.
+        Return an adjacency matrix for this DAG.
 
         Parameters
         ----------
