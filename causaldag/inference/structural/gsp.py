@@ -16,7 +16,13 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
 
     Parameters
     ----------
-    TODO
+    perm
+    ci_tester
+    verbose
+    fixed_adjacencies
+    fixed_gaps
+    node2nbrs
+    older
 
     Examples
     --------

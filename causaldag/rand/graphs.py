@@ -7,7 +7,9 @@ def _coin(p, size=1):
     return np.random.binomial(1, p, size=size)
 
 
-def unif_away_zero(low=.25, high=1, size=1):
+def unif_away_zero(low=.25, high=1, size=1, all_positive=False):
+    if all_positive:
+        return np.random.uniform(low, high, size=size)
     return (_coin(.5, size) - .5)*2 * np.random.uniform(low, high, size=size)
 
 

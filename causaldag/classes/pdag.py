@@ -177,7 +177,7 @@ class PDAG:
     def has_edge(self, i, j):
         """Return True if the graph contains the edge i--j
         """
-        return (i, j) in self._edges or (j, i) in self._edges
+        return frozenset({i, j}) in self._edges
 
     def has_arc(self, i, j):
         """Return True if the graph contains the arc i->j"""
@@ -258,7 +258,7 @@ class PDAG:
     def _add_edge(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)
-        self._edges.add(tuple(sorted((i, j))))
+        self._edges.add(frozenset({i, j}))
 
         self._neighbors[i].add(j)
         self._neighbors[j].add(i)
@@ -268,7 +268,7 @@ class PDAG:
 
     def remove_edge(self, i, j, ignore_error=False):
         try:
-            self._edges.remove(tuple(sorted((i, j))))
+            self._edges.remove(frozenset({i, j}))
             self._neighbors[i].remove(j)
             self._neighbors[j].remove(i)
             self._undirected_neighbors[i].remove(j)
@@ -284,7 +284,7 @@ class PDAG:
         """
         self._nodes.remove(node)
         self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
-        self._edges = {(i, j) for i, j in self._edges if i != node and j != node}
+        self._edges = {frozenset({i, j}) for i, j in self._edges if i != node and j != node}
         for child in self._children[node]:
             self._parents[child].remove(node)
             self._neighbors[child].remove(node)
@@ -310,7 +310,7 @@ class PDAG:
 
     def _replace_arc_with_edge(self, arc):
         self._arcs.remove(arc)
-        self._edges.add(tuple(sorted(arc)))
+        self._edges.add(frozenset({*arc}))
         i, j = arc
         self._parents[j].remove(i)
         self._children[i].remove(j)
@@ -318,7 +318,7 @@ class PDAG:
         self._undirected_neighbors[j].add(i)
 
     def _replace_edge_with_arc(self, arc):
-        self._edges.remove(tuple(sorted(arc)))
+        self._edges.remove(frozenset({*arc}))
         self._arcs.add(arc)
         i, j = arc
         self._parents[j].add(i)
@@ -333,18 +333,22 @@ class PDAG:
             self._replace_edge_with_arc((node, c))
         self.to_complete_pdag(verbose=verbose)
 
-    def to_complete_pdag(self, verbose=False):
+    def to_complete_pdag(self, verbose=False, solve_conflict=False):
         """
         Replace with arcs those edges whose orientations can be determined by Meek rules:
         =====
         See Koller & Friedman, Algorithm 3.5
 
         """
+        if solve_conflict:
+            raise NotImplementedError
+
         PROTECTED = 'P'  # indicates that some configuration definitely exists to protect the edge
         UNDECIDED = 'U'  # indicates that some configuration exists that could protect the edge
         NOT_PROTECTED = 'N'  # indicates no possible configuration that could protect the edge
 
-        undecided_arcs = self._edges.copy() | {(j, i) for i, j in self._edges}
+        edges1 = {(i, j) for i, j in self._edges}
+        undecided_arcs = edges1 | {(j, i) for i, j in edges1}
         arc_flags = {arc: PROTECTED for arc in self._arcs}
         arc_flags.update({arc: UNDECIDED for arc in undecided_arcs})
 
@@ -354,42 +358,52 @@ class PDAG:
                 flag = NOT_PROTECTED
 
                 # check configuration (a) -- causal chain
+                s = ''
                 for k in self._parents[i]:
                     if not self.has_edge_or_arc(k, j):
                         if arc_flags[(k, i)] == PROTECTED:
                             flag = PROTECTED
+                            s = f': {k}->{i}-{j}'
                             break
                         else:
                             flag = UNDECIDED
-                if verbose: print('{edge} marked {flag} by (a)'.format(edge=arc, flag=flag))
+                if verbose: print(f'{arc} marked {flag} by (a){s}')
 
                 # check configuration (b) -- acyclicity
+                s = ''
                 if flag != PROTECTED:
                     for k in self._parents[j]:
                         if i in self._parents[k]:
                             if arc_flags[(i, k)] == PROTECTED and arc_flags[(k, j)] == PROTECTED:
                                 flag = PROTECTED
+                                s = f': {k}->{j}-{i}->{k}'
                                 break
                             else:
                                 flag = UNDECIDED
-                    if verbose: print('{edge} marked {flag} by (b)'.format(edge=arc, flag=flag))
+                    if verbose: print(f'{arc} marked {flag} by (b){s}')
 
                 # check configuration (d)
+                s = ''
                 if flag != PROTECTED:
                     for k1, k2 in itr.combinations(self._parents[j], 2):
                         if self.has_edge(i, k1) and self.has_edge(i, k2) and not self.has_edge_or_arc(k1, k2):
                             if arc_flags[(k1, j)] == PROTECTED and arc_flags[(k2, j)] == PROTECTED:
                                 flag = PROTECTED
+                                s = f': {i}-{k1}->{j}<-{k2}-{i}'
                                 break
                             else:
                                 flag = UNDECIDED
-                    if verbose: print('{edge} marked {flag} by (c)'.format(edge=arc, flag=flag))
+                    if verbose: print(f'{arc} marked {flag} by (c){s}')
 
                 arc_flags[arc] = flag
 
             if all(arc_flags[arc] == NOT_PROTECTED for arc in undecided_arcs): break
+
             for arc in undecided_arcs.copy():
                 if arc_flags[arc] == PROTECTED:
+                    if not solve_conflict:
+                        if self.has_arc(arc[1], arc[0]):  # arc has already been oriented the opposite way
+                            continue
                     undecided_arcs.remove(arc)
                     undecided_arcs.remove((arc[1], arc[0]))
                     self._replace_edge_with_arc(arc)
@@ -460,7 +474,7 @@ class PDAG:
         if (i, j) in self._known_arcs:
             return
         self._known_arcs.add((i, j))
-        self._edges.remove(tuple(sorted((i, j))))
+        self._edges.remove(frozenset({i, j}))
         self.remove_unprotected_orientations()
 
     def add_known_arcs(self, arcs):
@@ -535,14 +549,11 @@ class PDAG:
         """
         raise NotImplementedError
 
-        nnodes = len(self._nodes)
-        n_edges = len(self._edges)
-
-        if len(self._arcs) != 0:
+        if self.num_arcs != 0:
             pass
-        elif n_edges == nnodes - 1:
+        elif self.num_edges == nnodes - 1:
             return nnodes
-        elif n_edges == nnodes*(nnodes-1)/2:
+        elif self.num_edges == nnodes*(nnodes-1)/2:
             return factorial(nnodes)
         else:
             pass
@@ -616,17 +627,17 @@ class PDAG:
     def shd(self, other):
         """Return the structural Hamming distance between this PDAG and another
         """
-        self_undirected = {tuple(sorted(arc)) for arc in self._arcs} | self._edges
-        other_undirected = {tuple(sorted(arc)) for arc in other._arcs} | other._edges
-        nadditions = len(self_undirected - other_undirected)
-        ndeletions = len(other_undirected - self_undirected)
+        self_undirected = {frozenset({*arc}) for arc in self._arcs} | self._edges
+        other_undirected = {frozenset({*arc}) for arc in other._arcs} | other._edges
+        num_additions = len(self_undirected - other_undirected)
+        num_deletions = len(other_undirected - self_undirected)
         diff_type = {
             (i, j) for i, j in self_undirected & other_undirected
             if ((i, j) in self._arcs and (i, j) not in other._arcs) or
                ((j, i) in self._arcs and (j, i) not in other._arcs) or
                ((i, j) in self._edges and (i, j) not in other._edges)
         }
-        return nadditions + ndeletions + len(diff_type)
+        return num_additions + num_deletions + len(diff_type)
 
     def shd_skeleton(self, other) -> int:
         return len(self.skeleton.symmetric_difference(other.skeleton))

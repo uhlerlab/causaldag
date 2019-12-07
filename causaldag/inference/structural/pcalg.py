@@ -4,7 +4,7 @@ from causaldag.utils.ci_tests import CI_Tester
 import itertools as itr
 
 
-def skeleton(nodes, ci_tester: CI_Tester, verbose=False):
+def skeleton(nodes: set, ci_tester: CI_Tester, max_cond_set: int=None, verbose=False):
     """
     Estimate the skeleton of an underlying DAG using the order-independent skeleton estimation method of
     Colombo and Maathius (2014).
@@ -16,6 +16,8 @@ def skeleton(nodes, ci_tester: CI_Tester, verbose=False):
     ci_tester:
         A conditional independence tester, which has a method is_ci taking two sets A and B, and a conditioning set C,
         and returns True/False.
+    max_cond_set:
+        Maximum size of conditioning set tested to separate nodes.
     verbose:
         If True, print edges as they are removed, along with the separating set responsible for removing them.
 
@@ -30,7 +32,8 @@ def skeleton(nodes, ci_tester: CI_Tester, verbose=False):
     nnodes = len(nodes)
     ug = UndirectedGraph(edges=set(itr.combinations(nodes, 2)))
     sepset = {}
-    for c_size in range(nnodes-1):
+    max_cond_set = max_cond_set if max_cond_set is not None else nnodes-2
+    for c_size in range(max_cond_set+1):
         adjacencies = ug.neighbors
         for i, j in itr.permutations(nodes, 2):
             if ug.has_edge(i, j) and len(adjacencies[i] - {j}) >= c_size:
@@ -43,7 +46,15 @@ def skeleton(nodes, ci_tester: CI_Tester, verbose=False):
     return ug, sepset
 
 
-def pcalg(nodes, ci_tester: CI_Tester=None, skel=None, sepset=None, verbose=False):
+def pcalg(
+        nodes,
+        ci_tester: CI_Tester=None,
+        skel=None,
+        sepset=None,
+        solve_conflict: bool=False,
+        max_cond_set: int=None,
+        verbose: bool=False
+):
     """
     Use the PC (Peters-Clark) algorithm to estimate the Markov equivalence class of the data-generating DAG.
 
@@ -58,6 +69,9 @@ def pcalg(nodes, ci_tester: CI_Tester=None, skel=None, sepset=None, verbose=Fals
         An estimated skeleton. If not provided, uses the `skeleton` method to estimate.
     sepset:
         The separating sets for non-adjacent nodes in the estimated skeleton.
+    solve_conflict:
+        If False, any disagreements on v-structures are simply overwritten. If True, allow both orientations
+        (represented by a bidirected edge).
     verbose:
         If True, print decisions made by the algorithm.
 
@@ -69,11 +83,13 @@ def pcalg(nodes, ci_tester: CI_Tester=None, skel=None, sepset=None, verbose=Fals
     -------
     est_dag
     """
+    if solve_conflict:
+        raise NotImplementedError
     if ci_tester is None:
         if skel is None or sepset is None:
             raise ValueError("Must provide either ci_tester or skeleton and sepset dictionary")
     if ci_tester is not None:
-        skel, sepset = skeleton(nodes, ci_tester, verbose=verbose)
+        skel, sepset = skeleton(nodes, ci_tester, max_cond_set=max_cond_set, verbose=verbose)
     adjacencies = skel.neighbors
 
     arcs = set()
@@ -81,11 +97,14 @@ def pcalg(nodes, ci_tester: CI_Tester=None, skel=None, sepset=None, verbose=Fals
         if not skel.has_edge(i, k):
             for j in adjacencies[i] & adjacencies[k]:
                 if j not in sepset[frozenset({i, k})]:
+                    if not solve_conflict:
+                        arcs.discard((j, k))
+                        arcs.discard((j, k))
                     arcs.add((i, j))
                     arcs.add((k, j))
 
     cpdag = PDAG(nodes=nodes, arcs=arcs, edges=skel.edges-{frozenset({*arc}) for arc in arcs})
-    cpdag.to_complete_pdag()
+    cpdag.to_complete_pdag(verbose=verbose, solve_conflict=solve_conflict)
 
     return cpdag
 
