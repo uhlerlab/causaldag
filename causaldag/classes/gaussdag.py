@@ -3,20 +3,30 @@
 Base class for DAGs representing Gaussian distributions (i.e. linear SEMs with Gaussian noise).
 """
 import operator as op
+import itertools as itr
 from typing import Any, Dict, Union, Set, Tuple, List
 
 import numpy as np
+from numpy import sqrt, diag
+from numpy.linalg import inv
 from scipy.linalg import ldl
 from scipy.stats import norm
 
 from causaldag.classes import DAG
-from causaldag.classes.interventions import Intervention, SoftInterventionalDistribution, PerfectInterventionalDistribution, PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, MultinomialIntervention, ConstantIntervention
+from causaldag.classes.interventions import Intervention, SoftInterventionalDistribution, \
+    PerfectInterventionalDistribution, PerfectIntervention, SoftIntervention, GaussIntervention, BinaryIntervention, \
+    MultinomialIntervention, ConstantIntervention
 from causaldag.utils import core_utils
 
 
 class GaussDAG(DAG):
-    def __init__(self, nodes: List, arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]], means=None,
-                 variances=None):
+    def __init__(
+            self,
+            nodes: List,
+            arcs: Union[Set[Tuple[Any, Any]], Dict[Tuple[Any, Any], float]],
+            means=None,
+            variances=None
+    ):
         arcs_set = arcs if isinstance(arcs, set) else set(arcs.keys())
         self._weight_mat = np.zeros((len(nodes), len(nodes)))
         self._node_list = nodes
@@ -27,6 +37,7 @@ class GaussDAG(DAG):
 
         self._precision = None
         self._covariance = None
+        self._correlation = None
 
         super().__init__(set(nodes), arcs_set)
 
@@ -36,10 +47,6 @@ class GaussDAG(DAG):
 
     def to_dag(self):
         """
-        TODO
-
-        Parameters
-        ----------
         TODO
 
         Examples
@@ -53,11 +60,15 @@ class GaussDAG(DAG):
         """
         Return a GaussDAG with arc weights specified by weight mat.
 
-        TODO
-
         Parameters
         ----------
-        TODO
+        weight_mat:
+            Matrix of edge weights, with weight[i, j] being the weight on the arc i->j.
+        nodes
+        means:
+            Node residual means.
+        variances:
+            Node residual variances.
 
         Examples
         --------
@@ -68,29 +79,56 @@ class GaussDAG(DAG):
         return cls(nodes=nodes, arcs=arcs, means=means, variances=variances)
 
     @classmethod
-    def from_precision(cls, precision_mat, node_order):
+    def from_covariance(cls, covariance_matrix: np.ndarray, node_order=None):
         """
-        Return a GaussDAG with the specified precision matrix and topological ordering of nodes.
-
-        TODO
+        Return a GaussDAG with the specified covariance matrix and topological ordering of nodes.
 
         Parameters
         ----------
-        TODO
+        covariance_matrix:
+            The desired covariance matrix for the graph.
+        node_order:
+            The desired ordering of nodes.
 
         Examples
         --------
         TODO
         """
-        p = precision_mat.shape[0]
+        if not core_utils.is_symmetric(covariance_matrix):
+            raise ValueError('Covariance matrix is not symmetric')
+        precision = inv(covariance_matrix)
+        return GaussDAG.from_precision(precision, node_order)
+
+    @classmethod
+    def from_precision(cls, precision_matrix, node_order=None):
+        """
+        Return a GaussDAG with the specified precision matrix and topological ordering of nodes.
+
+        Parameters
+        ----------
+        precision_matrix:
+            The desired precision matrix for the graph.
+        node_order:
+            The desired ordering of nodes.
+
+        Examples
+        --------
+        TODO
+        """
+        if not core_utils.is_symmetric(precision_matrix):
+            raise ValueError('Covariance matrix is not symmetric')
+
+        p = precision_matrix.shape[0]
+        if node_order is None:
+            node_order = list(range(p))
 
         # === permute precision matrix into  correct order for LDL
-        precision_mat = precision_mat.copy()
-        precision_mat = precision_mat[node_order]
-        precision_mat = precision_mat[:, node_order]
+        precision_matrix = precision_matrix.copy()
+        precision_matrix = precision_matrix[node_order]
+        precision_matrix = precision_matrix[:, node_order]
 
         # === perform ldl decomposition and correct for floating point errors
-        u, d, perm_ = ldl(precision_mat, lower=False)
+        u, d, perm_ = ldl(precision_matrix, lower=False)
         u[np.isclose(u, 0)] = 0
 
         # === permute back
@@ -108,15 +146,36 @@ class GaussDAG(DAG):
         # adj_mat[np.isclose(adj_mat, 0)] = 0
         return GaussDAG.from_amat(amat, variances=variances)
 
+    def normalize_weights(self):
+        """
+        Return a GaussDAG with the same skeleton and correlation matrix, normalized so that each variable has unit
+        variance.
+
+        Examples
+        --------
+        TODO
+        """
+        normalized_weight_mat = np.zeros(self.weight_mat.shape)
+        node_sds = sqrt(diag(self.covariance))
+        num_nodes = self.nnodes
+        for i, j in itr.combinations(range(num_nodes), 2):
+            if self.weight_mat[i, j] != 0:
+                normalized_weight_mat[i, j] = B[i, j] * node_sds[i] / node_sds[j]
+        # TODO: variance
+        return cd.GaussDAG.from_amat(normalized_weight_mat)
+
     def set_arc_weight(self, i, j, val):
         """
         Change the weight of the arc i->j to val
 
-        TODO
-
         Parameters
         ----------
-        TODO
+        i:
+            source node of arc.
+        j:
+            target node of arc.
+        val:
+            weight of the arc `i->j`.
 
         Examples
         --------
@@ -132,11 +191,12 @@ class GaussDAG(DAG):
         """
         Change the variance of node i to var
 
-        TODO
-
         Parameters
         ----------
-        TODO
+        i:
+            node whose variance to change.
+        var:
+            new variance.
 
         Examples
         --------
@@ -170,38 +230,46 @@ class GaussDAG(DAG):
         self._ensure_covariance()
         return self._covariance.copy()
 
+    def _ensure_correlation(self):
+        if self._correlation is None:
+            S = self.covariance
+            self._correlation = S / sqrt(diag(S)) / sqrt(diag(S)).reshape([-1, 1])
+
     @property
     def correlation(self):
-        self._ensure_covariance()
-        return self._covariance/np.sqrt(np.diag(self._covariance))/np.sqrt(np.diag(self._covariance)).reshape([-1, 1])
+        self._ensure_correlation()
+        return self._correlation
 
     def partial_correlation(self, i, j, cond_set):
         """
-        TODO
+        Return the partial correlation of i and j conditioned on `cond_set`.
 
         Parameters
         ----------
-        TODO
+        i: first node.
+        j: second node.
+        cond_set: conditioning set.
 
         Examples
         --------
         TODO
         """
+        cond_set = core_utils.to_set(cond_set)
         if len(cond_set) == 0:
             return self.correlation[i, j]
         else:
-            theta = np.linalg.inv(self.correlation[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
+            theta = inv(self.correlation[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
             return -theta[0, 1] / np.sqrt(theta[0, 0] * theta[1, 1])
 
     def add_arc(self, i, j, unsafe=False):
         """
         Add an arc to the graph with weight 1.
 
-        TODO
-
         Parameters
         ----------
-        TODO
+        i:
+        j:
+        unsafe:
 
         Examples
         --------
@@ -215,7 +283,9 @@ class GaussDAG(DAG):
 
         Parameters
         ----------
-        TODO
+        i:
+        j:
+        ignore_error:
 
         Examples
         --------
@@ -229,7 +299,7 @@ class GaussDAG(DAG):
 
         Parameters
         ----------
-        TODO
+        node
 
         Examples
         --------
@@ -245,7 +315,8 @@ class GaussDAG(DAG):
 
         Parameters
         ----------
-        TODO
+        node:
+        ignore_error:
 
         Examples
         --------
@@ -261,7 +332,8 @@ class GaussDAG(DAG):
 
         Parameters
         ----------
-        TODO
+        arcs:
+        unsafe:
 
         Examples
         --------
@@ -356,7 +428,7 @@ class GaussDAG(DAG):
         if self._covariance is None:
             id_ = np.eye(len(self._nodes))
             a = self._weight_mat
-            id_min_a_inv = np.linalg.inv(id_ - a)
+            id_min_a_inv = inv(id_ - a)
             if (self._variances == 1).all():
                 self._covariance = id_min_a_inv.T @ id_min_a_inv
             else:
@@ -364,11 +436,16 @@ class GaussDAG(DAG):
 
     def sample(self, nsamples: int = 1) -> np.array:
         """
-        Return `nsamples` samples from the graph
+        Return `nsamples` samples from the graph.
 
         Parameters
         ----------
-        TODO
+        nsamples:
+            Number of samples.
+
+        Returns
+        -------
+        (nsamples x nnodes) matrix of samples.
 
         Examples
         --------
@@ -377,7 +454,7 @@ class GaussDAG(DAG):
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
         for ix, (mean, var) in enumerate(zip(self._means, self._variances)):
-            noise[:, ix] = np.random.normal(loc = mean, scale=var**.5, size=nsamples)
+            noise[:, ix] = np.random.normal(loc=mean, scale=var ** .5, size=nsamples)
         t = self.topological_sort()
         for node in t:
             ix = self._node2ix[node]
@@ -393,6 +470,15 @@ class GaussDAG(DAG):
     def sample_interventional_perfect(self, interventions: PerfectIntervention, nsamples: int = 1) -> np.array:
         """
         Return `nsamples` samples from the graph under a perfect intervention
+
+        Parameters
+        ----------
+        interventions:
+        nsamples:
+
+        Returns
+        -------
+        (nsamples x nnodes) matrix of samples.
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.zeros((nsamples, len(self._nodes)))
@@ -402,7 +488,7 @@ class GaussDAG(DAG):
             if interventional_dist is not None:
                 noise[:, ix] = interventional_dist.sample(nsamples)
             else:
-                noise[:, ix] = np.random.normal(loc=mean, scale=var**.5, size=nsamples)
+                noise[:, ix] = np.random.normal(loc=mean, scale=var ** .5, size=nsamples)
 
         t = self.topological_sort()
         for node in t:
@@ -448,7 +534,7 @@ class GaussDAG(DAG):
 
         Parameters
         ----------
-        TODO
+        intervention:
 
         Examples
         --------
@@ -456,7 +542,7 @@ class GaussDAG(DAG):
         """
         samples = np.zeros((nsamples, len(self._nodes)))
         noise = np.random.normal(size=[nsamples, len(self._nodes)])
-        noise = noise * np.array(self._variances)**.5 + self._means
+        noise = noise * np.array(self._variances) ** .5 + self._means
 
         t = self.topological_sort()
         for node in t:
@@ -502,7 +588,8 @@ class GaussDAG(DAG):
     #         adjusted_cov = self.interventional_covariance(intervened_nodes)
     #         return multivariate_normal.logpdf(samples, meabn=adjusted_means, cov=adjusted_cov)
 
-    def logpdf(self, samples: np.array, interventions: PerfectIntervention = None, exclude_intervention_prob=True) -> np.array:
+    def logpdf(self, samples: np.array, interventions: PerfectIntervention = None,
+               exclude_intervention_prob=True) -> np.array:
         # TODO this is about 10x slower than using multivariate_normal.logpdf with the covariance matrix
         # TODO can I speed this up? where is the time spent?
 
@@ -519,7 +606,7 @@ class GaussDAG(DAG):
                     correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
                 else:
                     correction = 0
-                log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix]**.5)
+                log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix] ** .5)
         else:
             for node in sorted_nodes:
                 node_ix = self._node2ix[node]
@@ -534,7 +621,7 @@ class GaussDAG(DAG):
                     parent_ixs = [self._node2ix[p] for p in self._parents[node]]
                     parent_vals = samples[:, parent_ixs]
                     correction = (parent_vals * self._weight_mat[parent_ixs, node]).sum(axis=1)
-                    log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix]**.5)
+                    log_probs += norm.logpdf(samples[:, node_ix] - correction, scale=self._variances[node_ix] ** .5)
 
         return log_probs
 
@@ -554,6 +641,7 @@ if __name__ == '__main__':
         intervention2=ConstantIntervention(val=1)
     )
     import causaldag as cd
+
     B = np.zeros((3, 3))
     B[0, 1] = 1
     B[0, 2] = -1
@@ -573,5 +661,5 @@ if __name__ == '__main__':
 
     plt.clf()
     plt.ion()
-    plt.scatter(s2[:,1], s2[:,2])
+    plt.scatter(s2[:, 1], s2[:, 2])
     plt.show()

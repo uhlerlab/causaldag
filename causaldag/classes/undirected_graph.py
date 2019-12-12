@@ -258,3 +258,7 @@ class UndirectedGraph:
         self._neighbors.pop(i, None)
         self._degrees.pop(i, None)
 
+    def to_dag(self, perm):
+        raise NotImplementedError
+
+

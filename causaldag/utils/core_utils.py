@@ -1,4 +1,5 @@
 import itertools as itr
+from numpy import abs
 
 
 def ix_map_from_list(l):
@@ -40,3 +41,6 @@ def to_list(o):
             return [o]
     return o
 
+
+def is_symmetric(matrix, tol=1e-8):
+    return (abs(matrix - matrix.T) <= tol).all()
