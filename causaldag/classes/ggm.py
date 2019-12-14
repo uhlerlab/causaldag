@@ -126,11 +126,12 @@ class GGM(UndirectedGraph):
             variance = Sigma[i, i] - Sigma[i, ps] @ coeffs
 
             for p, coeff in zip(ps, coeffs):
+                print(p, i)
                 arcs[(p, i)] = coeff
             means.append(mean)
             variances.append(variance)
 
-        return GaussDAG(perm, arcs, means=means, variances=variances)
+        return GaussDAG(list(range(self.num_nodes)), arcs, means=means, variances=variances)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import itertools as itr
-from ...classes import UndirectedGraph
-from ...utils.ci_tests import CI_Tester, gauss_ci_test
+from causaldag.classes import UndirectedGraph
+from causaldag.utils.ci_tests import CI_Tester, gauss_ci_test
 from numpy import sqrt, log1p, ndenumerate, errstate
 from scipy.special import erf
 
