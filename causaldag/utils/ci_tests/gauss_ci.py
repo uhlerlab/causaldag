@@ -1,7 +1,7 @@
 from typing import Dict
 from math import erf
 import numba
-from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate
+from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate, cov
 from numpy.linalg import inv
 from . import MemoizedCI_Tester
 
@@ -28,12 +28,14 @@ def gauss_ci_suffstat(samples, invert=True):
     dictionary of sufficient statistics
     """
     n, p = samples.shape
+    S = cov(samples, rowvar=False)
     C = corrcoef(samples, rowvar=False)
     if invert and n >= p:
         K = numba_inv(C)
+        P = numba_inv(S)
         rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]
-        return dict(C=C, n=n, K=K, rho=rho)
-    return dict(C=C, n=n)
+        return dict(P=P, S=S, C=C, n=n, K=K, rho=rho)
+    return dict(S=S, C=C, n=n)
 
 
 def compute_partial_correlation(suffstat, i, j, cond_set=None):

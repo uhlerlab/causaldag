@@ -5,7 +5,7 @@ from causaldag.utils.ci_tests import CI_Tester
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset
 import random
-from causaldag.inference.structural.undirected import threshold_ug
+from causaldag.structure_learning.undirected import threshold_ug
 from causaldag import UndirectedGraph
 import numpy as np
 
