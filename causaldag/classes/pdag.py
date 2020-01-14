@@ -162,6 +162,18 @@ class PDAG:
             return set.union(*(cc.max_cliques() for cc in self.chain_components()))
 
     # === PROPERTIES W/ ARGUMENTS
+    def indegree_of(self, node):
+        return len(self._parents[node])
+
+    def outdegree_of(self, node):
+        return len(self._children[node])
+
+    def undirected_degree_of(self, node):
+        return len(self._undirected_neighbors[node])
+
+    def total_degree_of(self, node):
+        return len(self._neighbors[node])
+
     def parents_of(self, node):
         return set(self._parents[node])
 
