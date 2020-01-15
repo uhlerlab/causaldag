@@ -11,12 +11,19 @@ from typing import Set
 from collections import namedtuple
 from scipy.special import factorial
 import networkx as nx
+from typing import Set, FrozenSet
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
 
 class PDAG:
-    def __init__(self, nodes: Set=set(), arcs: Set=set(), edges=set(), known_arcs=set()):
+    def __init__(
+            self,
+            nodes: Set=set(),
+            arcs: Set=set(),
+            edges: Set=set(),
+            known_arcs=set()
+    ):
         self._nodes = set(nodes)
         self._arcs = set()
         self._edges = set()
@@ -137,7 +144,7 @@ class PDAG:
     def dominated_nodes(self):
         dominated_nodes = set()
         for node in self._nodes:
-            num_nbrs = len(self._undirected_neighbors[node])
+            num_nbrs = self.undirected_degree_of(node)
             if num_nbrs == 0:
                 dominated_nodes.add(node)
             elif num_nbrs == 1:
@@ -252,8 +259,9 @@ class PDAG:
         cut_edges = set()
         for node in intervened_nodes:
             cut_edges.update(dag.incident_arcs(node))
-        known_arcs = cut_edges | self._known_arcs
-        return PDAG(self._nodes, self._arcs, self._edges, known_arcs=known_arcs)
+        p = PDAG(self._nodes, self._arcs | cut_edges, self._edges - {frozenset({i, j}) for i, j in cut_edges})
+        p.to_complete_pdag()
+        return p
 
     # === MUTATORS
     def _add_arc(self, i, j):

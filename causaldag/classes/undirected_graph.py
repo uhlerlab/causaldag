@@ -2,6 +2,7 @@ from collections import defaultdict
 from copy import deepcopy
 import numpy as np
 # from cvxopt import spmatrix
+from networkx import Graph
 
 
 class UndirectedGraph:
@@ -20,6 +21,12 @@ class UndirectedGraph:
 
     def __eq__(self, other):
         return self._nodes == other._nodes and self._edges == other._edges
+
+    def to_nx(self) -> Graph:
+        nx_graph = Graph()
+        nx_graph.add_nodes_from(self._nodes)
+        nx_graph.add_edges_from(self._edges)
+        return nx_graph
 
     def to_amat(self, node_list=None, sparse=False) -> np.ndarray:
         """
@@ -59,7 +66,7 @@ class UndirectedGraph:
         return amat
 
     @classmethod
-    def from_amat(self, amat):
+    def from_amat(cls, amat):
         """
         Return an undirected graph with edges given by amat, i.e. i-j if amat[i,j] != 0
 
@@ -76,6 +83,10 @@ class UndirectedGraph:
         """
         edges = {(i, j) for (i, j), val in np.ndenumerate(amat) if val != 0}
         return UndirectedGraph(nodes=set(range(amat.shape[0])), edges=edges)
+
+    @classmethod
+    def from_nx(cls, g: Graph):
+        return UndirectedGraph(nodes=g.nodes, edges=g.edges)
 
     def copy(self, new=True):
         """
