@@ -1397,7 +1397,10 @@ class DAG:
         # contract bidirected connected components
         g = nx.DiGraph()
         g.add_nodes_from(components)
-        g.add_edges_from({(clique2component[c1], clique2component[c2]) for c1, c2 in all_edges})
+        g.add_edges_from({
+            (clique2component[c1], clique2component[c2]) for c1, c2 in all_edges
+            if clique2component[c1] != clique2component[c2]
+        })
 
         return g
 
@@ -1613,19 +1616,44 @@ class DAG:
             icpdags.append(icpdag)
         return ivs, icpdags
 
-    def _verification_optimal_helper(self, component, parent_component) -> set:
+    def _verification_optimal_helper(self, component, parent_component, verbose=False) -> set:
         # for a clique, select every other node
         if len(component) == 1:
+            if verbose: print('component is clique')
             remaining_nodes = list(component)[0] - parent_component
             sorted_nodes = self.induced_subgraph(remaining_nodes).topological_sort()
-            return sorted_nodes[1::2]
+            return set(sorted_nodes[1::2])
         else:
+            if verbose: print('component contains multiple cliques')
+            sorted_nodes = self.induced_subgraph(frozenset.union(*component)).topological_sort()
             intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
-            head = set.union(*intersections) - parent_component
-            tails = [c - head - parent_component for c in component]
-            pass
+            common_head = frozenset.union(*intersections) - parent_component
+            sorted_common_head = [node for node in sorted_nodes if node in common_head]
+            heads = [clique & common_head for clique in component]
+            tails = [clique - common_head - parent_component for clique in component]
+            sorted_heads = [[node for node in sorted_nodes if node in head] for head in heads]
+            sorted_tails = [[node for node in sorted_nodes if node in tail] for tail in tails]
 
-    def optimal_fully_orienting_interventions(self, cpdag=None, new=False) -> set:
+            intervened_nodes = set()
+            for head, tail in zip(sorted_heads, sorted_tails):
+                intervened_nodes.update(tail[-1::-2])
+                if len(tail) % 2 == 1:
+                    intervened_nodes.add(head[-1])
+
+            counter = 0
+            for node in sorted_common_head:
+                if node in intervened_nodes:
+                    counter = 0
+                else:
+                    counter += 1
+                    if counter == 2:
+                        intervened_nodes.add(node)
+                        counter = 0
+
+            return intervened_nodes
+            # TODO: test!
+
+    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> set:
         """
         Find the smallest set of interventions which fully orients the CPDAG into this DAG.
 
@@ -1645,8 +1673,12 @@ class DAG:
 
             intervened_nodes = set()
             for component in top_sort:
-                parent_nodes = set.union(*list(sdct.predecessors(component))[0])
-                intervened_nodes.update(self._verification_optimal_helper(component, parent_nodes))
+                parent = list(sdct.predecessors(component))
+                parent_nodes = frozenset.union(*parent) if len(parent) != 0 else set()
+                if verbose: print(f"orienting component {component}, parent={parent}")
+                component_intervened_nodes = self._verification_optimal_helper(component, parent_nodes, verbose=verbose)
+                if verbose: print(f"intervened: {component_intervened_nodes}")
+                intervened_nodes.update(component_intervened_nodes)
             return intervened_nodes
         else:
             cpdag = self.cpdag() if cpdag is None else cpdag
