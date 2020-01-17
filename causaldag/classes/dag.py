@@ -1303,6 +1303,8 @@ class DAG:
         d:
             cd.DAG
         """
+        if not isinstance(nx_graph, nx.DiGraph):
+            raise ValueError("Must be a DiGraph")
         return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
 
     def to_nx(self) -> nx.DiGraph:
@@ -1381,6 +1383,24 @@ class DAG:
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
     # === OPTIMAL INTERVENTIONS
+    def simplified_directed_clique_tree(self):
+        dct = self.directed_clique_tree()
+
+        # find bidirected connected components
+        all_edges = set(dct.edges())
+        bidirected_graph = nx.Graph()
+        bidirected_graph.add_nodes_from(dct.nodes())
+        bidirected_graph.add_edges_from({(c1, c2) for c1, c2 in all_edges if (c2, c1) in all_edges})
+        components = [frozenset(component) for component in nx.connected_components(bidirected_graph)]
+        clique2component = {clique: component for component in components for clique in component}
+
+        # contract bidirected connected components
+        g = nx.DiGraph()
+        g.add_nodes_from(components)
+        g.add_edges_from({(clique2component[c1], clique2component[c2]) for c1, c2 in all_edges})
+
+        return g
+
     def directed_clique_tree(self, verbose=False):
         # === get max cliques
         g = nx.Graph()
@@ -1432,7 +1452,7 @@ class DAG:
                 # only keep if single source in each component
                 candidate_trees_no_collider = []
                 for t in candidate_trees:
-                    components = nx.strongly_connected_component_subgraphs(t)
+                    components = [nx.subgraph(t, component) for component in nx.strongly_connected_components(t)]
                     components2parents = [set.union(*(set(t.predecessors(node)) - c.nodes() for node in c)) for c in components]
                     if all(len(parents) <= 1 for parents in components2parents):
                         candidate_trees_no_collider.append(t)
@@ -1453,6 +1473,9 @@ class DAG:
                 clique_tree = preferred_candidate_trees[0] if preferred_candidate_trees else candidate_trees_no_collider[0]
                 if verbose: print(clique_tree.edges())
                 break
+
+        labels = {(c1, c2, 0): c1 & c2 for c1, c2 in clique_tree.edges()}
+        nx.set_edge_attributes(clique_tree, labels, name='label')
 
         return clique_tree
 
@@ -1590,7 +1613,19 @@ class DAG:
             icpdags.append(icpdag)
         return ivs, icpdags
 
-    def optimal_fully_orienting_interventions(self, cpdag=None):
+    def _verification_optimal_helper(self, component, parent_component) -> set:
+        # for a clique, select every other node
+        if len(component) == 1:
+            remaining_nodes = list(component)[0] - parent_component
+            sorted_nodes = self.induced_subgraph(remaining_nodes).topological_sort()
+            return sorted_nodes[1::2]
+        else:
+            intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
+            head = set.union(*intersections) - parent_component
+            tails = [c - head - parent_component for c in component]
+            pass
+
+    def optimal_fully_orienting_interventions(self, cpdag=None, new=False) -> set:
         """
         Find the smallest set of interventions which fully orients the CPDAG into this DAG.
 
@@ -1604,15 +1639,25 @@ class DAG:
         interventions
             A minimum-size set of interventions which fully orients the DAG.
         """
-        cpdag = self.cpdag() if cpdag is None else cpdag
-        node2oriented = {
-            node: self.interventional_cpdag([{node}], cpdag=cpdag).arcs
-            for node in self._nodes - cpdag.dominated_nodes
-        }
-        for ss in core_utils.powerset(self._nodes - cpdag.dominated_nodes, r_min=1):
-            oriented = set.union(*(node2oriented[node] for node in ss))
-            if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
-                return ss
+        if new:
+            sdct = self.simplified_directed_clique_tree()
+            top_sort = nx.topological_sort(sdct)
+
+            intervened_nodes = set()
+            for component in top_sort:
+                parent_nodes = set.union(*list(sdct.predecessors(component))[0])
+                intervened_nodes.update(self._verification_optimal_helper(component, parent_nodes))
+            return intervened_nodes
+        else:
+            cpdag = self.cpdag() if cpdag is None else cpdag
+            node2oriented = {
+                node: self.interventional_cpdag([{node}], cpdag=cpdag).arcs
+                for node in self._nodes - cpdag.dominated_nodes
+            }
+            for ss in core_utils.powerset(self._nodes - cpdag.dominated_nodes, r_min=1):
+                oriented = set.union(*(node2oriented[node] for node in ss))
+                if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
+                    return ss
 
     def backdoor(self, i, j):
         """Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.
