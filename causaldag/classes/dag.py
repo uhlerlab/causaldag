@@ -1620,26 +1620,34 @@ class DAG:
         # for a clique, select every other node
         if len(component) == 1:
             if verbose: print('component is clique')
-            remaining_nodes = list(component)[0] - parent_component
-            sorted_nodes = self.induced_subgraph(remaining_nodes).topological_sort()
+            residual = list(component)[0] - parent_component
+            if verbose: print(f"residual: {residual}")
+            sorted_nodes = self.induced_subgraph(residual).topological_sort()
             return set(sorted_nodes[1::2])
         else:
-            if verbose: print('component contains multiple cliques')
             sorted_nodes = self.induced_subgraph(frozenset.union(*component)).topological_sort()
+
+            # determine common head
             intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
             common_head = frozenset.union(*intersections) - parent_component
             sorted_common_head = [node for node in sorted_nodes if node in common_head]
+            if verbose: print(f'component contains multiple cliques, common head = {sorted_common_head}')
+
+            # determine heads and tails
             heads = [clique & common_head for clique in component]
             tails = [clique - common_head - parent_component for clique in component]
             sorted_heads = [[node for node in sorted_nodes if node in head] for head in heads]
             sorted_tails = [[node for node in sorted_nodes if node in tail] for tail in tails]
 
+            # add nodes from tails
             intervened_nodes = set()
             for head, tail in zip(sorted_heads, sorted_tails):
-                intervened_nodes.update(tail[-1::-2])
-                if len(tail) % 2 == 1:
+                if verbose: print(f"tail={tail}, head={head}")
+                intervened_nodes.update(tail[-2::-2])
+                if len(tail) % 2 == 1 and len(head) > 0:
                     intervened_nodes.add(head[-1])
 
+            # add remaining nodes from common head
             counter = 0
             for node in sorted_common_head:
                 if node in intervened_nodes:
@@ -1674,7 +1682,7 @@ class DAG:
             intervened_nodes = set()
             for component in top_sort:
                 parent = list(sdct.predecessors(component))
-                parent_nodes = frozenset.union(*parent) if len(parent) != 0 else set()
+                parent_nodes = frozenset.union(*parent[0]) if len(parent) != 0 else set()
                 if verbose: print(f"orienting component {component}, parent={parent}")
                 component_intervened_nodes = self._verification_optimal_helper(component, parent_nodes, verbose=verbose)
                 if verbose: print(f"intervened: {component_intervened_nodes}")
