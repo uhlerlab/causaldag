@@ -3,7 +3,8 @@ from causaldag.utils import core_utils
 import itertools as itr
 import numpy as np
 import random
-from typing import List
+from typing import List, Iterable, Set, Dict, Hashable, Tuple, FrozenSet, Union
+from causaldag.classes.custom_types import Node, DirectedEdge, BidirectedEdge, UndirectedEdge
 
 
 class CycleError(Exception):
@@ -154,7 +155,7 @@ class AncestralGraph:
         """
         self._nodes.add(node)
 
-    def add_nodes_from(self, nodes):
+    def add_nodes_from(self, nodes: Iterable[Node]):
         """
         Add a node to the ancestral graph.
 
@@ -197,7 +198,7 @@ class AncestralGraph:
         curr_path_visited[node] = False
         stack.append(node)
 
-    def topological_sort(self):
+    def topological_sort(self) -> list:
         """
         Return a linear order that is consistent with the partial order implied by ancestral relations of this graph.
 
@@ -214,7 +215,7 @@ class AncestralGraph:
                 self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
         return list(reversed(stack))
 
-    def add_directed(self, i, j):
+    def add_directed(self, i: Node, j: Node):
         """
         Add a directed edge from node `i` to node `j`.
 
@@ -236,7 +237,7 @@ class AncestralGraph:
             self.remove_directed(i, j)
             raise e
 
-    def add_bidirected(self, i, j):
+    def add_bidirected(self, i: Node, j: Node):
         """
         Add a bidirected edge between nodes `i` and `j`.
 
@@ -258,7 +259,7 @@ class AncestralGraph:
             self.remove_bidirected(i, j)
             raise e
 
-    def add_undirected(self, i, j):
+    def add_undirected(self, i: Node, j: Node):
         """
         Add an undirected edge between nodes `i` and `j`.
 
@@ -370,7 +371,7 @@ class AncestralGraph:
         self._adjacent[i].add(j)
         self._adjacent[j].add(i)
 
-    def remove_node(self, node, ignore_error=False):
+    def remove_node(self, node: Node, ignore_error=False):
         """
         Remove `node`.
 
@@ -412,7 +413,7 @@ class AncestralGraph:
             else:
                 raise e
 
-    def remove_directed(self, i, j, ignore_error=False):
+    def remove_directed(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the directed edge from `i` to `j`.
 
@@ -439,7 +440,7 @@ class AncestralGraph:
             else:
                 raise e
 
-    def remove_bidirected(self, i, j, ignore_error=False):
+    def remove_bidirected(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the bidirected edge between `i` and `j`.
 
@@ -466,7 +467,7 @@ class AncestralGraph:
             else:
                 raise e
 
-    def remove_undirected(self, i, j, ignore_error=False):
+    def remove_undirected(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the undirected edge between `i` and `j`.
 
@@ -493,7 +494,7 @@ class AncestralGraph:
             else:
                 raise e
 
-    def remove_edge(self, i, j, ignore_error=False):
+    def remove_edge(self, i: Node, j: Node, ignore_error=False):
         """
         TODO
 
@@ -519,7 +520,7 @@ class AncestralGraph:
         elif not ignore_error:
             raise KeyError
 
-    def remove_edges(self, edges):
+    def remove_edges(self, edges: Iterable):
         """
         TODO
 
@@ -536,7 +537,7 @@ class AncestralGraph:
 
     # === PROPERTIES
     @property
-    def nodes(self) -> set:
+    def nodes(self) -> Set[Node]:
         return self._nodes.copy()
 
     @property
@@ -544,7 +545,7 @@ class AncestralGraph:
         return len(self._nodes)
 
     @property
-    def directed(self) -> set:
+    def directed(self) -> Set[DirectedEdge]:
         return self._directed.copy()
 
     @property
@@ -552,7 +553,7 @@ class AncestralGraph:
         return len(self._directed)
 
     @property
-    def bidirected(self) -> set:
+    def bidirected(self) -> Set[BidirectedEdge]:
         return self._bidirected.copy()
 
     @property
@@ -560,7 +561,7 @@ class AncestralGraph:
         return len(self._bidirected)
 
     @property
-    def undirected(self) -> set:
+    def undirected(self) -> Set[UndirectedEdge]:
         return self._undirected.copy()
 
     @property
@@ -572,19 +573,19 @@ class AncestralGraph:
         return self.num_directed + self.num_bidirected + self.num_undirected
 
     @property
-    def skeleton(self) -> set:
+    def skeleton(self) -> Set[UndirectedEdge]:
         return {frozenset({i, j}) for i, j in self._bidirected | self._undirected | self._directed}
 
-    def children_of(self, i) -> set:
+    def children_of(self, i) -> Set[Node]:
         return self._children[i].copy()
 
-    def parents_of(self, i) -> set:
+    def parents_of(self, i) -> Set[Node]:
         return self._parents[i].copy()
 
-    def spouses_of(self, i) -> set:
+    def spouses_of(self, i) -> Set[Node]:
         return self._spouses[i].copy()
 
-    def neighbors_of(self, i) -> set:
+    def neighbors_of(self, i) -> Set[Node]:
         return self._neighbors[i].copy()
 
     def _add_ancestors(self, ancestors, node, exclude_arcs=set()):
@@ -599,7 +600,7 @@ class AncestralGraph:
                 descendants.add(child)
                 self._add_descendants(descendants, child, exclude_arcs=exclude_arcs)
 
-    def ancestors_of(self, nodes, exclude_arcs=set()) -> set:
+    def ancestors_of(self, nodes, exclude_arcs=set()) -> Set[Node]:
         """
         Return the nodes upstream of node
 
@@ -629,7 +630,7 @@ class AncestralGraph:
             return set.union(*(self.ancestors_of(node) for node in nodes))
         return ancestors
 
-    def ancestor_dict(self):
+    def ancestor_dict(self) -> dict:
         """
         Return a dictionary from each node to its ancestors.
 
@@ -658,7 +659,7 @@ class AncestralGraph:
 
         return core_utils.defdict2dict(node2ancestors_plus_self, self._nodes)
 
-    def descendants_of(self, node, exclude_arcs=set()) -> set:
+    def descendants_of(self, node, exclude_arcs=set()) -> Set[Node]:
         """
         Return the nodes downstream of node
 
@@ -775,7 +776,7 @@ class AncestralGraph:
         """
         return self.has_directed(i, j) or self.has_directed(j, i) or self.has_bidirected(i, j) or self.has_undirected(i, j)
 
-    def vstructures(self) -> set:
+    def vstructures(self) -> Set[Tuple]:
         """
         TODO
 
@@ -809,7 +810,7 @@ class AncestralGraph:
         """
         return {node for node in self._nodes if len(self._parents[node] | self._spouses[node]) >= 2}
 
-    def _bidirected_reachable(self, node, tmp, visited):
+    def _bidirected_reachable(self, node, tmp: Set[Node], visited: Set[Node]) -> Set[Node]:
         visited.add(node)
         tmp.add(node)
         for spouse in filter(lambda spouse: spouse not in visited, self._spouses[node]):
@@ -840,7 +841,7 @@ class AncestralGraph:
 
         return components
 
-    def district_of(self, node):
+    def district_of(self, node) -> Set[Node]:
         """
         Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
 
@@ -1129,7 +1130,7 @@ class AncestralGraph:
         if certify: return True, None
         else: return True
 
-    def markov_blanket(self, node, flat: bool=False) -> set:
+    def markov_blanket(self, node, flat: bool=False) -> Union[Set[Node], Dict]:
         """
         Return the Markov blanket of a node with respect to the whole graph.
 
@@ -1164,7 +1165,7 @@ class AncestralGraph:
 
         return res_qsinks
 
-    def is_maximal(self, new=True, verbose=False):
+    def is_maximal(self, new=True, verbose=False) -> bool:
         """
         TODO
 
@@ -1268,7 +1269,7 @@ class AncestralGraph:
         return amat
 
     @staticmethod
-    def from_amat(amat):
+    def from_amat(amat: np.ndarray):
         """
         TODO
 
@@ -1602,7 +1603,7 @@ class AncestralGraph:
 
         return True
 
-    def msep_from_given(self, A, C=set()) -> set:
+    def msep_from_given(self, A, C=set()) -> Set[Node]:
         """
         Find all nodes m-separated from A given C.
 
