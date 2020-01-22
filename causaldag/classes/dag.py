@@ -7,7 +7,8 @@ import numpy as np
 import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
-from typing import Set, Union, Tuple, Any
+from causaldag.classes.custom_types import Node, DirectedEdge
+from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
 import random
 
@@ -68,7 +69,7 @@ class DAG:
         return str(self)
 
     @classmethod
-    def from_amat(cls, amat):
+    def from_amat(cls, amat: np.ndarray):
         """
         Return a DAG with arcs given by amat, i.e. i->j if amat[i,j] != 0
 
@@ -100,7 +101,7 @@ class DAG:
 
     # === PROPERTIES
     @property
-    def nodes(self) -> set:
+    def nodes(self) -> Set[Node]:
         return set(self._nodes)
 
     @property
@@ -108,7 +109,7 @@ class DAG:
         return len(self._nodes)
 
     @property
-    def arcs(self) -> set:
+    def arcs(self) -> Set[DirectedEdge]:
         return set(self._arcs)
 
     @property
@@ -116,27 +117,27 @@ class DAG:
         return len(self._arcs)
 
     @property
-    def neighbors(self):
+    def neighbors(self) -> Dict[Node, Set[Node]]:
         return core_utils.defdict2dict(self._neighbors, self._nodes)
 
     @property
-    def parents(self):
+    def parents(self) -> Dict[Node, Set[Node]]:
         return core_utils.defdict2dict(self._parents, self._nodes)
 
     @property
-    def children(self):
+    def children(self) -> Dict[Node, Set[Node]]:
         return core_utils.defdict2dict(self._children, self._nodes)
 
     @property
-    def skeleton(self):
+    def skeleton(self) -> Set[FrozenSet]:
         return {frozenset({i, j}) for i, j in self._arcs}
 
     @property
-    def in_degrees(self):
+    def in_degrees(self) -> Dict[Node, int]:
         return {node: len(self._parents[node]) for node in self._nodes}
 
     @property
-    def out_degrees(self):
+    def out_degrees(self) -> Dict[Node, int]:
         return {node: len(self._children[node]) for node in self._nodes}
 
     @property
@@ -148,11 +149,11 @@ class DAG:
         return max(len(self._parents[node]) for node in self._nodes)
 
     @property
-    def sparsity(self):
+    def sparsity(self) -> float:
         p = len(self._nodes)
         return len(self._arcs) / p / (p-1) * 2
 
-    def parents_of(self, node) -> set:
+    def parents_of(self, node: Node) -> Set[Node]:
         """
         Return all nodes that are parents of `node`.
 
@@ -170,13 +171,13 @@ class DAG:
         """
         return self._parents[node].copy()
 
-    def children_of(self, node) -> set:
+    def children_of(self, node: Node) -> Set[Node]:
         """
         Return all nodes that are children of `node`.
 
         Parameters
         ----------
-        TODO
+        node
 
         See Also
         --------
@@ -188,13 +189,13 @@ class DAG:
         """
         return self._children[node].copy()
 
-    def neighbors_of(self, node) -> set:
+    def neighbors_of(self, node: Node) -> Set[Node]:
         """
         Return all nodes that are adjacent to `node`.
 
         Parameters
         ----------
-        TODO
+        node
 
         See Also
         --------
@@ -206,7 +207,7 @@ class DAG:
         """
         return self._neighbors[node].copy()
 
-    def has_arc(self, source, target) -> bool:
+    def has_arc(self, source: Node, target: Node) -> bool:
         """
         Check if this DAG has an arc.
 
@@ -223,7 +224,7 @@ class DAG:
         """
         return (source, target) in self._arcs
 
-    def is_upstream_of(self, anc, desc) -> bool:
+    def is_upstream_of(self, anc: Node, desc: Node) -> bool:
         """Check if `anc` is upstream from `desc`
 
         Return
@@ -242,7 +243,7 @@ class DAG:
         return desc in self._children[anc] or desc in self.downstream(anc)
 
     # === MUTATORS
-    def add_node(self, node):
+    def add_node(self, node: Node):
         """
         Add a node to the DAG
 
@@ -265,7 +266,7 @@ class DAG:
         """
         self._nodes.add(node)
 
-    def add_arc(self, i, j, unsafe=False):
+    def add_arc(self, i: Node, j: Node, unsafe=False):
         """
         Add an arc to the DAG
 
@@ -321,7 +322,7 @@ class DAG:
         curr_path_visited[node] = False
         stack.append(node)
 
-    def topological_sort(self):
+    def topological_sort(self) -> List[Node]:
         """
         Return a topological sort of the nodes in the graph
 
@@ -345,7 +346,7 @@ class DAG:
                 self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
         return list(reversed(stack))
 
-    def add_nodes_from(self, nodes):
+    def add_nodes_from(self, nodes: Iterable):
         """
         Add nodes to the graph from a collection
 
@@ -369,7 +370,7 @@ class DAG:
         for node in nodes:
             self.add_node(node)
 
-    def add_arcs_from(self, arcs, unsafe=False):
+    def add_arcs_from(self, arcs: Iterable[Tuple], unsafe=False):
         """
         Add arcs to the graph from a collection
 
@@ -410,7 +411,7 @@ class DAG:
                     self.remove_arc(i, j)
                 raise e
 
-    def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
+    def reverse_arc(self, i: Node, j: Node, ignore_error=False, unsafe=False):
         """
         Reverse the arc i->j to i<-j
 
@@ -433,7 +434,7 @@ class DAG:
         self.remove_arc(i, j, ignore_error=ignore_error)
         self.add_arc(j, i, unsafe=unsafe)
 
-    def remove_arc(self, i, j, ignore_error=False):
+    def remove_arc(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the arc i->j
 
@@ -465,13 +466,13 @@ class DAG:
             else:
                 raise e
 
-    def remove_arcs(self, arcs, ignore_error=False):
+    def remove_arcs(self, arcs: Iterable, ignore_error=False):
         """
         TODO
 
         Parameters
         ----------
-        TODO
+        arcs
 
         Examples
         --------
@@ -480,7 +481,7 @@ class DAG:
         for i, j in arcs:
             self.remove_arc(i, j, ignore_error=ignore_error)
 
-    def remove_node(self, node, ignore_error=False):
+    def remove_node(self, node: Node, ignore_error=False):
         """
         Remove a node from the graph
 
@@ -518,7 +519,7 @@ class DAG:
                 raise e
 
     # === GRAPH PROPERTIES
-    def sources(self) -> set:
+    def sources(self) -> Set[Node]:
         """
         Get all nodes in the graph that have no parents
 
@@ -535,7 +536,7 @@ class DAG:
         """
         return {node for node in self._nodes if len(self._parents[node]) == 0}
 
-    def sinks(self) -> set:
+    def sinks(self) -> Set[Node]:
         """
         Get all nodes in the graph that have no children
 
@@ -552,7 +553,7 @@ class DAG:
         """
         return {node for node in self._nodes if len(self._children[node]) == 0}
 
-    def reversible_arcs(self) -> set:
+    def reversible_arcs(self) -> Set[DirectedEdge]:
         """
         Get all reversible (aka covered) arcs in the DAG.
 
@@ -574,7 +575,7 @@ class DAG:
                 reversible_arcs.add((i, j))
         return reversible_arcs
 
-    def is_reversible(self, i, j) -> bool:
+    def is_reversible(self, i: Node, j: Node) -> bool:
         """
         Check if the arc i->j is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`
 
@@ -597,7 +598,7 @@ class DAG:
         """
         return self._parents[i] == self._parents[j] - {i}
 
-    def arcs_in_vstructures(self):
+    def arcs_in_vstructures(self) -> Set[Tuple]:
         """
         Get all arcs in the graph that participate in a v-structure.
 
@@ -622,7 +623,7 @@ class DAG:
                     vstruct_arcs.add((p2, node))
         return vstruct_arcs
 
-    def vstructures(self):
+    def vstructures(self) -> Set[Tuple]:
         """
         TODO
 
@@ -641,7 +642,13 @@ class DAG:
                     vstructs.add((p1, node, p2))
         return vstructs
 
-    def markov_blanket(self, node) -> set:
+    def triples(self) -> Set[Tuple]:
+        t = set()
+        for node in self._nodes:
+            t |= {(n1, node, n2) for n1, n2 in itr.combinations(self._neighbors[node], 2)}
+        return t
+
+    def markov_blanket(self, node: Node) -> set:
         """
         Return the Markov blanket of `node`, i.e., the parents of the node, its children, and the parents of its children.
 
@@ -669,7 +676,7 @@ class DAG:
         return self._parents[node] | self._children[node] | parents_of_children - {node}
 
     # === COMPARISON
-    def chickering_distance(self, other):
+    def chickering_distance(self, other) -> int:
         reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
         return len(reversals) + 2*self.shd_skeleton(other)
 
@@ -840,7 +847,7 @@ class DAG:
                 downstream.add(child)
                 self._add_downstream(downstream, child)
 
-    def downstream(self, node) -> set:
+    def downstream(self, node: Node) -> Set[Node]:
         """
         Return the nodes downstream of node.
 
@@ -874,7 +881,7 @@ class DAG:
                 upstream.add(parent)
                 self._add_upstream(upstream, parent)
 
-    def upstream(self, node) -> set:
+    def upstream(self, node: Node) -> Set[Node]:
         """
         Return the nodes upstream of node
 
@@ -902,7 +909,7 @@ class DAG:
         self._add_upstream(upstream, node)
         return upstream
 
-    def incident_arcs(self, node) -> set:
+    def incident_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
         Return all arcs adjacent to node
 
@@ -933,7 +940,7 @@ class DAG:
             incident_arcs.add((parent, node))
         return incident_arcs
 
-    def incoming_arcs(self, node) -> set:
+    def incoming_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
         Return all arcs with target node
 
@@ -962,7 +969,7 @@ class DAG:
             incoming_arcs.add((parent, node))
         return incoming_arcs
 
-    def outgoing_arcs(self, node) -> set:
+    def outgoing_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
         Return all arcs with source node
 
@@ -991,7 +998,7 @@ class DAG:
             outgoing_arcs.add((node, child))
         return outgoing_arcs
 
-    def outdegree(self, node) -> int:
+    def outdegree(self, node: Node) -> int:
         """
         Return the outdegree of node
 
@@ -1019,7 +1026,7 @@ class DAG:
         """
         return len(self._children[node])
 
-    def indegree(self, node) -> int:
+    def indegree(self, node: Node) -> int:
         """
         Return the indegree of node
 
@@ -1047,7 +1054,7 @@ class DAG:
         """
         return len(self._parents[node])
 
-    def upstream_most(self, s):
+    def upstream_most(self, s: Set[Node]) -> Set[Node]:
         """
         Parameters
         ----------
@@ -1061,7 +1068,7 @@ class DAG:
         return {node for node in s if not self.upstream(node) & s}
 
     # === CONVERTERS
-    def resolved_sinks(self, other):
+    def resolved_sinks(self, other) -> set:
         res_sinks = set()
         while True:
             new_resolved = {
@@ -1360,7 +1367,7 @@ class DAG:
 
         return amat, node_list
 
-    def induced_subgraph(self, nodes: set):
+    def induced_subgraph(self, nodes: Set[Node]):
         """
         Return the induced subgraph over only `nodes`
 
@@ -1661,7 +1668,7 @@ class DAG:
             return intervened_nodes
             # TODO: test!
 
-    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> set:
+    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
         """
         Find the smallest set of interventions which fully orients the CPDAG into this DAG.
 
@@ -1867,7 +1874,7 @@ class DAG:
 
         return True
 
-    def dsep_from_given(self, A, C=set()) -> set:
+    def dsep_from_given(self, A, C=set()) -> Set[Node]:
         """
         Find all nodes d-separated from A given C .
 

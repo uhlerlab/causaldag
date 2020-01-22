@@ -3,6 +3,8 @@ from copy import deepcopy
 import numpy as np
 # from cvxopt import spmatrix
 from networkx import Graph
+from causaldag.classes.custom_types import Node, UndirectedEdge
+from typing import Set, Iterable, Dict
 
 
 class UndirectedGraph:
@@ -66,7 +68,7 @@ class UndirectedGraph:
         return amat
 
     @classmethod
-    def from_amat(cls, amat):
+    def from_amat(cls, amat: np.ndarray):
         """
         Return an undirected graph with edges given by amat, i.e. i-j if amat[i,j] != 0
 
@@ -103,26 +105,26 @@ class UndirectedGraph:
         return len(self._edges)
 
     @property
-    def degrees(self):
+    def degrees(self) -> Dict[Node, int]:
         return {node: self._degrees[node] for node in self._nodes}
 
     @property
-    def neighbors(self):
+    def neighbors(self) -> Dict[Node, Set[Node]]:
         return {node: self._neighbors[node] for node in self._nodes}
 
     @property
-    def edges(self) -> set:
+    def edges(self) -> Set[UndirectedEdge]:
         return self._edges.copy()
 
     @property
-    def nodes(self) -> set:
+    def nodes(self) -> Set[Node]:
         return self._nodes.copy()
 
     @property
-    def skeleton(self) -> set:
+    def skeleton(self) -> Set[UndirectedEdge]:
         return self.edges
 
-    def has_edge(self, i, j) -> bool:
+    def has_edge(self, i: Node, j: Node) -> bool:
         """
         Check if the undirected graph has an edge.
 
@@ -139,7 +141,7 @@ class UndirectedGraph:
         """
         return frozenset({i, j}) in self._edges
 
-    def neighbors_of(self, node) -> set:
+    def neighbors_of(self, node: Node) -> Set[Node]:
         """
         Return the neighbors of a node.
 
@@ -154,7 +156,7 @@ class UndirectedGraph:
         return self._neighbors[node].copy()
 
     # === MUTATORS ===
-    def add_edge(self, i, j):
+    def add_edge(self, i: Node, j: Node):
         """
         Add an edge.
 
@@ -181,7 +183,7 @@ class UndirectedGraph:
             self._degrees[i] += 1
             self._degrees[j] += 1
 
-    def add_edges_from(self, edges):
+    def add_edges_from(self, edges: Iterable):
         """
         Add a set of edges.
 
@@ -202,7 +204,7 @@ class UndirectedGraph:
         for i, j in edges:
             self.add_edge(i, j)
 
-    def delete_edges_from(self, edges):
+    def delete_edges_from(self, edges: Iterable):
         """
         Delete a set of edges.
 
@@ -223,7 +225,7 @@ class UndirectedGraph:
         for i, j in edges:
             self.delete_edge(i, j)
 
-    def delete_edge(self, i, j):
+    def delete_edge(self, i: Node, j: Node):
         """
         Delete an edge.
 
@@ -249,25 +251,26 @@ class UndirectedGraph:
         self._degrees[i] -= 1
         self._degrees[j] -= 1
 
-    def delete_node(self, i):
+    def delete_node(self, node: Node):
         """
         Delete a node.
 
         Parameters
         ----------
-        TODO
+        node:
+            Node to be deleted.
 
         Examples
         --------
         TODO
         """
-        self._nodes.remove(i)
-        for j in self._neighbors[i]:
-            self._neighbors[j].remove(i)
+        self._nodes.remove(node)
+        for j in self._neighbors[node]:
+            self._neighbors[j].remove(node)
             self._degrees[j] -= 1
-            self._edges.remove(frozenset({i, j}))
-        self._neighbors.pop(i, None)
-        self._degrees.pop(i, None)
+            self._edges.remove(frozenset({node, j}))
+        self._neighbors.pop(node, None)
+        self._degrees.pop(node, None)
 
     def to_dag(self, perm):
         raise NotImplementedError
