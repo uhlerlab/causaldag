@@ -1275,7 +1275,7 @@ class AncestralGraph:
 
         Parameters
         ----------
-        TODO
+        amat
 
         Examples
         --------
