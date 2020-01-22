@@ -7,7 +7,7 @@ import numpy as np
 import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
-from typing import Set, Union, Tuple, Any
+from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet
 import networkx as nx
 import random
 
@@ -68,7 +68,7 @@ class DAG:
         return str(self)
 
     @classmethod
-    def from_amat(cls, amat):
+    def from_amat(cls, amat: np.array):
         """
         Return a DAG with arcs given by amat, i.e. i->j if amat[i,j] != 0
 
@@ -108,7 +108,7 @@ class DAG:
         return len(self._nodes)
 
     @property
-    def arcs(self) -> set:
+    def arcs(self) -> Set[Tuple]:
         return set(self._arcs)
 
     @property
@@ -116,27 +116,27 @@ class DAG:
         return len(self._arcs)
 
     @property
-    def neighbors(self):
+    def neighbors(self) -> Dict[Any, Set]:
         return core_utils.defdict2dict(self._neighbors, self._nodes)
 
     @property
-    def parents(self):
+    def parents(self) -> Dict[Any, Set]:
         return core_utils.defdict2dict(self._parents, self._nodes)
 
     @property
-    def children(self):
+    def children(self) -> Dict[Any, Set]:
         return core_utils.defdict2dict(self._children, self._nodes)
 
     @property
-    def skeleton(self):
+    def skeleton(self) -> Set[FrozenSet]:
         return {frozenset({i, j}) for i, j in self._arcs}
 
     @property
-    def in_degrees(self):
+    def in_degrees(self) -> Dict[Any, int]:
         return {node: len(self._parents[node]) for node in self._nodes}
 
     @property
-    def out_degrees(self):
+    def out_degrees(self) -> Dict[Any, int]:
         return {node: len(self._children[node]) for node in self._nodes}
 
     @property
@@ -148,7 +148,7 @@ class DAG:
         return max(len(self._parents[node]) for node in self._nodes)
 
     @property
-    def sparsity(self):
+    def sparsity(self) -> float:
         p = len(self._nodes)
         return len(self._arcs) / p / (p-1) * 2
 
@@ -321,7 +321,7 @@ class DAG:
         curr_path_visited[node] = False
         stack.append(node)
 
-    def topological_sort(self):
+    def topological_sort(self) -> list:
         """
         Return a topological sort of the nodes in the graph
 
@@ -345,7 +345,7 @@ class DAG:
                 self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
         return list(reversed(stack))
 
-    def add_nodes_from(self, nodes):
+    def add_nodes_from(self, nodes: Iterable):
         """
         Add nodes to the graph from a collection
 
@@ -369,7 +369,7 @@ class DAG:
         for node in nodes:
             self.add_node(node)
 
-    def add_arcs_from(self, arcs, unsafe=False):
+    def add_arcs_from(self, arcs: Iterable[Tuple], unsafe=False):
         """
         Add arcs to the graph from a collection
 
@@ -597,7 +597,7 @@ class DAG:
         """
         return self._parents[i] == self._parents[j] - {i}
 
-    def arcs_in_vstructures(self):
+    def arcs_in_vstructures(self) -> Set[Tuple]:
         """
         Get all arcs in the graph that participate in a v-structure.
 
@@ -622,7 +622,7 @@ class DAG:
                     vstruct_arcs.add((p2, node))
         return vstruct_arcs
 
-    def vstructures(self):
+    def vstructures(self) -> Set[Tuple]:
         """
         TODO
 
@@ -640,6 +640,12 @@ class DAG:
                 if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
                     vstructs.add((p1, node, p2))
         return vstructs
+
+    def triples(self) -> Set[Tuple]:
+        t = set()
+        for node in self._nodes:
+            t |= {(n1, node, n2) for n1, n2 in itr.combinations(self._neighbors[node], 2)}
+        return t
 
     def markov_blanket(self, node) -> set:
         """
@@ -669,7 +675,7 @@ class DAG:
         return self._parents[node] | self._children[node] | parents_of_children - {node}
 
     # === COMPARISON
-    def chickering_distance(self, other):
+    def chickering_distance(self, other) -> int:
         reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
         return len(reversals) + 2*self.shd_skeleton(other)
 
@@ -902,7 +908,7 @@ class DAG:
         self._add_upstream(upstream, node)
         return upstream
 
-    def incident_arcs(self, node) -> set:
+    def incident_arcs(self, node) -> Set[Tuple]:
         """
         Return all arcs adjacent to node
 
@@ -933,7 +939,7 @@ class DAG:
             incident_arcs.add((parent, node))
         return incident_arcs
 
-    def incoming_arcs(self, node) -> set:
+    def incoming_arcs(self, node) -> Set[Tuple]:
         """
         Return all arcs with target node
 
@@ -962,7 +968,7 @@ class DAG:
             incoming_arcs.add((parent, node))
         return incoming_arcs
 
-    def outgoing_arcs(self, node) -> set:
+    def outgoing_arcs(self, node) -> Set[Tuple]:
         """
         Return all arcs with source node
 
@@ -1061,7 +1067,7 @@ class DAG:
         return {node for node in s if not self.upstream(node) & s}
 
     # === CONVERTERS
-    def resolved_sinks(self, other):
+    def resolved_sinks(self, other) -> set:
         res_sinks = set()
         while True:
             new_resolved = {
