@@ -95,4 +95,4 @@ def directed_barabasi(nnodes: int, nattach: int, size=1, as_list=False) -> Union
     return directed_random_graph(nnodes, random_graph_model, size=size, as_list=as_list)
 
 
-__all__ = ['directed_erdos', 'rand_weights', 'unif_away_zero']
+__all__ = ['directed_erdos', 'rand_weights', 'unif_away_zero', 'directed_barabasi', 'directed_random_graph']
