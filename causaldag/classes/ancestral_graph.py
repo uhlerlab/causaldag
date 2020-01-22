@@ -33,7 +33,7 @@ class AdjacentError(Exception):
         self.node2 = node2
         self.arrow_type = arrow_type
         message = '%s %s %s cannot be added since %s and %s are already adjacent' % (
-        node1, arrow_type, node2, node1, node2)
+            node1, arrow_type, node2, node1, node2)
         super().__init__(message)
 
 
@@ -45,13 +45,13 @@ class NeighborError(Exception):
         self.spouses = spouses
         if self.neighbors:
             message = 'The node %s has neighbors %s. Nodes cannot have neighbors and parents/spouses.' % (
-            node, ','.join(map(str, neighbors)))
+                node, ','.join(map(str, neighbors)))
         elif self.parents:
             message = 'The node %s has parents %s. Nodes cannot have neighbors and parents/spouses.' % (
-            node, ','.join(map(str, parents)))
+                node, ','.join(map(str, parents)))
         elif self.spouses:
             message = 'The node %s has spouses %s. Nodes cannot have neighbors and parents/spouses.' % (
-            node, ','.join(map(str, spouses)))
+                node, ','.join(map(str, spouses)))
         super().__init__(message)
 
 
@@ -99,7 +99,7 @@ class AncestralGraph:
         """
         return AncestralGraph(self.nodes, self.directed, self.bidirected, self.undirected)
 
-    def induced_subgraph(self, nodes):
+    def induced_subgraph(self, nodes: Set[Node]):
         """
         Return the induced subgraph over only `nodes`
 
@@ -126,13 +126,14 @@ class AncestralGraph:
         return AncestralGraph(nodes, directed=new_directed, bidirected=new_bidirected, undirected=new_undirected)
 
     def __str__(self):
-        return 'Directed edges: %s, Bidirected edges: %s, Undirected edges: %s' % (self._directed, self._bidirected, self._undirected)
+        return 'Directed edges: %s, Bidirected edges: %s, Undirected edges: %s' % (
+        self._directed, self._bidirected, self._undirected)
 
     def __repr__(self):
         return str(self)
 
     # === MUTATORS
-    def add_node(self, node):
+    def add_node(self, node: Node):
         """
         Add a node to the ancestral graph.
 
@@ -276,7 +277,7 @@ class AncestralGraph:
         """
         self._add_undirected(i, j)
 
-    def _add_directed(self, i, j, ignore_error=False):
+    def _add_directed(self, i: Node, j: Node, ignore_error=False):
         if self.has_directed(i, j):
             return
 
@@ -305,7 +306,7 @@ class AncestralGraph:
         self._adjacent[i].add(j)
         self._adjacent[j].add(i)
 
-    def _add_bidirected(self, i, j, ignore_error=False):
+    def _add_bidirected(self, i: Node, j: Node, ignore_error=False):
         if self.has_bidirected(i, j):
             return
 
@@ -336,7 +337,7 @@ class AncestralGraph:
         self._adjacent[i].add(j)
         self._adjacent[j].add(i)
 
-    def _add_undirected(self, i, j, ignore_error=False):
+    def _add_undirected(self, i: Node, j: Node, ignore_error=False):
         if self.has_undirected(i, j):
             return
 
@@ -526,7 +527,8 @@ class AncestralGraph:
 
         Parameters
         ----------
-        TODO
+        edges
+            TODO
 
         Examples
         --------
@@ -576,16 +578,16 @@ class AncestralGraph:
     def skeleton(self) -> Set[UndirectedEdge]:
         return {frozenset({i, j}) for i, j in self._bidirected | self._undirected | self._directed}
 
-    def children_of(self, i) -> Set[Node]:
+    def children_of(self, i: Node) -> Set[Node]:
         return self._children[i].copy()
 
-    def parents_of(self, i) -> Set[Node]:
+    def parents_of(self, i: Node) -> Set[Node]:
         return self._parents[i].copy()
 
-    def spouses_of(self, i) -> Set[Node]:
+    def spouses_of(self, i: Node) -> Set[Node]:
         return self._spouses[i].copy()
 
-    def neighbors_of(self, i) -> Set[Node]:
+    def neighbors_of(self, i: Node) -> Set[Node]:
         return self._neighbors[i].copy()
 
     def _add_ancestors(self, ancestors, node, exclude_arcs=set()):
@@ -659,7 +661,7 @@ class AncestralGraph:
 
         return core_utils.defdict2dict(node2ancestors_plus_self, self._nodes)
 
-    def descendants_of(self, node, exclude_arcs=set()) -> Set[Node]:
+    def descendants_of(self, node: Node, exclude_arcs=set()) -> Set[Node]:
         """
         Return the nodes downstream of node
 
@@ -684,7 +686,7 @@ class AncestralGraph:
         self._add_descendants(descendants, node, exclude_arcs=exclude_arcs)
         return descendants
 
-    def has_directed(self, i, j) -> bool:
+    def has_directed(self, i: Node, j: Node) -> bool:
         """
         Check if this graph has the directed edge i->j.
 
@@ -707,7 +709,7 @@ class AncestralGraph:
         """
         return (i, j) in self._directed
 
-    def has_bidirected(self, i, j) -> bool:
+    def has_bidirected(self, i: Node, j: Node) -> bool:
         """
         Check if this graph has a bidirected edge between `i` and `j`.
 
@@ -730,7 +732,7 @@ class AncestralGraph:
         """
         return frozenset({i, j}) in self._bidirected
 
-    def has_undirected(self, i, j) -> bool:
+    def has_undirected(self, i: Node, j: Node) -> bool:
         """
         Check if this graph has an undirected edge between `i` and `j`.
 
@@ -753,7 +755,7 @@ class AncestralGraph:
         """
         return frozenset({i, j}) in self._undirected
 
-    def has_any_edge(self, i, j) -> bool:
+    def has_any_edge(self, i: Node, j: Node) -> bool:
         """
         Check if i and j are adjacent in this graph.
 
@@ -774,14 +776,11 @@ class AncestralGraph:
         --------
         TODO
         """
-        return self.has_directed(i, j) or self.has_directed(j, i) or self.has_bidirected(i, j) or self.has_undirected(i, j)
+        return self.has_directed(i, j) or self.has_directed(j, i) or self.has_bidirected(i, j) or self.has_undirected(i,
+                                                                                                                      j)
 
     def vstructures(self) -> Set[Tuple]:
         """
-        TODO
-
-        Parameters
-        ----------
         TODO
 
         Examples
@@ -798,10 +797,6 @@ class AncestralGraph:
 
     def colliders(self) -> set:
         """
-        TODO
-
-        Parameters
-        ----------
         TODO
 
         Examples
@@ -841,7 +836,7 @@ class AncestralGraph:
 
         return components
 
-    def district_of(self, node) -> Set[Node]:
+    def district_of(self, node: Node) -> Set[Node]:
         """
         Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
 
@@ -856,7 +851,7 @@ class AncestralGraph:
         """
         return self._bidirected_reachable(node, set(), set())
 
-    def discriminating_paths(self, verbose=False):
+    def discriminating_paths(self, verbose=False) -> Dict[Tuple, str]:
         """
         TODO
 
@@ -911,7 +906,8 @@ class AncestralGraph:
                             path_queue.append(new_path)
         return discriminating_paths
 
-    def _reachable(self, start_node, end_node, visited=set(), allowed_edges={'b', 'u', 'c', 'p'}, predicate=lambda node: True, verbose=False):
+    def _reachable(self, start_node, end_node, visited=set(), allowed_edges={'b', 'u', 'c', 'p'},
+                   predicate=lambda node: True, verbose=False):
         allowed_nbrs = set()
         if 'b' in allowed_edges:
             allowed_nbrs.update(self._spouses[start_node])
@@ -934,18 +930,16 @@ class AncestralGraph:
             if nbr == end_node:
                 if verbose: print("Reached end node")
                 return True
-            results.append(self._reachable(nbr, end_node, visited=visited, allowed_edges=allowed_edges, predicate=predicate, verbose=verbose))
+            results.append(
+                self._reachable(nbr, end_node, visited=visited, allowed_edges=allowed_edges, predicate=predicate,
+                                verbose=verbose))
 
         if verbose: print("reachability results:", results)
         return any(results)
 
     # === ???
-    def pairwise_markov_statements(self):
+    def pairwise_markov_statements(self) -> Set[Tuple[Node, Node, FrozenSet[Node]]]:
         """
-        TODO
-
-        Parameters
-        ----------
         TODO
 
         Examples
@@ -958,7 +952,7 @@ class AncestralGraph:
                 statements.add((i, j, frozenset(self.ancestors_of(i) | self.ancestors_of(j) - {i, j})))
         return statements
 
-    def is_imap(self, other, certify: bool=False) -> bool:
+    def is_imap(self, other, certify: bool = False) -> bool:
         """
         Check if this graph is an IMAP of the `other` graph, i.e., all m-separation statements in this graph
         are also m-separation statements in `other`.
@@ -986,8 +980,10 @@ class AncestralGraph:
             ((i, j, S) for i, j, S in self.pairwise_markov_statements() if not other.msep(i, j, S)),
             None)
         is_imap_ = certificate is None
-        if certify: return is_imap_, certificate
-        else: return is_imap_
+        if certify:
+            return is_imap_, certificate
+        else:
+            return is_imap_
 
     # def is_minimal_imap(self, other, certify=False):
     #     print("THIS HAS NOT BEEN TESTED")
@@ -1001,7 +997,7 @@ class AncestralGraph:
     #     else:
     #         return res, certificate
 
-    def is_minimal_imap(self, other, certify: bool=False, check_imap=True) -> bool:
+    def is_minimal_imap(self, other, certify: bool = False, check_imap=True) -> bool:
         """
         TODO
 
@@ -1016,23 +1012,29 @@ class AncestralGraph:
         if check_imap and not self.is_imap(other):
             return False, None
 
-        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_bidirected+self.num_directed):
+        for i, j in random.sample(list(self._directed) + list(self._bidirected),
+                                  self.num_bidirected + self.num_directed):
             new_mag = self.copy()
             if self.has_bidirected(i, j):
                 new_mag.remove_bidirected(i, j)
             if self.has_directed(i, j):
                 new_mag.remove_directed(i, j)
             if new_mag.is_maximal() and new_mag.is_imap(other):
-                if certify: return False, (i, j)
-                else: return False
-        if certify: return True, None
-        else: return True
+                if certify:
+                    return False, (i, j)
+                else:
+                    return False
+        if certify:
+            return True, None
+        else:
+            return True
 
     def is_minimal_imap2(self, other, certify=False, check_imap=True, validate=False):
         if check_imap and not self.is_imap(other):
             return False, None
 
-        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+        for i, j in random.sample(list(self._directed) + list(self._bidirected),
+                                  self.num_directed + self.num_bidirected):
             if other.msep(i, j, self.ancestors_of(i) | self.ancestors_of(j) - {i, j}):
                 new_mag = self.copy()
                 if self.has_bidirected(i, j):
@@ -1043,23 +1045,29 @@ class AncestralGraph:
                     if validate:
                         if not new_mag.is_imap(other):
                             raise Exception
-                    if certify: return False, (i, j)
-                    else: return False
-        if certify: return True, None
-        else: return True
+                    if certify:
+                        return False, (i, j)
+                    else:
+                        return False
+        if certify:
+            return True, None
+        else:
+            return True
 
     def is_minimal_imap3(self, other, certify=False, check_imap=True, validate=False, verbose=False):
         if check_imap and not self.is_imap(other):
             return False, None
 
-        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+        for i, j in random.sample(list(self._directed) + list(self._bidirected),
+                                  self.num_directed + self.num_bidirected):
             new_mag = self.copy()
             if self.has_bidirected(i, j):
                 new_mag.remove_bidirected(i, j)
             else:
                 new_mag.remove_directed(i, j)
             current_markov_blanket = set.union(*(set(v) for v in self.markov_blanket(j).values())) | self.district_of(j)
-            new_markov_blanket = set.union(*(set(v) for v in new_mag.markov_blanket(j).values())) | new_mag.district_of(j)
+            new_markov_blanket = set.union(*(set(v) for v in new_mag.markov_blanket(j).values())) | new_mag.district_of(
+                j)
             mb_difference = (current_markov_blanket - new_markov_blanket - {j}) | {i}
             rest = new_markov_blanket - {i, j}
             if verbose: print(f'i={i}, j={j}, mb_diff={mb_difference}, rest={rest}')
@@ -1071,12 +1079,17 @@ class AncestralGraph:
                 if validate:
                     if not new_mag.is_imap(other):
                         raise Exception
-                if certify: return False, (i, j)
-                else: return False
-        if certify: return True, None
-        else: return True
+                if certify:
+                    return False, (i, j)
+                else:
+                    return False
+        if certify:
+            return True, None
+        else:
+            return True
 
-    def is_minimal_imap4(self, other, certify=False, check_imap=True, validate=False, extra_validate=False, verbose=False):
+    def is_minimal_imap4(self, other, certify=False, check_imap=True, validate=False, extra_validate=False,
+                         verbose=False):
         if check_imap and not self.is_imap(other):
             raise Exception("Not an IMAP")
             print("isn't imap")
@@ -1092,7 +1105,8 @@ class AncestralGraph:
                         raise Exception("CI test not sufficient", new_mag, other, i, j, s)
             print('extra validated')
 
-        for i, j in random.sample(list(self._directed)+list(self._bidirected), self.num_directed+self.num_bidirected):
+        for i, j in random.sample(list(self._directed) + list(self._bidirected),
+                                  self.num_directed + self.num_bidirected):
             change = False
             new_mag = self.copy()
             new_mag.remove_edge(i, j)
@@ -1124,13 +1138,17 @@ class AncestralGraph:
                 if validate:
                     if not new_mag.is_imap(other):
                         raise Exception("CI test isn't sufficient: new MAG is not an IMAP")
-                if certify: return False, (i, j)
-                else: return False
+                if certify:
+                    return False, (i, j)
+                else:
+                    return False
 
-        if certify: return True, None
-        else: return True
+        if certify:
+            return True, None
+        else:
+            return True
 
-    def markov_blanket(self, node, flat: bool=False) -> Union[Set[Node], Dict]:
+    def markov_blanket(self, node, flat: bool = False) -> Union[Set[Node], Dict]:
         """
         Return the Markov blanket of a node with respect to the whole graph.
 
@@ -1156,8 +1174,8 @@ class AncestralGraph:
             new_resolved = {
                 node for node in self._nodes - res_qsinks
                 if not (self._children[node] - res_qsinks) and
-                   not (other._children[node] - res_qsinks) and
-                   self.markov_blanket(node) == other.markov_blanket(node)
+                                 not (other._children[node] - res_qsinks) and
+                                 self.markov_blanket(node) == other.markov_blanket(node)
             }
             res_qsinks.update(new_resolved)
             if not new_resolved:
@@ -1210,7 +1228,8 @@ class AncestralGraph:
                 # === FIND INDUCING PATHS BETWEEN PAIRS OF NODE
                 induced_pairs = []
 
-                non_adjacent_pairs = ((i, j) for i, j in itr.combinations(self._nodes, 2) if not self.has_any_edge(i, j))
+                non_adjacent_pairs = ((i, j) for i, j in itr.combinations(self._nodes, 2) if
+                                      not self.has_any_edge(i, j))
                 for node1, node2 in non_adjacent_pairs:
                     check_ancestry = lambda node: node in ancestor_dict[node1] or node in ancestor_dict[node2]
                     nbrs1 = self._children[node1] | self._spouses[node1]
@@ -1222,7 +1241,8 @@ class AncestralGraph:
                         same_component = node2component[nbr1] == node2component[nbr2]
                         if same_component and nbr1 in ancestor_dict[node2] and nbr2 in ancestor_dict[node1]:
                             if verbose: print(f"Checking neighbors {nbr1} (for {node1}) and {nbr2} (for {node2})")
-                            if self._reachable(nbr1, nbr2, visited=set(), allowed_edges={'b'}, predicate=check_ancestry, verbose=verbose):
+                            if self._reachable(nbr1, nbr2, visited=set(), allowed_edges={'b'}, predicate=check_ancestry,
+                                               verbose=verbose):
                                 if verbose: print("Reachable")
                                 induced_pairs.append((node1, node2))
                                 continue
@@ -1246,10 +1266,6 @@ class AncestralGraph:
     # === CONVERTERS
     def to_amat(self) -> np.ndarray:
         """
-        TODO
-
-        Parameters
-        ----------
         TODO
 
         Examples
@@ -1332,10 +1348,6 @@ class AncestralGraph:
         """
         TODO
 
-        Parameters
-        ----------
-        TODO
-
         Examples
         --------
         TODO
@@ -1394,10 +1406,6 @@ class AncestralGraph:
         """
         TODO
 
-        Parameters
-        ----------
-        TODO
-
         Examples
         --------
         TODO
@@ -1405,13 +1413,13 @@ class AncestralGraph:
         return frozenset(self._directed), frozenset(self._bidirected), frozenset(self._undirected)
 
     # === Algorithms
-    def _add_upstream(self, upstream, node):
+    def _add_upstream(self, upstream: set, node: Node):
         for parent in self._parents[node]:
             if parent not in upstream:
                 upstream.add(parent)
                 self._add_upstream(upstream, parent)
 
-    def _is_collider(self, u, v, w) -> bool:
+    def _is_collider(self, u: Node, v: Node, w: Node) -> bool:
         """return True if u-v-w is a collider"""
         if v in self._children[u] and v in self._children[w]:
             return True
@@ -1424,7 +1432,7 @@ class AncestralGraph:
         else:
             return False
 
-    def _no_other_path(self, i, j, ancestor_dict):
+    def _no_other_path(self, i: Node, j: Node, ancestor_dict: dict) -> bool:
         """
         Check if there is any path from i to j other than possibly the direct edge i->j.
         """
@@ -1472,7 +1480,7 @@ class AncestralGraph:
             mark_changes_bidir = {
                 (i, j) for i, j in bidirected + bidirected_reversed
                 if self._parents[i] - self._parents[j] == set() and
-                   self._spouses[i] - {j} - self._parents[j] - self._spouses[j] == set()
+                                   self._spouses[i] - {j} - self._parents[j] - self._spouses[j] == set()
             }
             return mark_changes_dir, mark_changes_bidir
 
@@ -1502,7 +1510,8 @@ class AncestralGraph:
 
                 # SECOND CONDITION
                 disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j), None) if disc_paths_for_i else None
+                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j),
+                                            None) if disc_paths_for_i else None
                 if disc_paths_condition is not None:
                     if verbose: print(f'Failed discriminating path condition on {disc_paths_condition}')
                     continue
@@ -1529,7 +1538,8 @@ class AncestralGraph:
 
                 # SECOND CONDITION
                 disc_paths_for_i = [path for path in disc_paths.keys() if path[-2] == i]
-                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j), None) if disc_paths_for_i else None
+                disc_paths_condition = next((path for path in disc_paths_for_i if path[-1] == j),
+                                            None) if disc_paths_for_i else None
                 if disc_paths_condition is not None:
                     if verbose: print(f'Failed discriminating path condition on {disc_paths_condition}')
                     continue
@@ -1539,7 +1549,7 @@ class AncestralGraph:
 
             return mark_changes_dir, mark_changes_bidir
 
-    def msep(self, A, B, C=set()) -> bool:
+    def msep(self, A: Set[Node], B: Set[Node], C: Set[Node]=set()) -> bool:
         """
         Check whether A and B are m-separated given C, using the Bayes ball algorithm.
 
@@ -1603,7 +1613,7 @@ class AncestralGraph:
 
         return True
 
-    def msep_from_given(self, A, C=set()) -> Set[Node]:
+    def msep_from_given(self, A: Set[Node], C: Set[Node]=set()) -> Set[Node]:
         """
         Find all nodes m-separated from A given C.
 
@@ -1672,6 +1682,3 @@ class AncestralGraph:
 if __name__ == '__main__':
     g = AncestralGraph(nodes=set(range(1, 5)), directed={(1, 2), (2, 4), (3, 2), (3, 4)})
     disc_paths = g.discriminating_paths()
-
-
-
