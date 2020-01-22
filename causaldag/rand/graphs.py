@@ -13,7 +13,7 @@ def unif_away_zero(low=.25, high=1, size=1, all_positive=False):
     return (_coin(.5, size) - .5)*2 * np.random.uniform(low, high, size=size)
 
 
-def directed_erdos(nnodes, density, size=1):
+def directed_erdos(nnodes, density, size=1, as_list=False):
     """
     Generate random Erdos-Renyi DAG(s) on `nnodes` nodes with density `density`.
 
@@ -25,6 +25,8 @@ def directed_erdos(nnodes, density, size=1):
         Probability of any edge.
     size:
         Number of graphs.
+    as_list:
+        If True, always return as a list, even if only one DAG is generated.
 
     Examples
     --------
@@ -33,7 +35,8 @@ def directed_erdos(nnodes, density, size=1):
     if size == 1:
         bools = _coin(density, size=int(nnodes*(nnodes-1)/2))
         arcs = {(i, j) for (i, j), b in zip(itr.combinations(range(nnodes), 2), bools) if b}
-        return DAG(nodes=set(range(nnodes)), arcs=arcs)
+        d = DAG(nodes=set(range(nnodes)), arcs=arcs)
+        return [d] if as_list else d
     else:
         return [directed_erdos(nnodes, density) for _ in range(size)]
 

@@ -1895,7 +1895,7 @@ class DAG:
        
         while True:
             i_p_1_links = set()
-            #Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
+            # Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
             for link in i_links:
                 u, v = link
                 for w in self._neighbors[v]:
@@ -1904,7 +1904,7 @@ class DAG:
                             if v in descendants:
                                 i_p_1_links.add((v,w))
                                 reachable.add(w)
-                        else:  #Not collider
+                        else:  # Not collider
                             if v not in determined:
                                 i_p_1_links.add((v,w))
                                 reachable.add(w)
