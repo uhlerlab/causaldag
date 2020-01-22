@@ -177,7 +177,7 @@ class DAG:
 
         Parameters
         ----------
-        TODO
+        node
 
         See Also
         --------
@@ -195,7 +195,7 @@ class DAG:
 
         Parameters
         ----------
-        TODO
+        node
 
         See Also
         --------
@@ -266,7 +266,7 @@ class DAG:
         """
         self._nodes.add(node)
 
-    def add_arc(self, i, j, unsafe=False):
+    def add_arc(self, i: Node, j: Node, unsafe=False):
         """
         Add an arc to the DAG
 
@@ -411,7 +411,7 @@ class DAG:
                     self.remove_arc(i, j)
                 raise e
 
-    def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
+    def reverse_arc(self, i: Node, j: Node, ignore_error=False, unsafe=False):
         """
         Reverse the arc i->j to i<-j
 
@@ -434,7 +434,7 @@ class DAG:
         self.remove_arc(i, j, ignore_error=ignore_error)
         self.add_arc(j, i, unsafe=unsafe)
 
-    def remove_arc(self, i, j, ignore_error=False):
+    def remove_arc(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the arc i->j
 
@@ -466,13 +466,13 @@ class DAG:
             else:
                 raise e
 
-    def remove_arcs(self, arcs, ignore_error=False):
+    def remove_arcs(self, arcs: Iterable, ignore_error=False):
         """
         TODO
 
         Parameters
         ----------
-        TODO
+        arcs
 
         Examples
         --------
@@ -481,7 +481,7 @@ class DAG:
         for i, j in arcs:
             self.remove_arc(i, j, ignore_error=ignore_error)
 
-    def remove_node(self, node, ignore_error=False):
+    def remove_node(self, node: Node, ignore_error=False):
         """
         Remove a node from the graph
 
