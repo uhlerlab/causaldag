@@ -10,6 +10,7 @@ import operator as op
 from causaldag.classes.custom_types import Node, DirectedEdge
 from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
+from networkx.utils import UnionFind
 import random
 
 
@@ -1412,82 +1413,44 @@ class DAG:
         return g
 
     def directed_clique_tree(self, verbose=False):
-        # === get max cliques
-        g = nx.Graph()
-        g.add_edges_from(self._arcs)
-        max_cliques = {frozenset(c) for c in nx.chordal_graph_cliques(g)}
-
-        clique_tree = nx.MultiDiGraph()
-        # === return single node graph if already complete
-        if len(max_cliques) == 1:
-            clique_tree.add_node(max_cliques.pop())
-            return clique_tree
-
-        # === get edge weights and directions b/t cliques
-        overlap_to_edges = defaultdict(set)
-        is_bidirected_dict = dict()
-        for c1, c2 in itr.combinations(max_cliques, 2):
-            shared = c1 & c2
-            if shared:
+        cliques = nx.chordal_graph_cliques(self.to_nx().to_undirected())
+        ct = nx.MultiDiGraph()
+        ct.add_nodes_from(cliques)
+        edges = {(c1, c2): c1 & c2 for c1, c2 in itr.combinations(cliques, 2) if c1 & c2}
+        subtrees = UnionFind()
+        bidirected_components = UnionFind()
+        for c1, c2 in sorted(edges, key=lambda e: len(edges[e]), reverse=True):
+            if verbose: print(f"Considering edge {c1}-{c2}")
+            if subtrees[c1] != subtrees[c2]:
+                shared = c1 & c2
                 all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(shared, c1 - shared))
                 all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(shared, c2 - shared))
-                is_bidirected = all_into_c1 and all_into_c2
-                if not is_bidirected:
-                    c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)  # switch directions so c1 first
-                is_bidirected_dict[(c1, c2)] = is_bidirected
-                overlap_to_edges[len(c1 & c2)].add((c1, c2))
+                if all_into_c1 and all_into_c2:
+                    if verbose: print(f"Adding edge {c1}<->{c2}")
+                    subtrees.union(c1, c2)
+                    bidirected_components.union(c1, c2)
+                    ct.add_edge(c1, c2)
+                    ct.add_edge(c2, c1)
+                else:
+                    c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)
+                    c2_parent = bidirected_components[c2]
+                    bidirected_component = [
+                        c for c, parent in bidirected_components.parents.items()
+                        if parent == c2_parent
+                    ]
+                    has_source = any(
+                        set(ct.predecessors(c)) - set(ct.successors(c))
+                        for c in bidirected_component
+                    )
+                    if not has_source:
+                        if verbose: print(f"{c1}->{c2}")
+                        ct.add_edge(c1, c2)
+                        subtrees.union(c1, c2)
 
-        if verbose: print(overlap_to_edges, is_bidirected_dict)
-        current_threshold = max(overlap_to_edges)
+        labels = {(c1, c2, 0): c1 & c2 for c1, c2 in ct.edges()}
+        nx.set_edge_attributes(ct, labels, name='label')
 
-        # greedily choose edges to create a directed clique tree
-        for _ in range(len(max_cliques)-1):
-            while current_threshold > 0:
-                candidate_edges = list(overlap_to_edges[current_threshold])
-                candidate_trees = [clique_tree.copy() for _ in candidate_edges]
-                for t, (c1, c2) in zip(candidate_trees, candidate_edges):
-                    if is_bidirected_dict[(c1, c2)]:
-                        t.add_edge(c1, c2)
-                        t.add_edge(c2, c1)
-                    else:
-                        t.add_edge(c1, c2)
-
-                # only keep forests
-                candidate_trees = [t for t in candidate_trees if nx.is_forest(t.to_undirected())]
-
-                if not candidate_trees:
-                    current_threshold -= 1
-                    continue
-
-                # only keep if single source in each component
-                candidate_trees_no_collider = []
-                for t in candidate_trees:
-                    components = [nx.subgraph(t, component) for component in nx.strongly_connected_components(t)]
-                    components2parents = [set.union(*(set(t.predecessors(node)) - c.nodes() for node in c)) for c in components]
-                    if all(len(parents) <= 1 for parents in components2parents):
-                        candidate_trees_no_collider.append(t)
-                if not candidate_trees_no_collider:
-                    raise Exception("Can't find a collider-free tree")
-
-                # choose clique tree without new -><->, if possible
-                preferred_candidate_trees = []
-                for t in candidate_trees_no_collider:
-                    new_edge = set(t.edges()) - set(clique_tree.edges())
-                    c1, c2 = list(new_edge)[0]
-                    if not t.has_edge(c2, c1):
-                        preferred_candidate_trees.append(t)
-                    else:
-                        if not set(t.predecessors(c1)) - {c2} and not set(t.predecessors(c2)) - {c1}:
-                            preferred_candidate_trees.append(t)
-
-                clique_tree = preferred_candidate_trees[0] if preferred_candidate_trees else candidate_trees_no_collider[0]
-                if verbose: print(clique_tree.edges())
-                break
-
-        labels = {(c1, c2, 0): c1 & c2 for c1, c2 in clique_tree.edges()}
-        nx.set_edge_attributes(clique_tree, labels, name='label')
-
-        return clique_tree
+        return ct
 
     def cpdag(self):
         """
@@ -1637,6 +1600,9 @@ class DAG:
             # determine common head
             intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
             common_head = frozenset.union(*intersections) - parent_component
+            max_intersection = max(intersections, key=len)
+            if max_intersection != frozenset.union(*intersections):
+                raise RuntimeError
             sorted_common_head = [node for node in sorted_nodes if node in common_head]
             if verbose: print(f'component contains multiple cliques, common head = {sorted_common_head}')
 
