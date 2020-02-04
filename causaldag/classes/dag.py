@@ -1426,11 +1426,18 @@ class DAG:
                 all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(shared, c1 - shared))
                 all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(shared, c2 - shared))
                 if all_into_c1 and all_into_c2:
-                    if verbose: print(f"Adding edge {c1}<->{c2}")
-                    subtrees.union(c1, c2)
-                    bidirected_components.union(c1, c2)
-                    ct.add_edge(c1, c2)
-                    ct.add_edge(c2, c1)
+                    c1_parent = bidirected_components[c1]
+                    c2_parent = bidirected_components[c2]
+                    b1 = [c for c, parent in bidirected_components.parents.items() if parent == c1_parent]
+                    b2 = [c for c, parent in bidirected_components.parents.items() if parent == c2_parent]
+                    b1_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b1)
+                    b2_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b2)
+                    if not (b1_source and b2_source):
+                        if verbose: print(f"Adding edge {c1}<->{c2}")
+                        subtrees.union(c1, c2)
+                        bidirected_components.union(c1, c2)
+                        ct.add_edge(c1, c2)
+                        ct.add_edge(c2, c1)
                 else:
                     c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)
                     c2_parent = bidirected_components[c2]
@@ -1633,6 +1640,31 @@ class DAG:
 
             return intervened_nodes
             # TODO: test!
+
+    def residuals(self):
+        sdct = self.simplified_directed_clique_tree()
+        sdct_nodes = list(sdct.nodes)
+        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
+        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
+        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
+        return [component - parent for component, parent in zip(sdct_components, sdct_parents)]
+
+    def residual_essential_graph(self):
+        from causaldag import PDAG
+
+        sdct = self.simplified_directed_clique_tree()
+        sdct_nodes = list(sdct.nodes)
+        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
+        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
+        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
+        sdct_residuals = [component - parent for component, parent in zip(sdct_components, sdct_parents)]
+        arcs = {
+            (p, r) for parent, residual, component in zip(sdct_parents, sdct_residuals, sdct_components)
+
+           for p, r in itr.product(parent & component, residual)
+        }
+        g = PDAG(nodes=self._nodes, arcs=arcs&self._arcs, edges=self._arcs-arcs)
+        return g
 
     def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
         """
