@@ -17,7 +17,7 @@ import scipy
 import networkx as nx 
 
 
-def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0.05):
+def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0.05, verbose=0):
     """
     Estimates the difference between two undirected graphs directly from two data sets
     using Kullback-Leibler importance estimation procedure (KLIEP).
@@ -34,20 +34,23 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0.05):
         Maximum number of iterations for gradient descent.
     edge_threshold: float, default = 0.05
         Edge weight cutoff for keeping an edge (all edges above or equal to this threshold are kept).
+    verbose: int, default = 0
+        The verbosity level of logging messages.
 
     Returns
     -------
     difference_ug: list
         List of tuple of edges in the difference undirected graph.
-    difference_nodes: set
-        Nodes in the difference undirected graph.    
     """
 
+    if verbose > 0:
+        print("Running KLIEP to get difference undirected graph...")
+        
     k1 = kernel_linear(X1)
     k2 = kernel_linear(X2)
-    theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=1000)
-    difference_ug, difference_nodes = compute_difference_graph(X1, theta, edge_threshold=edge_threshold)
-    return difference_ug, difference_nodes
+    theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=1000, verbose=verbose)
+    difference_ug = compute_difference_graph(X1, theta, edge_threshold=edge_threshold)
+    return difference_ug
 
 
 def kernel_linear(X):
@@ -75,7 +78,7 @@ def llkliep(theta, k1, k2):
     return loglik[0], grad
 
 
-def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000):
+def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000, verbose=0):
     """
     Performs gradient updates to find parameters that maximize the log-likelihood.
 
@@ -89,6 +92,8 @@ def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000):
         L1 regularization parameter.
     max_iter: int, default = 1000
         Maximum number of iterations for gradient descent.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
 
     Returns
     -------
@@ -116,7 +121,7 @@ def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000):
         g[ids] = grad[ids] - alpha
 
         ids = zero_ids & (grad < -alpha)
-        g[ids] = gt[ids] + alpha
+        g[ids] = grad[ids] + alpha
 
         # update theta parameters
         theta = theta - step*g/(iter + 1)
@@ -124,20 +129,20 @@ def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000):
 
         loglik_diff = np.abs(loglik - loglik_old)
         iter = iter + 1
-        if iter == max_iter:
+        if (verbose > 0) & (iter == max_iter):
             print('Maximum iteration reached')
     return theta
 
 
 def compute_difference_graph(X, theta, edge_threshold=0.05):
     """
-    Obtain difference undirected graph and corresponding nodes from estimated parameters.
+    Obtain difference undirected graph from estimated parameters.
     """
-    n, d = x.shape
+    n, d = X.shape
     delta_ug = np.zeros((d,d))
     delta_ug[np.triu_indices(d, 1)] = theta[0:-d].flatten()
     delta_ug = delta_ug + delta_ug.T
     # remove edges that are below cutoff threshold
     delta_ug[np.abs(delta_ug) < edge_threshold] = 0
     g = nx.from_numpy_matrix(delta_ug)
-    return list(g.edges()), set(np.unique(g.edges()))
+    return list(g.edges())
