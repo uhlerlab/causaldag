@@ -1608,8 +1608,8 @@ class DAG:
             intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
             common_head = frozenset.union(*intersections) - parent_component
             max_intersection = max(intersections, key=len)
-            if max_intersection != frozenset.union(*intersections):
-                raise RuntimeError
+            # if max_intersection != frozenset.union(*intersections):
+            #     raise RuntimeError
             sorted_common_head = [node for node in sorted_nodes if node in common_head]
             if verbose: print(f'component contains multiple cliques, common head = {sorted_common_head}')
 
