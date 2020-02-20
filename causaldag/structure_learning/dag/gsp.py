@@ -10,7 +10,8 @@ from causaldag import UndirectedGraph
 import numpy as np
 
 
-def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None, older=False):
+def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None,
+             older=False):
     """
     TODO
 
@@ -41,7 +42,8 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
             continue
 
         # === TEST MARKOV BLANKET
-        mb = d.markov_blanket(pi_i) if node2nbrs is None else (set(perm[:j]) - {pi_i}) & (node2nbrs[pi_i] | node2nbrs[pi_j])
+        mb = d.markov_blanket(pi_i) if node2nbrs is None else (set(perm[:j]) - {pi_i}) & (
+                    node2nbrs[pi_i] | node2nbrs[pi_j])
         mb = mb if not older else set(perm[:j]) - {pi_i}
 
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
@@ -184,9 +186,9 @@ def jci_gsp(
         setting_list: List[Dict],
         nodes: set,
         combined_ci_tester: CI_Tester,
-        depth: int=4,
-        nruns: int=5,
-        verbose: bool=False,
+        depth: int = 4,
+        nruns: int = 5,
+        verbose: bool = False,
         initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
 ):
     """
@@ -216,9 +218,9 @@ def jci_gsp(
             raise ValueError("initial_undirected must be one of 'threshold', or an UndirectedGraph")
     if initial_undirected:
         amat = initial_undirected.to_amat()
-        initial_permutations = [context_nodes+min_degree_alg_amat(amat) for _ in range(nruns)]
+        initial_permutations = [context_nodes + min_degree_alg_amat(amat) for _ in range(nruns)]
     else:
-        initial_permutations = [context_nodes+random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
+        initial_permutations = [context_nodes + random.sample(list(nodes), len(nodes)) for _ in range(nruns)]
 
     # === RUN GSP ON FULL DAG
     est_meta_dag, _ = gsp(
@@ -228,7 +230,7 @@ def jci_gsp(
         nruns=nruns,
         initial_permutations=initial_permutations,
         fixed_orders=fixed_orders,
-        fixed_adjacencies=context_adjacencies|known_iv_adjacencies,
+        fixed_adjacencies=context_adjacencies | known_iv_adjacencies,
         verbose=verbose
     )
 
@@ -239,7 +241,7 @@ def jci_gsp(
         if isinstance(node, str)
     }
     learned_intervention_targets = [learned_intervention_targets[i] for i in range(len(setting_list))]
-    est_dag = est_meta_dag.subgraph({node for node in est_meta_dag.nodes if not isinstance(node, str)})
+    est_dag = est_meta_dag.induced_subgraph({node for node in est_meta_dag.nodes if not isinstance(node, str)})
 
     return est_dag, learned_intervention_targets
 
@@ -247,11 +249,11 @@ def jci_gsp(
 def gsp(
         nodes: set,
         ci_tester: CI_Tester,
-        depth: Optional[int]=4,
-        nruns: int=5,
-        verbose: bool=False,
-        initial_undirected: Optional[Union[str, UndirectedGraph]]='threshold',
-        initial_permutations: Optional[List]=None,
+        depth: Optional[int] = 4,
+        nruns: int = 5,
+        verbose: bool = False,
+        initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
+        initial_permutations: Optional[List] = None,
         fixed_orders=set(),
         fixed_adjacencies=set(),
         fixed_gaps=set(),
@@ -330,6 +332,7 @@ def gsp(
 
         # === FIND NEXT POSSIBLE MOVES
         current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
+        if verbose: print(f"Current covered arcs: {current_covered_arcs}")
         covered_arcs2removed_arcs = [
             (i, j, update_minimal_imap(current_dag, i, j, ci_tester))
             for i, j in current_covered_arcs
@@ -419,8 +422,8 @@ def igsp(
         invariance_tester: InvarianceTester,
         depth: Optional[int] = 4,
         nruns: int = 5,
-        initial_undirected: Optional[Union[str, UndirectedGraph]]='threshold',
-        initial_permutations: Optional[List]=None,
+        initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
+        initial_permutations: Optional[List] = None,
         verbose: bool = False,
 ):
     """
@@ -507,7 +510,8 @@ def igsp(
             for setting_num, setting in enumerate(setting_list):
                 if j in setting['interventions'] and i not in setting['interventions']:
                     i_always_varies = all(
-                        invariance_tester.is_invariant(i, context=setting_num, cond_set=s) for s in powerset(neighbors_i)
+                        invariance_tester.is_invariant(i, context=setting_num, cond_set=s) for s in
+                        powerset(neighbors_i)
                     )
                     if i_always_varies: return True
             return False
@@ -541,7 +545,7 @@ def igsp(
             starting_perm = random.sample(nodes, len(nodes))
 
         current_dag = perm2dag(starting_perm, ci_tester)
-        if verbose: print("=== STARTING RUN %s/%s" % (r+1, nruns))
+        if verbose: print("=== STARTING RUN %s/%s" % (r + 1, nruns))
         current_covered_arcs = current_dag.reversible_arcs()
         current_icovered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j)]
         current_contradicting = _get_contradicting_arcs(current_dag)
@@ -571,7 +575,7 @@ def igsp(
                 desc = f'({len(current_dag.arcs)} arcs'
                 desc += f', I-covered: {current_icovered_arcs}'
                 desc += f', I-contradicting: {current_contradicting})'
-                print('-'*len(trace), current_dag, desc)
+                print('-' * len(trace), current_dag, desc)
             if (len(next_dags) > 0 and len(trace) != depth) or len(lower_dags) > 0:
                 if len(lower_dags) > 0:  # restart at a lower DAG
                     all_visited_dags = set()
@@ -645,11 +649,11 @@ def unknown_target_igsp(
         nodes: set,
         ci_tester: CI_Tester,
         invariance_tester: InvarianceTester,
-        depth: Optional[int]=4,
-        nruns: int=5,
+        depth: Optional[int] = 4,
+        nruns: int = 5,
         initial_undirected: Optional[Union[str, UndirectedGraph]] = 'threshold',
         initial_permutations: Optional[List] = None,
-        verbose: bool=False,
+        verbose: bool = False,
         use_lowest=True,
         tup_score=True
 ) -> (DAG, List[Set[int]]):
@@ -683,6 +687,7 @@ def unknown_target_igsp(
         background knowledge on orders. This option is mutually exclusive with initial_undirected.
 
     """
+
     def _is_icovered(i, j, dag):
         """
         Check if the edge i->j is I-covered in the DAG dag
@@ -764,7 +769,8 @@ def unknown_target_igsp(
         current_intervention_targets = [set() for _ in range(len(setting_list))]
         for setting_num, i, parents_i in variants:
             current_intervention_targets[setting_num].add(i)
-        current_score = len(current_dag.arcs) + len(variants) if not tup_score else (len(current_dag.arcs), len(variants))
+        current_score = len(current_dag.arcs) + len(variants) if not tup_score else (
+        len(current_dag.arcs), len(variants))
         if verbose: print("=== STARTING DAG:", current_dag, "== SCORE:", current_score)
 
         current_covered_arcs = current_dag.reversible_arcs()
@@ -784,7 +790,8 @@ def unknown_target_igsp(
         # === SEARCH!
         while True:
             if verbose:
-                print('-'*len(trace), current_dag, '(%d arcs)' % len(current_dag.arcs), 'I-covered arcs:', current_i_covered_arcs, 'score:', current_score)
+                print('-' * len(trace), current_dag, '(%d arcs)' % len(current_dag.arcs), 'I-covered arcs:',
+                      current_i_covered_arcs, 'score:', current_score)
             all_visited_dags.add(frozenset(current_dag.arcs))
             lower_dags = [
                 (d, i_cov_arcs, score, iv_targets) for d, i_cov_arcs, score, iv_targets in next_dags
@@ -796,7 +803,8 @@ def unknown_target_igsp(
                     all_visited_dags = set()
                     trace = []
                     lowest_ix = min(enumerate(lower_dags), key=lambda x: x[1][2])[0] if use_lowest else 0
-                    current_dag, current_i_covered_arcs, current_score, current_intervention_targets = lower_dags.pop(lowest_ix)
+                    current_dag, current_i_covered_arcs, current_score, current_intervention_targets = lower_dags.pop(
+                        lowest_ix)
                     if verbose: print("FOUND DAG WITH LOWER SCORE:", current_dag, "== SCORE:", current_score)
                 else:
                     trace.append((current_dag, current_i_covered_arcs, next_dags, current_intervention_targets))
@@ -825,7 +833,7 @@ def unknown_target_igsp(
             min_dag = current_dag
             min_score = current_score
             learned_intervention_targets = current_intervention_targets
-        if verbose: print("=== FINISHED RUN %s/%s ===" % (r+1, nruns))
+        if verbose: print("=== FINISHED RUN %s/%s ===" % (r + 1, nruns))
 
     return min_dag, learned_intervention_targets
 
@@ -834,13 +842,10 @@ if __name__ == '__main__':
     import causaldag as cd
     from causaldag.utils.ci_tests.ci_tester import MemoizedCI_Tester
     from causaldag.utils.ci_tests.oracle import dsep_test
+
     p = 10
     d = cd.rand.directed_erdos(p, .2)
     ci_tester = MemoizedCI_Tester(dsep_test, d)
     est_dag, _ = gsp(set(range(p)), ci_tester, nruns=1, depth=float('inf'))
 
     print(est_dag.shd_skeleton(d))
-
-
-
-

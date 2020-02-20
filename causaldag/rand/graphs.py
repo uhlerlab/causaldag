@@ -1,5 +1,5 @@
 import numpy as np
-from causaldag import DAG, GaussDAG
+from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
 from typing import Union, List, Callable
 from networkx import barabasi_albert_graph
@@ -63,6 +63,21 @@ def rand_weights(dag, rand_weight_fn=unif_away_zero) -> GaussDAG:
     return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))
 
 
+def rand_nn_functions(dag: DAG, num_layers=3) -> SampleDAG:
+    s = SampleDAG(dag._nodes, arcs=dag._arcs)
+    for node in dag._nodes:
+        def conditional(parent_vals):
+            p = len(parent_vals)
+            vals = parent_vals
+            for _ in range(num_layers):
+                a = np.random.random((p, p))*2
+                vals = a @ vals
+                vals = np.where(vals > 0, vals, vals*.01)
+            return np.random.random(p)*2 @ vals + np.random.laplace(0, 1)
+        s.set_conditional(node, conditional)
+    return s
+
+
 def directed_random_graph(nnodes: int, random_graph_model: Callable, size=1, as_list=False) -> Union[DAG, List[DAG]]:
     if size == 1:
         # generate a random undirected graph
@@ -95,4 +110,13 @@ def directed_barabasi(nnodes: int, nattach: int, size=1, as_list=False) -> Union
     return directed_random_graph(nnodes, random_graph_model, size=size, as_list=as_list)
 
 
-__all__ = ['directed_erdos', 'rand_weights', 'unif_away_zero', 'directed_barabasi', 'directed_random_graph']
+__all__ = [
+    'directed_erdos',
+    'rand_weights',
+    'unif_away_zero',
+    'directed_barabasi',
+    'directed_random_graph',
+    'rand_nn_functions'
+]
+
+

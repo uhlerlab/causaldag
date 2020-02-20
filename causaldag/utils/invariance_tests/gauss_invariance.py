@@ -126,7 +126,7 @@ def gauss_invariance_test(
     else:
         reject = f_pvalue < alpha
 
-    # === FORM RESULT DICT AND RETUR
+    # === FORM RESULT DICT AND RETURN
     result_dict = dict(
         ftest_stat=ftest_stat,
         f_pvalue=f_pvalue,
@@ -136,4 +136,5 @@ def gauss_invariance_test(
         result_dict['rc_stat'] = rc_stat
         result_dict['rc_pvalue'] = rc_pvalue
 
+    # print(result_dict)
     return result_dict
