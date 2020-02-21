@@ -1520,7 +1520,8 @@ class AncestralGraph:
                 mark_changes_dir.add((i, j))
 
             mark_changes_bidir = set()
-            for i, j in self._bidirected | set(map(reversed, self._bidirected)):
+            forward_edges = {(i, j) for i, j in self._bidirected}
+            for i, j in forward_edges | set(map(reversed, forward_edges)):
                 if verbose: print(f'{i}<->{j} => {i}->{j} ?')
                 parents_condition = self._parents[i] - self._parents[j]
                 if parents_condition != set():
