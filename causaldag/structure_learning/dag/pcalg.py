@@ -54,7 +54,7 @@ def pcalg(
         solve_conflict: bool=False,
         max_cond_set: int=None,
         verbose: bool=False
-):
+) -> PDAG:
     """
     Use the PC (Peters-Clark) algorithm to estimate the Markov equivalence class of the data-generating DAG.
 
