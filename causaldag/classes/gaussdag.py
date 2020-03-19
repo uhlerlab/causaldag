@@ -55,6 +55,9 @@ class GaussDAG(DAG):
         """
         return DAG(nodes=set(self._node_list), arcs=self.arcs)
 
+    def copy(self):
+        return GaussDAG(nodes=self._nodes, arcs=self.arc_weights, means=self._means, variances=self._variances)
+
     @classmethod
     def from_amat(cls, weight_mat, nodes=None, means=None, variances=None):
         """

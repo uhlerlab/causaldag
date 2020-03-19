@@ -25,14 +25,14 @@ def unif_away_original(original, dist_original=.25, low=.25, high=1):
         if original - dist_original >= -high:
             regions.append((-high, original-dist_original))
         if original + dist_original <= -low:
-            regions.append((original+dist_original, low))
+            regions.append((original+dist_original, -low))
     else:
-        regions.append((low, high))
+        regions.append((-high, -low))
         if original + dist_original <= high:
             regions.append((original+dist_original, high))
         if original - dist_original >= low:
             regions.append((low, original-dist_original))
-    a, b = random.choice(regions, weights=[b-a for a, b in regions])
+    a, b = random.choices(regions, weights=[b-a for a, b in regions])[0]
     return np.random.uniform(a, b)
 
 
