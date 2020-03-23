@@ -10,6 +10,7 @@ Welcome to causaldag's documentation!
    :maxdepth: 2
 
    classes/index
+   structure_learning/index
 
 
 Indices and tables

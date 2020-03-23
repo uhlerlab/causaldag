@@ -59,3 +59,7 @@ Functions for nodes
    DAG.outgoing_arcs
    DAG.indegree
    DAG.outdegree
+   DAG.parents_of
+   DAG.children_of
+   DAG.neighbors_of
+   DAG.markov_blanket
