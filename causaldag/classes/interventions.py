@@ -51,6 +51,32 @@ class ScalingIntervention(SoftInterventionalDistribution):
 
 
 @dataclass
+class ShiftIntervention(SoftInterventionalDistribution):
+    shift: float
+
+    def sample(self, parent_values: Optional[np.ndarray], dag, node) -> np.ndarray:
+        from causaldag import GaussDAG, SampleDAG
+        if isinstance(dag, GaussDAG):
+            nsamples, nparents = parent_values.shape
+            node_ix = dag._node2ix[node]
+            noise = np.random.normal(loc=dag._means[node_ix] + self.shift, scale=dag._variances[node_ix]**.5, size=nsamples)
+            parent_ixs = [dag._node2ix[p] for p in dag._parents[node]]
+            if nparents != 0:
+                return np.sum(parent_values * dag._weight_mat[parent_ixs, node], axis=1) + noise
+            else:
+                return noise
+        elif isinstance(dag, SampleDAG):
+            nsamples = parent_values.shape[0]
+            samples = np.zeros(nsamples)
+            for sample_num in range(nsamples):
+                samples[sample_num] = dag.conditionals[node](parent_values[sample_num, :]) + self.shift
+            return samples
+
+    def pdf(self, vals: np.ndarray, parent_values: np.ndarray, dag, node) -> float:
+        pass
+
+
+@dataclass
 class GaussIntervention(PerfectInterventionalDistribution):
     mean: float = 0
     variance: float = 1

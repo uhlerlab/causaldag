@@ -645,7 +645,9 @@ class PDAG:
 
     # === COMPARISON
     def shd(self, other):
-        """Return the structural Hamming distance between this PDAG and another
+        """Return the structural Hamming distance between this PDAG and another.
+
+        For each pair of nodes, the SHD is incremented by 1 if the edge type/presence between the two nodes is different
         """
         self_undirected = {frozenset({*arc}) for arc in self._arcs} | self._edges
         other_undirected = {frozenset({*arc}) for arc in other._arcs} | other._edges
@@ -655,7 +657,7 @@ class PDAG:
             (i, j) for i, j in self_undirected & other_undirected
             if ((i, j) in self._arcs and (i, j) not in other._arcs) or
                ((j, i) in self._arcs and (j, i) not in other._arcs) or
-               ((i, j) in self._edges and (i, j) not in other._edges)
+               (frozenset({i, j}) in self._edges and frozenset({i, j}) not in other._edges)
         }
         return num_additions + num_deletions + len(diff_type)
 

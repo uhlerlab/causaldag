@@ -204,6 +204,30 @@ class GaussDAG(DAG):
         """
         self._variances[i] = var
 
+    def means(self):
+        """
+        Return the mean of each node
+        """
+        means = np.zeros(len(self._node_list))
+        for i in range(self.nnodes):
+            parent_ixs = [self._node2ix[p] for p in self._parents[i]]
+            means[i] = self.weight_mat[parent_ixs, i] @ means[parent_ixs] + self._means[i]
+        return means
+
+    def deterministic_intervention_means(self, intervention: Dict[Any, float]):
+        """
+        Return the mean of each node after a deterministic intervention is performed
+        """
+        means = np.zeros(len(self._node_list))
+        for i in range(self.nnodes):
+            iv_value = intervention.get(i)
+            if iv_value is None:
+                parent_ixs = [self._node2ix[p] for p in self._parents[i]]
+                means[i] = self.weight_mat[parent_ixs, i] @ means[parent_ixs] + self._means[i]
+            else:
+                means[i] = iv_value
+        return means
+
     @property
     def nodes(self):
         return list(self._nodes)

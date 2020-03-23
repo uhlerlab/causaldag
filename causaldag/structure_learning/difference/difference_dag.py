@@ -13,13 +13,13 @@ References
     Journal of the Royal Statistical Society: Series B (Statistical Methodology), 72(4), pp.417-473.
 """
 
-
 from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph
 from causaldag.utils.ci_tests import gauss_ci_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
 from scipy.special import ncfdtr
 from numpy.linalg import inv
+import numpy as np
 import itertools
 from joblib import Parallel, delayed
 from sklearn.utils import safe_mask
@@ -29,14 +29,14 @@ from sklearn.utils.random import sample_without_replacement
 def dci(
         X1,
         X2,
-        alpha_ug: float=1.0,
-        alpha_skeleton: float=0.1,
-        alpha_orient: float=0.1,
-        max_set_size: int=None,
-        difference_ug: list=None,
-        max_iter: int=1000,
-        edge_threshold: float=0.05,
-        verbose: int=0
+        alpha_ug: float = 1.0,
+        alpha_skeleton: float = 0.1,
+        alpha_orient: float = 0.1,
+        max_set_size: int = None,
+        difference_ug: list = None,
+        max_iter: int = 1000,
+        edge_threshold: float = 0.05,
+        verbose: int = 0
 ):
     """
     Uses the Difference Causal Inference (DCI) algorithm to estimate the difference-DAG between two settings.
@@ -93,39 +93,43 @@ def dci(
     num_nodes = X1.shape[1]
     # obtain sufficient statistics
     suffstat1 = gauss_ci_suffstat(X1)
-    suffstat2 = gauss_ci_suffstat(X2)    
+    suffstat2 = gauss_ci_suffstat(X2)
     rh1 = RegressionHelper(suffstat1)
     rh2 = RegressionHelper(suffstat2)
-    
+
     # compute the difference undirected graph via KLIEP if the differece_ug is not provided
     if difference_ug is None:
-        difference_ug = dci_undirected_graph(X1, X2, alpha=alpha_ug, max_iter=max_iter, edge_threshold=edge_threshold, verbose=verbose)
-    
+        difference_ug = dci_undirected_graph(X1, X2, alpha=alpha_ug, max_iter=max_iter, edge_threshold=edge_threshold,
+                                             verbose=verbose)
+
     # estimate the skeleton of the difference-DAG 
     skeleton = dci_skeleton(difference_ug, rh1, rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
     # orient edges of the skeleton of the difference-DAG
-    edges_oriented, edges_unoriented = dci_orient(skeleton, rh1, rh2, alpha=alpha_orient, max_set_size=max_set_size, verbose=verbose)
+    edges_oriented, edges_unoriented = dci_orient(skeleton, rh1, rh2, alpha=alpha_orient, max_set_size=max_set_size,
+                                                  verbose=verbose)
 
-    adjacency_matrix = edges2adjacency(num_nodes, edges_unoriented, undirected=True) + edges2adjacency(num_nodes, edges_oriented, undirected=False)
+    adjacency_matrix = edges2adjacency(num_nodes, edges_unoriented, undirected=True) + edges2adjacency(num_nodes,
+                                                                                                       edges_oriented,
+                                                                                                       undirected=False)
     return adjacency_matrix
 
 
 def dci_stability_selection(
         X1,
         X2,
-        alpha_ug_grid: list=[0.1, 1, 10],
-        alpha_skeleton_grid: list=[0.1, 0.5],
+        alpha_ug_grid: list = [0.1, 1, 10],
+        alpha_skeleton_grid: list = [0.1, 0.5],
         alpha_orient_grid: list = [0.001, 0.1],
-        max_set_size: int=None,
-        difference_ug: list=None,
-        max_iter: int=1000,
-        edge_threshold: float=0.05,
-        sample_fraction: float=0.7,
-        n_bootstrap_iterations: int=50,
-        bootstrap_threshold: float=0.5,
-        n_jobs: int=1,
-        random_state: int=None,
-        verbose: int=0
+        max_set_size: int = None,
+        difference_ug: list = None,
+        max_iter: int = 1000,
+        edge_threshold: float = 0.05,
+        sample_fraction: float = 0.7,
+        n_bootstrap_iterations: int = 50,
+        bootstrap_threshold: float = 0.5,
+        n_jobs: int = 1,
+        random_state: int = None,
+        verbose: int = 0
 ):
     """
     Runs Difference Causal Inference (DCI) algorithm with stability selection to estimate the difference-DAG between two settings. 
@@ -195,35 +199,34 @@ def dci_stability_selection(
     """
 
     _, n_variables = X1.shape
-    n_params = len(alpha_ug_grid)*len(alpha_skeleton_grid)*len(alpha_orient_grid)
+    n_params = len(alpha_ug_grid) * len(alpha_skeleton_grid) * len(alpha_orient_grid)
 
-    hyperparams = itertools.product(alpha_ug_grid, alpha_skeleton_grid, alpha_orient_grid)        
+    hyperparams = itertools.product(alpha_ug_grid, alpha_skeleton_grid, alpha_orient_grid)
     stability_scores = np.zeros((n_params, n_variables, n_variables))
 
     for idx, params in enumerate(hyperparams):
         if verbose > 0:
-            print("Fitting estimator for alpha_ug = %.5f, alpha_skeleton = %.5f, alpha_orient = %.5f with %d bootstrap iterations" %
-                  (params[0], params[1], params[2], n_bootstrap_iterations))
+            print(
+                "Fitting estimator for alpha_ug = %.5f, alpha_skeleton = %.5f, alpha_orient = %.5f with %d bootstrap iterations" %
+                (params[0], params[1], params[2], n_bootstrap_iterations))
 
         bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction,
                                                  X1, random_state=random_state)
         bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction,
                                                  X2, random_state=random_state)
 
-
         bootstrap_results = Parallel(n_jobs, verbose=verbose
-        )(delayed(dci)(X1[safe_mask(X1, subsample1), :],
-            X2[safe_mask(X2, subsample2), :],
-            alpha_ug = params[0],
-            alpha_skeleton = params[1],
-            alpha_orient = params[2],
-            max_set_size = max_set_size,
-            difference_ug = difference_ug,
-            max_iter = max_iter,
-            edge_threshold = edge_threshold,
-            verbose = verbose)
-          for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
-
+                                     )(delayed(dci)(X1[safe_mask(X1, subsample1), :],
+                                                    X2[safe_mask(X2, subsample2), :],
+                                                    alpha_ug=params[0],
+                                                    alpha_skeleton=params[1],
+                                                    alpha_orient=params[2],
+                                                    max_set_size=max_set_size,
+                                                    difference_ug=difference_ug,
+                                                    max_iter=max_iter,
+                                                    edge_threshold=edge_threshold,
+                                                    verbose=verbose)
+                                       for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
 
         stability_scores[idx] = np.array(bootstrap_results).mean(axis=0)
 
@@ -249,9 +252,9 @@ def dci_skeleton(
         difference_ug: list,
         rh1: RegressionHelper,
         rh2: RegressionHelper,
-        alpha: float=0.1,
-        max_set_size: int=3,
-        verbose: int=0
+        alpha: float = 0.1,
+        max_set_size: int = 3,
+        verbose: int = 0
 ):
     """
     Estimates the skeleton of the difference-DAG.
@@ -303,7 +306,8 @@ def dci_skeleton(
 
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
-            stat_i = (beta1_i[j_ix] - beta2_i[j_ix])**2 * inv(var1_i*precision1/(n1-1) + var2_i*precision2/(n2-1))[j_ix, j_ix]
+            stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
+                     inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
             pval_i = ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
             pval_i = 2 * min(pval_i, 1 - pval_i)
 
@@ -311,7 +315,7 @@ def dci_skeleton(
             i_invariant = pval_i > alpha
             if i_invariant:
                 if verbose > 0:
-                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" %(i, j, pval_i, alpha))
+                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_i, alpha))
                 skeleton.remove(frozenset({i, j}))
                 break
 
@@ -321,7 +325,8 @@ def dci_skeleton(
 
             # compute statistic and p-value
             i_ix = cond_set_j.index(i)
-            stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * inv(var1_j*precision1/(n1-1) + var2_j*precision2/(n2-1))[i_ix, i_ix]
+            stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
+                     inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
             pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
             pval_j = 2 * min(pval_j, 1 - pval_j)
 
@@ -329,7 +334,7 @@ def dci_skeleton(
             j_invariant = pval_j > alpha
             if j_invariant:
                 if verbose > 0:
-                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" %(i, j, pval_j, alpha))
+                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_j, alpha))
                 skeleton.remove(frozenset({i, j}))
                 break
 
@@ -340,9 +345,9 @@ def dci_orient(
         skeleton: set,
         rh1: RegressionHelper,
         rh2: RegressionHelper,
-        alpha: float=0.1,
-        max_set_size: int=3,
-        verbose: int=0
+        alpha: float = 0.1,
+        max_set_size: int = 3,
+        verbose: int = 0
 ):
     """
     Orients edges in the skeleton of the difference DAG.
@@ -392,8 +397,8 @@ def dci_orient(
             beta1_i, var1_i, _ = rh1.regression(i, cond_i)
             beta2_i, var2_i, _ = rh2.regression(i, cond_i)
             # compute p-value for invariance of residual variances for i
-            pvalue_i = ncfdtr(n1 - len(cond_i), n2 - len(cond_i), 0, var1_i/var2_i)
-            pvalue_i = 2 * min(pvalue_i, 1-pvalue_i)
+            pvalue_i = ncfdtr(n1 - len(cond_i), n2 - len(cond_i), 0, var1_i / var2_i)
+            pvalue_i = 2 * min(pvalue_i, 1 - pvalue_i)
 
             # compute residual variances for j
             beta1_j, var1_j, _ = rh1.regression(j, cond_j)
@@ -409,7 +414,7 @@ def dci_orient(
                 else:
                     edge = (i, j) if i in cond_j else (j, i)
                 oriented_edges.add(edge)
-                
+
                 if verbose > 0:
                     print("Oriented (%d, %d) as %s" % (i, j, edge))
                 break
