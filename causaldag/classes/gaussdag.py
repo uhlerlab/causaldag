@@ -420,10 +420,6 @@ class GaussDAG(DAG):
         """
         TODO
 
-        Parameters
-        ----------
-        TODO
-
         Examples
         --------
         TODO
@@ -461,6 +457,7 @@ class GaussDAG(DAG):
             id_min_a_inv = inv(id_ - a)
             if (self._variances == 1).all():
                 self._covariance = id_min_a_inv.T @ id_min_a_inv
+                # TODO set isclose to 0 to 0 ??
             else:
                 self._covariance = id_min_a_inv.T @ np.diag(self._variances) @ id_min_a_inv
 

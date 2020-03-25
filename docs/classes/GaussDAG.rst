@@ -1,3 +1,5 @@
+.. _gaussdag
+
 ********
 GaussDAG
 ********
