@@ -190,6 +190,9 @@ class GaussDAG(DAG):
         if val != 0 and (i, j) not in self._arcs:
             super().add_arc(i, j)
 
+    def set_node_mean(self, i, mean):
+        self._means[i] = mean
+
     def set_node_variance(self, i, var):
         """
         Change the variance of node i to var
