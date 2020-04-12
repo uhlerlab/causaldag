@@ -24,5 +24,5 @@ Released under the 3-Clause BSD license::
 from .classes import *
 from .loaders import *
 from . import rand
-from . import structure_learning
+from .structure_learning import *
 from . import utils
