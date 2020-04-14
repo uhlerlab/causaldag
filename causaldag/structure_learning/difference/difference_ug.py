@@ -17,7 +17,7 @@ import scipy
 import networkx as nx 
 
 
-def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0.05, verbose=0):
+def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, verbose=0):
     """
     Estimates the difference between two undirected graphs directly from two data sets
     using Kullback-Leibler importance estimation procedure (KLIEP).
@@ -50,6 +50,10 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0.05, 
     k2 = kernel_linear(X2)
     theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=1000, verbose=verbose)
     difference_ug = compute_difference_graph(X1, theta, edge_threshold=edge_threshold)
+    
+    if verbose > 0:
+        print("Difference undirected graph: ", difference_ug)
+
     return difference_ug
 
 
@@ -134,7 +138,7 @@ def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000, verbose=0):
     return theta
 
 
-def compute_difference_graph(X, theta, edge_threshold=0.05):
+def compute_difference_graph(X, theta, edge_threshold=0):
     """
     Obtain difference undirected graph from estimated parameters.
     """
@@ -142,6 +146,8 @@ def compute_difference_graph(X, theta, edge_threshold=0.05):
     delta_ug = np.zeros((d,d))
     delta_ug[np.triu_indices(d, 1)] = theta[0:-d].flatten()
     delta_ug = delta_ug + delta_ug.T
+    # set the diagonal
+    np.fill_diagonal(delta_ug, theta[-d:])
     # remove edges that are below cutoff threshold
     delta_ug[np.abs(delta_ug) < edge_threshold] = 0
     g = nx.from_numpy_matrix(delta_ug)
