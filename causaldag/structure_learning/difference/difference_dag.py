@@ -32,10 +32,10 @@ def dci(
         alpha_ug: float = 1.0,
         alpha_skeleton: float = 0.1,
         alpha_orient: float = 0.1,
-        max_set_size: int = None,
+        max_set_size: int = 3,
         difference_ug: list = None,
         max_iter: int = 1000,
-        edge_threshold: float = 0.05,
+        edge_threshold: float = 0,
         verbose: int = 0
 ):
     """
@@ -55,16 +55,17 @@ def dci(
     alpha_orient: float, default = 0.1
         Significance level parameter for determining orientation of an edge. 
         Lower alpha_orient results in more directed edges in the difference-DAG.
-    max_set_size: int, default = None
+    max_set_size: int, default = 3
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+        If None, conditioning sets of all sizes will be used.
     difference_ug: list, default = None
         List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
         KLIEP algorithm for estimating the difference undirected graph will be run. 
         If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
     max_iter: int, default = 1000
         Maximum number of iterations for gradient descent in KLIEP algorithm.
-    edge_threshold: float, default = 0.05
+    edge_threshold: float, default = 0
         Edge weight cutoff for keeping an edge for KLIEP algorithm (all edges above or equal to this threshold are kept).
     verbose: int, default = 0
         The verbosity level of logging messages.
@@ -101,11 +102,12 @@ def dci(
     if difference_ug is None:
         difference_ug = dci_undirected_graph(X1, X2, alpha=alpha_ug, max_iter=max_iter, edge_threshold=edge_threshold,
                                              verbose=verbose)
-
+    # get nodes to be considered in the conditioning sets
+    nodes_cond_set = get_nodes_in_graph(difference_ug)
     # estimate the skeleton of the difference-DAG 
-    skeleton = dci_skeleton(difference_ug, rh1, rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
+    skeleton = dci_skeleton(difference_ug, nodes_cond_set, rh1, rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
     # orient edges of the skeleton of the difference-DAG
-    edges_oriented, edges_unoriented = dci_orient(skeleton, rh1, rh2, alpha=alpha_orient, max_set_size=max_set_size,
+    edges_oriented, edges_unoriented = dci_orient(skeleton, nodes_cond_set, rh1, rh2, alpha=alpha_orient, max_set_size=max_set_size,
                                                   verbose=verbose)
 
     adjacency_matrix = edges2adjacency(num_nodes, edges_unoriented, undirected=True) + edges2adjacency(num_nodes,
@@ -120,7 +122,7 @@ def dci_stability_selection(
         alpha_ug_grid: list = [0.1, 1, 10],
         alpha_skeleton_grid: list = [0.1, 0.5],
         alpha_orient_grid: list = [0.001, 0.1],
-        max_set_size: int = None,
+        max_set_size: int = 3,
         difference_ug: list = None,
         max_iter: int = 1000,
         edge_threshold: float = 0.05,
@@ -250,6 +252,7 @@ def bootstrap_generator(n_bootstrap_iterations, sample_fraction, X, random_state
 
 def dci_skeleton(
         difference_ug: list,
+        nodes_cond_set: set,
         rh1: RegressionHelper,
         rh2: RegressionHelper,
         alpha: float = 0.1,
@@ -263,6 +266,8 @@ def dci_skeleton(
     ----------
     difference_ug: list
         List of tuples that represents edges in the difference undirected graph.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
     rh1: RegressionHelper
         Sufficient statistics estimated based on samples in the first dataset, stored in RegressionHelper class.
     rh2: RegressionHelper
@@ -293,10 +298,11 @@ def dci_skeleton(
 
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
-    nodes = get_nodes_in_graph(difference_ug)
-    skeleton = {frozenset({i, j}) for i, j in difference_ug}
 
-    for i, j in difference_ug:
+    skeleton = {frozenset({i, j}) for i, j in difference_ug}
+    difference_ug_without_self_edges = [tuple((i,j)) for i, j in difference_ug if i != j]
+
+    for i, j in difference_ug_without_self_edges:
         for cond_set in powerset(nodes - {i, j}, r_max=max_set_size):
             cond_set_i, cond_set_j = [*cond_set, j], [*cond_set, i]
 
@@ -343,6 +349,7 @@ def dci_skeleton(
 
 def dci_orient(
         skeleton: set,
+        nodes_cond_set: set,
         rh1: RegressionHelper,
         rh2: RegressionHelper,
         alpha: float = 0.1,
@@ -356,6 +363,8 @@ def dci_orient(
     ----------
     skeleton: set
         Set of edges in the skeleton of the difference-DAG.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
     rh1: RegressionHelper
         Sufficient statistics estimated based on samples in the first dataset, stored in RegressionHelper class.
     rh2: RegressionHelper
@@ -392,7 +401,7 @@ def dci_orient(
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
     for i, j in skeleton:
-        for cond_i, cond_j in zip(powerset(nodes - {i}, r_max=max_set_size), powerset(nodes - {j}, r_max=max_set_size)):
+        for cond_i, cond_j in zip(powerset(nodes_cond_set - {i}, r_max=max_set_size), powerset(nodes_cond_set - {j}, r_max=max_set_size)):
             # compute residual variances for i
             beta1_i, var1_i, _ = rh1.regression(i, cond_i)
             beta2_i, var2_i, _ = rh2.regression(i, cond_i)
@@ -411,15 +420,40 @@ def dci_orient(
                 # orient the edge according to highest p-value
                 if pvalue_i > pvalue_j:
                     edge = (j, i) if j in cond_i else (i, j)
+                    pvalue_used = pvalue_i
                 else:
                     edge = (i, j) if i in cond_j else (j, i)
+                    pvalue_used = pvalue_j
                 oriented_edges.add(edge)
 
                 if verbose > 0:
-                    print("Oriented (%d, %d) as %s" % (i, j, edge))
+                    print("Oriented (%d, %d) as %s since p-value=%.5f > alpha=%.5f" % (i, j, edge, pvalue_used, alpha))
                 break
 
-    unoriented_edges = skeleton - {frozenset({i, j}) for i, j in oriented_edges}
+    # orient edges via graph traversal
+    unoriented_edges_before_traversal = skeleton - oriented_edges - {(j, i) for i, j in oriented_edges}
+    unoriented_edges = unoriented_edges_before_traversal.copy()
+    g = nx.DiGraph()
+    for i, j in oriented_edges:
+        g.add_edge(i, j)
+    g.add_nodes_from(nodes)
+
+
+    for i, j in unoriented_edges_before_traversal:
+        chain_path = list(nx.all_simple_paths(g, source=i, target=j))
+        if len(chain_path) > 0:
+            oriented_edges.add((i, j))
+            unoriented_edges.remove((i, j))
+            if verbose > 0:
+                print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (i, j)))
+        else:
+            chain_path = list(nx.all_simple_paths(g, source=j, target=i))
+            if len(chain_path) > 0:
+                oriented_edges.add((j, i))
+                unoriented_edges.remove((i, j))
+                if verbose > 0:
+                    print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (j, i)))
+
     return oriented_edges, unoriented_edges
 
 
@@ -456,3 +490,32 @@ def get_nodes_in_graph(graph):
     Returns nodes that are in the graph.
     """
     return set(np.unique(graph))
+
+
+def get_directed_and_undirected_edges(adjacency_matrix):
+    """
+    Given an adjacency matrix, which contains both directed and undirected edges,
+    this function returns two adjancy matrices containing directed and undirected edges separately.
+    Useful for plotting the difference causal graph.
+
+    Parameters
+    ----------
+    adjacency_matrix: array, shape  = [num_nodes, num_nodes]
+        Adjacency matrix representing partially directed acyclic graph,
+        which containts both undirected and directed edges. 
+        Each entry should be either 0 or 1, representing absence or presence of an edge, respectively.
+
+    Returns
+    -------
+    adjacency_matrix_directed: array, shape  = [num_nodes, num_nodes]
+        Adjacency matrix containing only directed edges.
+    adjacency_matrix_undirected: array, shape  = [num_nodes, num_nodes]
+        Adjacency matrix containing only undirected edges.
+    """
+
+    adjacency_matrix = adjacency_matrix.astype('float')
+    adjacency_matrix_sym = adjacency_matrix + adjacency_matrix.T
+    adjacency_matrix_undirected = (adjacency_matrix_sym == 2).astype('float')
+    adjacency_matrix_directed = (adjacency_matrix_sym == 1).astype('float')
+    adjacency_matrix_directed[adjacency_matrix_directed == 1] = adjacency_matrix[adjacency_matrix_directed==1]
+    return adjacency_matrix_directed, adjacency_matrix_undirected
