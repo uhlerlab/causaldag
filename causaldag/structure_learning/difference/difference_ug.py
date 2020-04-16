@@ -41,6 +41,8 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, ver
     -------
     difference_ug: list
         List of tuple of edges in the difference undirected graph.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
     """
 
     if verbose > 0:
@@ -54,7 +56,9 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, ver
     if verbose > 0:
         print("Difference undirected graph: ", difference_ug)
 
-    return difference_ug
+    # get nodes to be considered in the conditioning sets
+    nodes_cond_set = get_nodes_in_graph(difference_ug)
+    return difference_ug, nodes_cond_set
 
 
 def kernel_linear(X):
@@ -152,3 +156,9 @@ def compute_difference_graph(X, theta, edge_threshold=0):
     delta_ug[np.abs(delta_ug) < edge_threshold] = 0
     g = nx.from_numpy_matrix(delta_ug)
     return list(g.edges())
+
+def get_nodes_in_graph(graph):
+    """
+    Returns nodes that are in the graph.
+    """
+    return set(np.unique(graph))
