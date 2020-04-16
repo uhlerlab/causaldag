@@ -52,7 +52,7 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, ver
     k2 = kernel_linear(X2)
     theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=1000, verbose=verbose)
     difference_ug = compute_difference_graph(X1, theta, edge_threshold=edge_threshold)
-    
+
     if verbose > 0:
         print("Difference undirected graph: ", difference_ug)
 

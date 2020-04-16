@@ -4,6 +4,7 @@ from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
 from typing import Union, List, Callable
 from networkx import barabasi_albert_graph
+from scipy.special import comb
 
 
 def _coin(p, size=1):
@@ -135,7 +136,12 @@ def alter_weights(
         gdag: GaussDAG,
         prob_altered: float = None,
         num_altered: int = None,
-        rand_weight_fn=unif_away_original
+        prob_added: float = None,
+        num_added: int = None,
+        prob_removed: float = None,
+        num_removed: int = None,
+        rand_weight_fn=unif_away_zero,
+        rand_change_fn=unif_away_original
 ):
     """
     Return a copy of a GaussDAG with some of its arc weights randomly altered by `rand_weight_fn`.
@@ -148,17 +154,54 @@ def alter_weights(
         Probability each arc has its weight altered.
     num_altered:
         Number of arcs whose weights are altered.
+    prob_added:
+        Probability that each missing arc is added.
+    num_added:
+        Number of missing arcs added.
+    prob_removed:
+        Probability that each arc is removed.
+    num_removed:
+        Number of arcs removed.
     rand_weight_fn:
-        Function to generate random weights, given the original weight.
+        Function that returns a random weight for each new edge.
+    rand_change_fn:
+        Function that takes the current weight of an edge and returns the new weight.
     """
     if num_altered is None and prob_altered is None:
-        raise ValueError("Must specify at least one of `percent_altered` or `num_altered`.")
+        raise ValueError("Must specify at least one of `prob_altered` or `num_altered`.")
+    if num_added is None and prob_added is None:
+        raise ValueError("Must specify at least one of `prob_added` or `num_added`.")
+    if num_removed is None and prob_removed is None:
+        raise ValueError("Must specify at least one of `prob_removed` or `num_removed`.")
+    if num_altered + num_removed > gdag.num_arcs:
+        raise ValueError(f"Tried altering {num_altered} arcs and removing {num_removed} arcs, but there are only {gdag.num_arcs} arcs in this DAG.")
+    num_missing_arcs = comb(gdag.nnodes, 2) - gdag.num_arcs
+    if num_added > num_missing_arcs:
+        raise ValueError(f"Tried adding {num_added} arcs but there are only {num_missing_arcs} arcs missing from the DAG.")
+
+    # GET NUMBER ADDED/CHANGED/REMOVED
     num_altered = num_altered if num_altered is not None else np.random.binomial(gdag.num_arcs, prob_altered)
+    num_removed = num_removed if num_removed is not None else np.random.binomial(gdag.num_arcs, prob_removed)
+    num_removed = min(num_removed, gdag.num_arcs - num_altered)
+    num_added = num_added if num_added is not None else np.random.binomial(num_missing_arcs, prob_added)
+
+    # GET ACTUAL ARCS THAT ARE ADDED/CHANGED/REMOVED
     altered_arcs = random.sample(list(gdag.arcs), num_altered)
+    removed_arcs = random.sample(list(gdag.arcs - set(altered_arcs)), num_removed)
+    valid_arcs_to_add = set(itr.combinations(gdag.topological_sort(), 2)) - gdag.arcs
+    added_arcs = random.sample(list(valid_arcs_to_add), num_added)
+
+    # CREATE NEW DAG
     new_gdag = gdag.copy()
     weights = gdag.arc_weights
     for i, j in altered_arcs:
-        new_gdag.set_arc_weight(i, j, rand_weight_fn(weights[(i, j)]))
+        new_gdag.set_arc_weight(i, j, rand_change_fn(weights[(i, j)]))
+    for i, j in removed_arcs:
+        new_gdag.remove_arc(i, j)
+    new_weights = rand_weight_fn(size=num_added)
+    for (i, j), val in zip(added_arcs, new_weights):
+        new_gdag.set_arc_weight(i, j, val)
+
     return new_gdag
 
 

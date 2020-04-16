@@ -145,10 +145,10 @@ def dci_stability_selection(
         Second dataset.
     alpha_ug_grid: array-like, default = [0.1, 1, 10]
         Grid of values to iterate over representing L1 regularization parameter for estimating the difference undirected graph via KLIEP algorithm.
-    alpha_skeleton: array-like, default = [0.1, 0.5]
+    alpha_skeleton_grid: array-like, default = [0.1, 0.5]
         Grid of values to iterate over representing significance level parameter for determining presence of edges in the skeleton of the difference graph. 
         Lower alpha_skeleton results in sparser difference graph.
-    alpha_orient: array-like, default = [0.001, 0.1]
+    alpha_orient_grid: array-like, default = [0.001, 0.1]
         Grid of values to iterate over representing significance level parameter for determining orientation of an edge. 
         Lower alpha_orient results in more directed edges in the difference-DAG.
     max_set_size: int, default = 3
@@ -336,7 +336,7 @@ def dci_skeleton(
             i_invariant = pval_i > alpha
             if i_invariant:
                 if verbose > 0:
-                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_i, alpha))
+                    print("Removing edge %d-%d since p-value=%.5f > alpha=%.5f" % (i, j, pval_i, alpha))
                 skeleton.remove(frozenset({i, j}))
                 break
 
