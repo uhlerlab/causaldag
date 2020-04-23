@@ -314,11 +314,10 @@ def dci_skeleton(
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
 
-    skeleton = {frozenset({i, j}) for i, j in difference_ug}
-    difference_ug_without_self_edges = [tuple((i,j)) for i, j in difference_ug if i != j]
+    skeleton = {(i, j) for i, j in difference_ug}
 
-    for i, j in difference_ug_without_self_edges:
-        for cond_set in powerset(nodes - {i, j}, r_max=max_set_size):
+    for i, j in difference_ug:
+        for cond_set in powerset(nodes_cond_set - {i, j}, r_max=max_set_size):
             cond_set_i, cond_set_j = [*cond_set, j], [*cond_set, i]
 
             # calculate regression coefficients (j regressed on cond_set_j) for both datasets
@@ -337,7 +336,7 @@ def dci_skeleton(
             if i_invariant:
                 if verbose > 0:
                     print("Removing edge %d-%d since p-value=%.5f > alpha=%.5f" % (i, j, pval_i, alpha))
-                skeleton.remove(frozenset({i, j}))
+                skeleton.remove((i, j))
                 break
 
             # calculate regression coefficients (i regressed on cond_set_i) for both datasets
@@ -356,7 +355,7 @@ def dci_skeleton(
             if j_invariant:
                 if verbose > 0:
                     print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_j, alpha))
-                skeleton.remove(frozenset({i, j}))
+                skeleton.remove((i, j))
                 break
 
     return skeleton
@@ -483,8 +482,9 @@ def dci_orient(
                     print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (j, i)))
 
     # form an adjacency matrix containing directed and undirected edges
-    adjacency_matrix = edges2adjacency(num_nodes, edges_unoriented, undirected=True) + edges2adjacency(num_nodes,
-                                                                                                       edges_oriented,
+    num_nodes = X1.shape[1]
+    adjacency_matrix = edges2adjacency(num_nodes, unoriented_edges, undirected=True) + edges2adjacency(num_nodes,
+                                                                                                       oriented_edges,
                                                                                                        undirected=False)
     return adjacency_matrix
 
