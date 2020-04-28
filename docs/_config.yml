@@ -22,8 +22,8 @@ title: CausalDAG
 email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   Python package for the creation, manipulation, and learning of Causal DAGs.
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/causaldag" # the subpath of your site, e.g. /blog
+url: "https://uhlerlab.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: jekyllrb
 github_username:  jekyll
 
