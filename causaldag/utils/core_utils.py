@@ -17,7 +17,7 @@ def defdict2dict(defdict, keys):
 
 def powerset(s, r_min=0, r_max=None):
     if r_max is None: r_max = len(s)
-    return itr.chain(*(itr.combinations(s, r) for r in range(r_min, r_max+1)))
+    return map(set, itr.chain(*(itr.combinations(s, r) for r in range(r_min, r_max+1))))
 
 
 def to_set(o):

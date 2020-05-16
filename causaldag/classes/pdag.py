@@ -12,6 +12,7 @@ from collections import namedtuple
 from scipy.special import factorial
 import networkx as nx
 from typing import Set, FrozenSet
+import csv
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
@@ -353,6 +354,41 @@ class PDAG:
             self._replace_edge_with_arc((node, c))
         self.to_complete_pdag(verbose=verbose)
 
+    def to_complete_pdag_new(self, verbose=False):
+        raise NotImplementedError("Must be tested")
+        protected_parents = defaultdict(set)
+        protected_children = defaultdict(set)
+        undecided_edges = {(i, j) for i, j in self._edges}
+        neighbors = self._undirected_neighbors.copy()
+
+        while True:
+            chain_arcs1 = {(i, j) for i, j in undecided_edges if protected_parents[i] - self._neighbors[j]}
+            undecided_edges -= chain_arcs1
+            chain_arcs2 = {(j, i) for i, j in undecided_edges if protected_parents[j] - self._neighbors[i]}
+            undecided_edges -= set(map(reversed, chain_arcs2))
+
+            cycle_arcs1 = {(i, j) for i, j in undecided_edges if protected_children[i] & protected_parents[j]}
+            undecided_edges -= cycle_arcs1
+            cycle_arcs2 = {(j, i) for i, j in undecided_edges if protected_children[j] & protected_parents[i]}
+            undecided_edges -= set(map(reversed, cycle_arcs2))
+
+            a1 = {
+                (i, j) for i, j in undecided_edges
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in itr.combinations(neighbors[i] & protected_parents[j], 2))
+            }
+            undecided_edges -= a1
+            a2 = {
+                (j, i) for i, j in undecided_edges
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in itr.combinations(neighbors[j] & protected_parents[i], 2))
+            }
+            undecided_edges -= a1
+
+            for i, j in chain_arcs1 | chain_arcs2 | cycle_arcs1 | cycle_arcs2 | a1 | a2:
+                protected_children[i].add(j)
+                protected_parents[j].add(i)
+                neighbors[i].remove(j)
+                neighbors[j].remove(i)
+
     def to_complete_pdag(self, verbose=False, solve_conflict=False):
         """
         Replace with arcs those edges whose orientations can be determined by Meek rules:
@@ -501,6 +537,15 @@ class PDAG:
         raise NotImplementedError
 
     # === MUTATORS
+    def to_csv(self, filename):
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
+            for node1, node2 in self._edges:
+                writer.writerow([node1, node2])
+                writer.writerow([node2, node1])
+
     def to_amat(self, node_list=None, mode='dataframe'):
         """Return an adjacency matrix for the graph
         """

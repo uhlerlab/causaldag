@@ -12,6 +12,7 @@ from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
 from networkx.utils import UnionFind
 import random
+import csv
 
 
 class CycleError(Exception):
@@ -99,6 +100,12 @@ class DAG:
         """
         # return DAG(nodes=self._nodes, arcs=self._arcs)
         return DAG(dag=self)
+
+    def rename_nodes(self, name_map: Dict):
+        return DAG(
+            nodes={name_map[n] for n in self._nodes},
+            arcs={(name_map[i], name_map[j]) for i, j in self._arcs}
+        )
 
     # === PROPERTIES
     @property
@@ -1367,6 +1374,12 @@ class DAG:
             amat[node2ix[source], node2ix[target]] = 1
 
         return amat, node_list
+
+    def to_csv(self, filename):
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
 
     def induced_subgraph(self, nodes: Set[Node]):
         """

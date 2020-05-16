@@ -8,6 +8,8 @@ import random
 from causaldag.structure_learning.undirected import threshold_ug
 from causaldag import UndirectedGraph
 import numpy as np
+from tqdm import trange
+from causaldag.utils.core_utils import powerset
 
 
 def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None,
@@ -49,9 +51,25 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
             d.add_arc(pi_i, pi_j, unsafe=True)
-        if verbose: print("%s indep of %s given %s: %s" % (pi_i, pi_j, mb, is_ci))
+        if verbose: print(f"{pi_i} indep of {pi_j} given {mb}: {is_ci}")
 
     return d
+
+
+def perm2dag_subsets(perm, ci_tester, max_subset_size=None):
+    """
+    Not recommended unless max_subset_size set very small. Not thoroughly tested.
+    """
+    arcs = set()
+    nodes = set(perm)
+    for i, pi_i in enumerate(perm):
+        for candidate_parent_set in powerset(perm[:i], r_max=max_subset_size):
+            print(candidate_parent_set)
+            if all(ci_tester.is_ci(i, j, candidate_parent_set) for j in nodes - {i} - candidate_parent_set):
+            # if ci_tester.is_ci(i, nodes - {i} - candidate_parent_set, candidate_parent_set):
+                arcs.update({(parent, i) for parent in candidate_parent_set})
+                break
+    return DAG(nodes=nodes, arcs=arcs)
 
 
 def perm2dag2(perm, ci_tester, node2nbrs=None):
@@ -259,7 +277,9 @@ def gsp(
         fixed_gaps=set(),
         use_lowest=True,
         max_iters=float('inf'),
-        factor=2
+        factor=2,
+        progress_bar=False,
+        summarize=False
 ) -> (DAG, List[List[Dict]]):
     """
     Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
@@ -301,6 +321,9 @@ def gsp(
     ------
     (est_dag, summaries)
     """
+    if initial_permutations is not None:
+        nruns = len(initial_permutations)
+
     if initial_permutations is None and isinstance(initial_undirected, str):
         if initial_undirected == 'threshold':
             initial_undirected = threshold_ug(nodes, ci_tester)
@@ -325,7 +348,8 @@ def gsp(
     summaries = []
     min_dag = None
     # all_kept_dags = set()
-    for r in range(nruns):
+    range_fn = range if not progress_bar else trange
+    for r in range_fn(nruns):
         summary = []
         current_dag = starting_dags[r]
         if verbose: print("=== STARTING DAG:", current_dag)
@@ -408,11 +432,15 @@ def gsp(
                     current_dag, current_covered_arcs, covered_arcs2removed_arcs = trace.pop()
 
         # === END OF RUN
-        summaries.append(summary)
+        if summarize:
+            summaries.append(summary)
         if min_dag is None or len(current_dag.arcs) < len(min_dag.arcs):
             min_dag = current_dag
 
-    return min_dag, summaries
+    if summarize:
+        return min_dag, summaries
+    else:
+        return min_dag
 
 
 def igsp(
@@ -655,7 +683,8 @@ def unknown_target_igsp(
         initial_permutations: Optional[List] = None,
         verbose: bool = False,
         use_lowest=True,
-        tup_score=True
+        tup_score=True,
+        no_targets=False
 ) -> (DAG, List[Set[int]]):
     """
     Use the Unknown Target Interventional Greedy Sparsest Permutation algorithm to estimate a DAG in the I-MEC of the
@@ -685,8 +714,12 @@ def unknown_target_igsp(
     initial_permutations:
         A list of initial permutations with which to start the algorithm. This option is helpful when there is
         background knowledge on orders. This option is mutually exclusive with initial_undirected.
+    no_targets:
+        if True, leave out information on known intervention targets.
 
     """
+    if no_targets:
+        setting_list = [{'known_interventions': []} for _ in setting_list]
 
     def _is_icovered(i, j, dag):
         """
@@ -806,6 +839,7 @@ def unknown_target_igsp(
                     current_dag, current_i_covered_arcs, current_score, current_intervention_targets = lower_dags.pop(
                         lowest_ix)
                     if verbose: print("FOUND DAG WITH LOWER SCORE:", current_dag, "== SCORE:", current_score)
+                    if verbose: print(f"Current intervention targets: {current_intervention_targets}")
                 else:
                     trace.append((current_dag, current_i_covered_arcs, next_dags, current_intervention_targets))
                     current_dag, current_i_covered_arcs, current_score, current_intervention_targets = next_dags.pop()
