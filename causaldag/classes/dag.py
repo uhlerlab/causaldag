@@ -623,13 +623,7 @@ class DAG:
         >>> g.arcs_in_vstructures()
         {(1, 3), (2, 3))
         """
-        vstruct_arcs = set()
-        for node in self._nodes:
-            for p1, p2 in itr.combinations(self._parents[node], 2):
-                if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
-                    vstruct_arcs.add((p1, node))
-                    vstruct_arcs.add((p2, node))
-        return vstruct_arcs
+        return {(i, j) for i, j in self._arcs if self._parents[j] - self._neighbors[i] - {i}}
 
     def vstructures(self) -> Set[Tuple]:
         """
@@ -1491,6 +1485,16 @@ class DAG:
         from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
         pdag.remove_unprotected_orientations()
+        return pdag
+
+    def cpdag_new(self, new=False):
+        from causaldag import PDAG
+        vstruct = self.arcs_in_vstructures()
+        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
+        if new:
+            pdag.to_complete_pdag_new()
+        else:
+            pdag.to_complete_pdag()
         return pdag
 
     def moral_graph(self):

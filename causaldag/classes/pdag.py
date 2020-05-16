@@ -23,7 +23,8 @@ class PDAG:
             nodes: Set=set(),
             arcs: Set=set(),
             edges: Set=set(),
-            known_arcs=set()
+            known_arcs=set(),
+            new=False
     ):
         self._nodes = set(nodes)
         self._arcs = set()
@@ -32,10 +33,14 @@ class PDAG:
         self._children = defaultdict(set)
         self._neighbors = defaultdict(set)
         self._undirected_neighbors = defaultdict(set)
-        for i, j in arcs:
-            self._add_arc(i, j)
-        for i, j in edges:
-            self._add_edge(i, j)
+        if new:  # for some reason this is slower than the old way. memory?
+            self._add_arcs_from(arcs)
+            self._add_edges_from(edges)
+        else:
+            for arc in arcs:
+                self._add_arc(*arc)
+            for edge in edges:
+                self._add_edge(*edge)
 
         self._known_arcs = known_arcs.copy()
 
@@ -276,6 +281,32 @@ class PDAG:
         self._children[i].add(j)
         self._parents[j].add(i)
 
+    def _add_arcs_from(self, arcs):
+        if not arcs:
+            return
+        sources, sinks = zip(*arcs)
+        self._nodes.update(sources)
+        self._nodes.update(sinks)
+        self._arcs.update(arcs)
+        for i, j in arcs:
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+            self._children[i].add(j)
+            self._parents[j].add(i)
+
+    def _add_edges_from(self, edges):
+        if not edges:
+            return
+        s1, s2 = zip(*edges)
+        self._nodes.update(s1)
+        self._nodes.update(s2)
+        self._edges.update(map(frozenset, edges))
+        for i, j in edges:
+            self._undirected_neighbors[i].add(j)
+            self._undirected_neighbors[j].add(i)
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+
     def _add_edge(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)
@@ -355,7 +386,6 @@ class PDAG:
         self.to_complete_pdag(verbose=verbose)
 
     def to_complete_pdag_new(self, verbose=False):
-        raise NotImplementedError("Must be tested")
         protected_parents = defaultdict(set)
         protected_children = defaultdict(set)
         undecided_edges = {(i, j) for i, j in self._edges}
@@ -383,7 +413,10 @@ class PDAG:
             }
             undecided_edges -= a1
 
-            for i, j in chain_arcs1 | chain_arcs2 | cycle_arcs1 | cycle_arcs2 | a1 | a2:
+            new_arcs = chain_arcs1 | chain_arcs2 | cycle_arcs1 | cycle_arcs2 | a1 | a2
+            if len(new_arcs) == 0:
+                break
+            for i, j in new_arcs:
                 protected_children[i].add(j)
                 protected_parents[j].add(i)
                 neighbors[i].remove(j)
