@@ -34,6 +34,7 @@ def dci(
         alpha_orient: float = 0.1,
         max_set_size: int = 3,
         difference_ug: list = None,
+        nodes_cond_set: set = None,
         max_iter: int = 1000,
         edge_threshold: float = 0,
         verbose: int = 0
@@ -63,6 +64,8 @@ def dci(
         List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
         KLIEP algorithm for estimating the difference undirected graph will be run. 
         If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
     max_iter: int, default = 1000
         Maximum number of iterations for gradient descent in KLIEP algorithm.
     edge_threshold: float, default = 0
@@ -99,20 +102,15 @@ def dci(
     rh2 = RegressionHelper(suffstat2)
 
     # compute the difference undirected graph via KLIEP if the differece_ug is not provided
-    if difference_ug is None:
-        difference_ug = dci_undirected_graph(X1, X2, alpha=alpha_ug, max_iter=max_iter, edge_threshold=edge_threshold,
+    if difference_ug is None or nodes_cond_set is None:
+        difference_ug, nodes_cond_set = dci_undirected_graph(X1, X2, alpha=alpha_ug, max_iter=max_iter, edge_threshold=edge_threshold,
                                              verbose=verbose)
-    # get nodes to be considered in the conditioning sets
-    nodes_cond_set = get_nodes_in_graph(difference_ug)
+    
     # estimate the skeleton of the difference-DAG 
-    skeleton = dci_skeleton(difference_ug, nodes_cond_set, rh1, rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
+    skeleton = dci_skeleton(X1, X2, difference_ug, nodes_cond_set, rh1=rh1, rh2=rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
     # orient edges of the skeleton of the difference-DAG
-    edges_oriented, edges_unoriented = dci_orient(skeleton, nodes_cond_set, rh1, rh2, alpha=alpha_orient, max_set_size=max_set_size,
+    adjacency_matrix = dci_orient(X1, X2, skeleton, nodes_cond_set, rh1=rh1, rh2=rh2, alpha=alpha_orient, max_set_size=max_set_size,
                                                   verbose=verbose)
-
-    adjacency_matrix = edges2adjacency(num_nodes, edges_unoriented, undirected=True) + edges2adjacency(num_nodes,
-                                                                                                       edges_oriented,
-                                                                                                       undirected=False)
     return adjacency_matrix
 
 
@@ -124,6 +122,7 @@ def dci_stability_selection(
         alpha_orient_grid: list = [0.001, 0.1],
         max_set_size: int = 3,
         difference_ug: list = None,
+        nodes_cond_set: set = None,
         max_iter: int = 1000,
         edge_threshold: float = 0.05,
         sample_fraction: float = 0.7,
@@ -152,13 +151,15 @@ def dci_stability_selection(
     alpha_orient_grid: array-like, default = [0.001, 0.1]
         Grid of values to iterate over representing significance level parameter for determining orientation of an edge. 
         Lower alpha_orient results in more directed edges in the difference-DAG.
-    max_set_size: int, default = None
+    max_set_size: int, default = 3
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
     difference_ug: list, default = None
         List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
         KLIEP algorithm for estimating the difference undirected graph will be run. 
         If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
     max_iter: int, default = 1000
         Maximum number of iterations for gradient descent in KLIEP algorithm.
     edge_threshold: float, default = 0.05
@@ -225,6 +226,7 @@ def dci_stability_selection(
                                                     alpha_orient=params[2],
                                                     max_set_size=max_set_size,
                                                     difference_ug=difference_ug,
+                                                    nodes_cond_set=nodes_cond_set,
                                                     max_iter=max_iter,
                                                     edge_threshold=edge_threshold,
                                                     verbose=verbose)
@@ -251,10 +253,12 @@ def bootstrap_generator(n_bootstrap_iterations, sample_fraction, X, random_state
 
 
 def dci_skeleton(
+        X1,
+        X2,
         difference_ug: list,
         nodes_cond_set: set,
-        rh1: RegressionHelper,
-        rh2: RegressionHelper,
+        rh1: RegressionHelper = None,
+        rh2: RegressionHelper = None,
         alpha: float = 0.1,
         max_set_size: int = 3,
         verbose: int = 0
@@ -264,18 +268,22 @@ def dci_skeleton(
 
     Parameters
     ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
     difference_ug: list
         List of tuples that represents edges in the difference undirected graph.
     nodes_cond_set: set
         Nodes to be considered as conditioning sets.
-    rh1: RegressionHelper
+    rh1: RegressionHelper, default = None
         Sufficient statistics estimated based on samples in the first dataset, stored in RegressionHelper class.
-    rh2: RegressionHelper
+    rh2: RegressionHelper, default = None
         Sufficient statistics estimated based on samples in the second dataset, stored in RegressionHelper class.
     alpha: float, default = 0.1
         Significance level parameter for determining presence of edges in the skeleton of the difference graph.
         Lower alpha results in sparser difference graph.
-    max_set_size: int, default = None
+    max_set_size: int, default = 3
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
     verbose: int, default = 0
@@ -296,14 +304,20 @@ def dci_skeleton(
 
     assert 0 <= alpha <= 1, "alpha must be in [0,1] range."
 
+    if rh1 is None or rh2 is None:
+        # obtain sufficient statistics
+        suffstat1 = gauss_ci_suffstat(X1)
+        suffstat2 = gauss_ci_suffstat(X2)
+        rh1 = RegressionHelper(suffstat1)
+        rh2 = RegressionHelper(suffstat2)
+
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
 
-    skeleton = {frozenset({i, j}) for i, j in difference_ug}
-    difference_ug_without_self_edges = [tuple((i,j)) for i, j in difference_ug if i != j]
+    skeleton = {(i, j) for i, j in difference_ug}
 
-    for i, j in difference_ug_without_self_edges:
-        for cond_set in powerset(nodes - {i, j}, r_max=max_set_size):
+    for i, j in difference_ug:
+        for cond_set in powerset(nodes_cond_set - {i, j}, r_max=max_set_size):
             cond_set_i, cond_set_j = [*cond_set, j], [*cond_set, i]
 
             # calculate regression coefficients (j regressed on cond_set_j) for both datasets
@@ -322,7 +336,7 @@ def dci_skeleton(
             if i_invariant:
                 if verbose > 0:
                     print("Removing edge %d-%d since p-value=%.5f > alpha=%.5f" % (i, j, pval_i, alpha))
-                skeleton.remove(frozenset({i, j}))
+                skeleton.remove((i, j))
                 break
 
             # calculate regression coefficients (i regressed on cond_set_i) for both datasets
@@ -341,17 +355,19 @@ def dci_skeleton(
             if j_invariant:
                 if verbose > 0:
                     print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_j, alpha))
-                skeleton.remove(frozenset({i, j}))
+                skeleton.remove((i, j))
                 break
 
     return skeleton
 
 
 def dci_orient(
+        X1, 
+        X2,
         skeleton: set,
         nodes_cond_set: set,
-        rh1: RegressionHelper,
-        rh2: RegressionHelper,
+        rh1: RegressionHelper = None,
+        rh2: RegressionHelper = None,
         alpha: float = 0.1,
         max_set_size: int = 3,
         verbose: int = 0
@@ -361,13 +377,17 @@ def dci_orient(
 
     Parameters
     ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
     skeleton: set
         Set of edges in the skeleton of the difference-DAG.
     nodes_cond_set: set
         Nodes to be considered as conditioning sets.
-    rh1: RegressionHelper
+    rh1: RegressionHelper, default = None
         Sufficient statistics estimated based on samples in the first dataset, stored in RegressionHelper class.
-    rh2: RegressionHelper
+    rh2: RegressionHelper, default = None
         Sufficient statistics estimated based on samples in the second dataset, stored in RegressionHelper class.
     alpha: float, default = 0.1
         Significance level parameter for determining orientation of an edge.
@@ -394,6 +414,13 @@ def dci_orient(
         print("DCI edge orientation...")
 
     assert 0 <= alpha <= 1, "alpha must be in [0,1] range."
+
+    if rh1 is None or rh2 is None:
+        # obtain sufficient statistics
+        suffstat1 = gauss_ci_suffstat(X1)
+        suffstat2 = gauss_ci_suffstat(X2)
+        rh1 = RegressionHelper(suffstat1)
+        rh2 = RegressionHelper(suffstat2)
 
     nodes = {i for i, j in skeleton} | {j for i, j in skeleton}
     oriented_edges = set()
@@ -454,7 +481,12 @@ def dci_orient(
                 if verbose > 0:
                     print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (j, i)))
 
-    return oriented_edges, unoriented_edges
+    # form an adjacency matrix containing directed and undirected edges
+    num_nodes = X1.shape[1]
+    adjacency_matrix = edges2adjacency(num_nodes, unoriented_edges, undirected=True) + edges2adjacency(num_nodes,
+                                                                                                       oriented_edges,
+                                                                                                       undirected=False)
+    return adjacency_matrix
 
 
 def edges2adjacency(num_nodes, edge_set, undirected=False):
@@ -483,13 +515,6 @@ def edges2adjacency(num_nodes, edge_set, undirected=False):
         if undirected:
             adjacency_matrix[child, parent] = 1
     return adjacency_matrix
-
-
-def get_nodes_in_graph(graph):
-    """
-    Returns nodes that are in the graph.
-    """
-    return set(np.unique(graph))
 
 
 def get_directed_and_undirected_edges(adjacency_matrix):
