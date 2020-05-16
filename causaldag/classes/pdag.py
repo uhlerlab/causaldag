@@ -579,7 +579,7 @@ class PDAG:
                 writer.writerow([node1, node2])
                 writer.writerow([node2, node1])
 
-    def to_amat(self, node_list=None, mode='dataframe'):
+    def to_amat(self, node_list=None, mode='dataframe', source_axis=0):
         """Return an adjacency matrix for the graph
         """
         if node_list is None:
@@ -594,7 +594,10 @@ class PDAG:
             amat = lil_matrix(shape, dtype=int)
 
         for source, target in self._arcs:
-            amat[node2ix[source], node2ix[target]] = 1
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
         for i, j in self._edges:
             amat[node2ix[i], node2ix[j]] = 1
             amat[node2ix[j], node2ix[i]] = 1
