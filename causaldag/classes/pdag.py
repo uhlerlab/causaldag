@@ -68,7 +68,11 @@ class PDAG:
 
     @classmethod
     def from_sparse(cls, sparse_amat, source_axis=0):
-        pass
+        raise NotImplementedError
+
+    @classmethod
+    def from_csv(cls, filename):
+        raise NotImplementedError
 
     @classmethod
     def from_amat(cls, amat: np.ndarray, source_axis=0):
@@ -92,6 +96,7 @@ class PDAG:
     def from_nx(cls, nx_graph):
         return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
 
+    # CONVERTERS
     def to_nx(self):
         if self._arcs:
             raise NotImplementedError
