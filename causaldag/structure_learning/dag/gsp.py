@@ -2,6 +2,7 @@ from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
 from causaldag.utils.ci_tests import CI_Tester
+from causaldag.classes.custom_types import UndirectedEdge
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset
 import random
@@ -12,35 +13,62 @@ from tqdm import trange
 from causaldag.utils.core_utils import powerset
 
 
-def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(), fixed_gaps=set(), node2nbrs=None,
-             older=False):
+def perm2dag(
+        perm: list,
+        ci_tester: CI_Tester,
+        verbose=False,
+        fixed_adjacencies: Set[UndirectedEdge]=set(),
+        fixed_gaps: Set[UndirectedEdge]=set(),
+        node2nbrs=None,
+        older=False):
     """
-    TODO
+    Given a permutation, find the minimal IMAP consistent with that permutation and the results of conditional independence
+    tests from ci_tester.
 
     Parameters
     ----------
-    perm
-    ci_tester
-    verbose
-    fixed_adjacencies
-    fixed_gaps
-    node2nbrs
-    older
+    perm:
+        list of nodes representing the permutation.
+    ci_tester:
+        object for testing conditional independence.
+    verbose:
+        if True, log each CI test.
+    fixed_adjacencies:
+        set of nodes known to be adjacent.
+    fixed_gaps:
+        set of nodes known not to be adjacent.
+    node2nbrs:
+        TODO
+    older:
+        TODO
 
     Examples
     --------
-    TODO
+    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, gauss_ci_test, gauss_ci_suffstat
+    >>> perm = [0,1,2]
+    >>> suffstat = gauss_ci_suffstat(samples)
+    >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat)
+    >>> perm2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
     """
+    if fixed_adjacencies:
+        adj = next(iter(fixed_adjacencies))
+        if not isinstance(adj, frozenset):
+            raise ValueError('fixed_adjacencies should contain frozensets')
+    if fixed_gaps:
+        adj = next(iter(fixed_gaps))
+        if not isinstance(adj, frozenset):
+            raise ValueError('fixed_gaps should contain frozensets')
+
     d = DAG(nodes=set(perm))
     ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
     for i, j in ixs:
         pi_i, pi_j = perm[i], perm[j]
 
         # === IF FIXED, DON'T TEST
-        if (pi_i, pi_j) in fixed_adjacencies or (pi_j, pi_i) in fixed_adjacencies:
+        if frozenset({pi_i, pi_j}) in fixed_adjacencies:
             d.add_arc(pi_i, pi_j)
             continue
-        if (pi_i, pi_j) in fixed_gaps or (pi_j, pi_i) in fixed_gaps:
+        if frozenset({pi_i, pi_j}) in fixed_gaps:
             continue
 
         # === TEST MARKOV BLANKET
@@ -51,7 +79,7 @@ def perm2dag(perm, ci_tester: CI_Tester, verbose=False, fixed_adjacencies=set(),
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
             d.add_arc(pi_i, pi_j, unsafe=True)
-        if verbose: print(f"{pi_i} indep of {pi_j} given {mb}: {is_ci}")
+        if verbose: print(f"{pi_i} is independent of {pi_j} given {mb}: {is_ci}")
 
     return d
 
@@ -370,11 +398,14 @@ def gsp(
 
         # === SEARCH!
         iters_since_improvement = 0
+        it_count = 0
         while True:
+            it_count += 1
             if iters_since_improvement > max_iters:
                 break
 
-            summary.append({'dag': current_dag, 'depth': len(trace), 'num_arcs': len(current_dag.arcs)})
+            if summarize:
+                summary.append({'dag': current_dag, 'depth': len(trace), 'num_arcs': len(current_dag.arcs)})
             all_visited_dags.add(frozenset(current_dag.arcs))
             max_arcs_removed = len(covered_arcs2removed_arcs[-1][2]) if len(covered_arcs2removed_arcs) > 0 else 0
 

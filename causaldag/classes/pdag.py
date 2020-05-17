@@ -20,9 +20,9 @@ SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'c
 class PDAG:
     def __init__(
             self,
-            nodes: Set=set(),
-            arcs: Set=set(),
-            edges: Set=set(),
+            nodes: Set = set(),
+            arcs: Set = set(),
+            edges: Set = set(),
             known_arcs=set(),
             new=False
     ):
@@ -45,20 +45,52 @@ class PDAG:
         self._known_arcs = known_arcs.copy()
 
     @classmethod
-    def from_amat(cls, amat):
+    def from_df(cls, df, source_axis=0):
+        arcs = set()
+        edges = set()
+
+        amat = df.values
+        nodes = set(df.index)
+        name_map = dict(enumerate(df.index))
+
+        for i, j in zip(*np.triu_indices_from(amat, k=1)):
+            if amat[i, j] != 0 and amat[j, i] != 0:
+                edges.add((i, j))
+            elif amat[i, j] != 0:
+                arcs.add((i, j) if source_axis == 0 else (j, i))
+            elif amat[j, i] != 0:
+                arcs.add((j, i) if source_axis == 0 else (i, j))
+
+        arcs = {(name_map[i], name_map[j]) for i, j in arcs}
+        edges = {(name_map[i], name_map[j]) for i, j in edges}
+
+        return PDAG(nodes, arcs, edges)
+
+    @classmethod
+    def from_sparse(cls, sparse_amat, source_axis=0):
+        pass
+
+    @classmethod
+    def from_amat(cls, amat: np.ndarray, source_axis=0):
         """Return a PDAG with arcs/edges given by amat
         """
         nrows, ncols = amat.shape
         arcs = set()
         edges = set()
-        for (i, j), val in np.ndenumerate(amat):
-            if val != 0:
-                if (j, i) in arcs:
-                    arcs.remove((j, i))
-                    edges.add((i, j))
-                else:
-                    arcs.add((i, j))
+
+        for i, j in zip(*np.triu_indices_from(amat, k=1)):
+            if amat[i, j] != 0 and amat[j, i] != 0:
+                edges.add((i, j))
+            elif amat[i, j] != 0:
+                arcs.add((i, j) if source_axis == 0 else (j, i))
+            elif amat[j, i] != 0:
+                arcs.add((j, i) if source_axis == 0 else (j, i))
+
         return PDAG(set(range(nrows)), arcs, edges)
+
+    @classmethod
+    def from_nx(cls, nx_graph):
+        return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
 
     def to_nx(self):
         if self._arcs:
@@ -67,9 +99,76 @@ class PDAG:
         g.add_edges_from(self._edges)
         return g
 
-    @classmethod
-    def from_nx(cls, nx_graph):
-        return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
+    def to_csv(self, filename):
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
+            for node1, node2 in self._edges:
+                writer.writerow([node1, node2])
+                writer.writerow([node2, node1])
+
+    def to_df(self, node_list=None, source_axis=0):
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        from pandas import DataFrame
+        return DataFrame(amat, index=node_list, columns=node_list)
+
+    def to_sparse(self, node_list: list = None, source_axis=0):
+        from scipy.sparse import lil_matrix
+        shape = (len(self._nodes), len(self._nodes))
+
+        amat = lil_matrix(shape, dtype=int)
+
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        return amat, node_list
+
+    def to_amat(self, node_list: list = None, source_axis=0) -> (np.ndarray, list):
+        """Return an adjacency matrix for the graph
+        """
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        return amat, node_list
 
     def __eq__(self, other):
         same_nodes = self._nodes == other._nodes
@@ -96,6 +195,13 @@ class PDAG:
         """Return a copy of the graph
         """
         return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
+
+    def rename_nodes(self, name_map):
+        return PDAG(
+            nodes={name_map[n] for n in self._nodes},
+            arcs={(name_map[i], name_map[j]) for i, j in self._arcs},
+            edges={(name_map[i], name_map[j]) for i, j in self._edges}
+        )
 
     # === PROPERTIES
     @property
@@ -404,12 +510,14 @@ class PDAG:
 
             a1 = {
                 (i, j) for i, j in undecided_edges
-                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in itr.combinations(neighbors[i] & protected_parents[j], 2))
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in
+                       itr.combinations(neighbors[i] & protected_parents[j], 2))
             }
             undecided_edges -= a1
             a2 = {
                 (j, i) for i, j in undecided_edges
-                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in itr.combinations(neighbors[j] & protected_parents[i], 2))
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in
+                       itr.combinations(neighbors[j] & protected_parents[i], 2))
             }
             undecided_edges -= a1
 
@@ -570,43 +678,6 @@ class PDAG:
         raise NotImplementedError
 
     # === MUTATORS
-    def to_csv(self, filename):
-        with open(filename, 'w', newline='\n') as file:
-            writer = csv.writer(file)
-            for source, target in self._arcs:
-                writer.writerow([source, target])
-            for node1, node2 in self._edges:
-                writer.writerow([node1, node2])
-                writer.writerow([node2, node1])
-
-    def to_amat(self, node_list=None, mode='dataframe', source_axis=0):
-        """Return an adjacency matrix for the graph
-        """
-        if node_list is None:
-            node_list = sorted(self._nodes)
-        node2ix = {node: i for i, node in enumerate(node_list)}
-
-        shape = (len(self._nodes), len(self._nodes))
-        if mode == 'dataframe' or mode == 'numpy':
-            amat = np.zeros(shape, dtype=int)
-        else:
-            from scipy.sparse import lil_matrix
-            amat = lil_matrix(shape, dtype=int)
-
-        for source, target in self._arcs:
-            if source_axis == 0:
-                amat[node2ix[source], node2ix[target]] = 1
-            else:
-                amat[node2ix[target], node2ix[source]] = 1
-        for i, j in self._edges:
-            amat[node2ix[i], node2ix[j]] = 1
-            amat[node2ix[j], node2ix[i]] = 1
-
-        if mode == 'dataframe':
-            from pandas import DataFrame
-            return DataFrame(amat, index=node_list, columns=node_list)
-        else:
-            return amat, node_list
 
     def _possible_sinks(self):
         return {node for node in self._nodes if len(self._children[node]) == 0}
@@ -654,7 +725,7 @@ class PDAG:
             pass
         elif self.num_edges == nnodes - 1:
             return nnodes
-        elif self.num_edges == nnodes*(nnodes-1)/2:
+        elif self.num_edges == nnodes * (nnodes - 1) / 2:
             return factorial(nnodes)
         else:
             pass
@@ -720,7 +791,8 @@ class PDAG:
                         else:
                             new_reversible_arcs.discard((i, k))
 
-                    q.append(SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level+1))
+                    q.append(
+                        SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level + 1))
 
         return all_arcs
 
@@ -737,8 +809,8 @@ class PDAG:
         diff_type = {
             (i, j) for i, j in self_undirected & other_undirected
             if ((i, j) in self._arcs and (i, j) not in other._arcs) or
-               ((j, i) in self._arcs and (j, i) not in other._arcs) or
-               (frozenset({i, j}) in self._edges and frozenset({i, j}) not in other._edges)
+                               ((j, i) in self._arcs and (j, i) not in other._arcs) or
+                               (frozenset({i, j}) in self._edges and frozenset({i, j}) not in other._edges)
         }
         return num_additions + num_deletions + len(diff_type)
 
