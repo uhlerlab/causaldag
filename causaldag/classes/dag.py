@@ -714,6 +714,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g1 = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g2 = cd.DAG(arcs={(2, 1), (2, 3)})
         >>> g1.shd(g2)
