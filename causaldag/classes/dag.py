@@ -88,12 +88,8 @@ class DAG:
         TODO
         """
         nodes = set(range(amat.shape[0]))
-        arcs = set()
-        d = DAG(nodes=nodes)
-        for (i, j), val in np.ndenumerate(amat):
-            if val != 0:
-                d.add_arc(i, j)
-        return d
+        arcs = {(i, j) for i, j in itr.permutations(nodes, 2) if amat[i, j] != 0}
+        return DAG(nodes=nodes, arcs=arcs)
 
     def copy(self):
         """

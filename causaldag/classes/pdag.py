@@ -11,7 +11,7 @@ from typing import Set
 from collections import namedtuple
 from scipy.special import factorial
 import networkx as nx
-from typing import Set, FrozenSet
+from typing import Set, FrozenSet, Iterable
 import csv
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
@@ -442,6 +442,27 @@ class PDAG:
             else:
                 raise e
 
+    def remove_edges_from(self, edges):
+        for i, j in edges:
+            self.remove_edge(i, j)
+
+    def remove_arc(self, i, j, ignore_error=False):
+        try:
+            self._arcs.remove((i, j))
+            self._children[i].remove(j)
+            self._parents[j].remove(i)
+            self._neighbors[i].remove(j)
+            self._neighbors[j].remove(i)
+        except KeyError as e:
+            if ignore_error:
+                pass
+            else:
+                raise e
+
+    def remove_arcs_from(self, arcs):
+        for i, j in arcs:
+            self.remove_arc(i, j)
+
     def remove_node(self, node):
         """Remove a node from the graph
         """
@@ -461,6 +482,13 @@ class PDAG:
         del self._children[node]
         del self._neighbors[node]
         del self._undirected_neighbors[node]
+
+    def remove_nodes_from(self, nodes):
+        for node in nodes:
+            self.remove_node(node)
+
+    def remove_all_arcs(self):
+        self.remove_arcs_from(set(self._arcs))
 
     def replace_edge_with_arc(self, arc, ignore_error=False):
         try:
@@ -724,16 +752,17 @@ class PDAG:
     def mec_size(self):
         """Return the number of DAGs in the MEC represented by this PDAG
         """
-        raise NotImplementedError
+        if self.num_arcs > 0:
+            return len(self.all_dags())
 
-        if self.num_arcs != 0:
-            pass
-        elif self.num_edges == nnodes - 1:
-            return nnodes
-        elif self.num_edges == nnodes * (nnodes - 1) / 2:
-            return factorial(nnodes)
+        if self.num_edges == self.nnodes:
+            return 2*self.nnodes
+        elif self.num_edges == self.nnodes - 1:
+            return self.nnodes
+        elif self.num_edges == self.nnodes * (self.nnodes - 1) / 2:
+            return factorial(self.nnodes)
         else:
-            pass
+            return len(self.all_dags())
 
     def exact_sample(self, save_sampler=True, nsamples=1):
         """Return a DAG sampled uniformly at random from the MEC represented by this PDAG
@@ -747,7 +776,7 @@ class PDAG:
         arcs = dag._arcs
         all_arcs = set()
 
-        orig_reversible_arcs = dag.reversible_arcs() - self._known_arcs
+        orig_reversible_arcs = dag.reversible_arcs() - self._arcs
         orig_parents_dict = dag.parents
         orig_children_dict = dag.children
 
@@ -776,22 +805,22 @@ class PDAG:
 
                     new_reversible_arcs = dag.reversible_arcs.copy()
                     for k in dag.parents_dict[j]:
-                        if (new_parents_dict[j] - {k}) == new_parents_dict[k] and (k, j) not in self._known_arcs:
+                        if (new_parents_dict[j] - {k}) == new_parents_dict[k] and (k, j) not in self._arcs:
                             new_reversible_arcs.add((k, j))
                         else:
                             new_reversible_arcs.discard((k, j))
                     for k in dag.children_dict[j]:
-                        if new_parents_dict[j] == (new_parents_dict[k] - {j}) and (j, k) not in self._known_arcs:
+                        if new_parents_dict[j] == (new_parents_dict[k] - {j}) and (j, k) not in self._arcs:
                             new_reversible_arcs.add((j, k))
                         else:
                             new_reversible_arcs.discard((j, k))
                     for k in dag.parents_dict[i]:
-                        if (new_parents_dict[i] - {k}) == new_parents_dict[k] and (k, i) not in self._known_arcs:
+                        if (new_parents_dict[i] - {k}) == new_parents_dict[k] and (k, i) not in self._arcs:
                             new_reversible_arcs.add((k, i))
                         else:
                             new_reversible_arcs.discard((k, i))
                     for k in dag.children_dict[i]:
-                        if new_parents_dict[i] == (new_parents_dict[k] - {i}) and (i, k) not in self._known_arcs:
+                        if new_parents_dict[i] == (new_parents_dict[k] - {i}) and (i, k) not in self._arcs:
                             new_reversible_arcs.add((i, k))
                         else:
                             new_reversible_arcs.discard((i, k))
@@ -800,6 +829,15 @@ class PDAG:
                         SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level + 1))
 
         return all_arcs
+
+    def is_edge_clique(self, s):
+        """
+        Check if every pair of nodes in s is adjacent.
+        """
+        return all(self.has_edge(i, j) for i, j in itr.combinations(s, 2))
+
+    def possible_parents(self, node) -> Iterable:
+        return core_utils.powerset_predicate(self._undirected_neighbors[node], self.is_edge_clique)
 
     # === COMPARISON
     def shd(self, other):

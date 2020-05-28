@@ -11,15 +11,15 @@ from causaldag.utils.ci_tests._utils import residuals
 def ki_test_vector(
         Y: np.ndarray,
         X: np.ndarray,
-        width_x: float=0.,
-        width_y: float=0.,
-        alpha: float=0.05,
-        gamma_approx: bool=True,
-        n_draws: int=500,
-        lam: float=1e-3,
-        thresh: float=1e-5,
-        num_eig: int=0,
-        catgorical_x: bool=False
+        width_x: float = 0.,
+        width_y: float = 0.,
+        alpha: float = 0.05,
+        gamma_approx: bool = True,
+        n_draws: int = 500,
+        lam: float = 1e-3,
+        thresh: float = 1e-5,
+        num_eig: int = 0,
+        catgorical_x: bool = False
 ):
     """
     Test the null hypothesis that Y and X are independent
@@ -58,45 +58,45 @@ def ki_test_vector(
     if width_y == 0:
         width_y = np.median(euclidean_distances(Y))
     Y = scale(Y)
-    kernel_precision_y = 1/(width_y ** 2)  # TODO: CHECK
+    kernel_precision_y = 1 / (width_y ** 2)  # TODO: CHECK
 
-    H = np.eye(n) - np.ones([n, n])/n
+    H = np.eye(n) - np.ones([n, n]) / n
     kx = H @ kx @ H
     ky = kernels.rbf_kernel(Y, kernel_precision_y)
     ky = H @ ky @ H
 
     # === COMPUTE STATISTIC ====
-    statistic = np.sum(kx * ky.T)/n  # same as trace of product
+    statistic = np.sum(kx * ky.T) / n  # same as trace of product
 
     # === COMPUTE NULL DISTRIBUTION ====
     if not gamma_approx:
         raise NotImplementedError
     else:
-        mean_approx = 1/n**2 * np.trace(kx) * np.trace(ky)
-        var_approx = 2/n**4 * np.sum(kx * kx) * np.sum(ky * ky)
+        mean_approx = 1 / n ** 2 * np.trace(kx) * np.trace(ky)
+        var_approx = 2 / n ** 4 * np.sum(kx * kx) * np.sum(ky * ky)
         # k is shape, theta is scale
-        k_approx = mean_approx**2/var_approx
-        prec_approx = var_approx/mean_approx
+        k_approx = mean_approx ** 2 / var_approx
+        prec_approx = var_approx / mean_approx
 
-        critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
+        critval = gamma.ppf(1 - alpha, k_approx, scale=prec_approx)
         pval = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
 
-    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic>critval)
+    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic > critval)
 
 
 def kci_test_vector(
         Y: np.array,
         E: np.array,
         X: np.array,
-        width: float=0.,
-        alpha: float=0.05,
-        unbiased: bool=False,
-        gamma_approx: bool=True,
-        n_draws: int=500,
-        lam: float=1e-3,
-        thresh: float=1e-5,
-        num_eig: int=0,
-        catgorical_e: bool=False
+        width: float = 0.,
+        alpha: float = 0.05,
+        unbiased: bool = False,
+        gamma_approx: bool = True,
+        n_draws: int = 500,
+        lam: float = 1e-3,
+        thresh: float = 1e-5,
+        num_eig: int = 0,
+        catgorical_e: bool = False
 ) -> Dict:
     """
     Test the null hypothesis that Y and E are independent given X.
@@ -138,7 +138,7 @@ def kci_test_vector(
             width = 0.3
     if num_eig == 0:
         num_eig = n
-    kernel_precision = 1/(width**2 * d)
+    kernel_precision = 1 / (width ** 2 * d)
 
     if catgorical_e:
         ke = kernels.delta_kernel(E)
@@ -147,9 +147,9 @@ def kci_test_vector(
         ke = kernels.rbf_kernel(E, kernel_precision)
 
     # === CREATE KERNEL MATRICES ===
-    H = np.eye(n) - np.ones([n, n])/n
+    H = np.eye(n) - np.ones([n, n]) / n
 
-    kyx = kernels.rbf_kernel(np.concatenate((Y, X/2), axis=1), kernel_precision)
+    kyx = kernels.rbf_kernel(np.concatenate((Y, X / 2), axis=1), kernel_precision)
     kyx = H @ kyx @ H  # Centralize Kyx
 
     ke = H @ ke @ H  # Centralize Ke
@@ -165,7 +165,7 @@ def kci_test_vector(
     dfE = np.sum(np.diag(np.eye(n) - rx))
 
     # === CALCULATE EIGENVALUES AND EIGENVECTORS ===
-    eigvecs_kyx, eigvals_kyx, _ = np.linalg.svd((kyx + kyx.T)/2)
+    eigvecs_kyx, eigvals_kyx, _ = np.linalg.svd((kyx + kyx.T) / 2)
     eigvals_kyx = eigvals_kyx[:num_eig]
     eigvecs_kyx = eigvecs_kyx[:, :num_eig]
     eigvecs_kex, eigvals_kex, _ = np.linalg.svd((kex + kex.T) / 2)
@@ -173,7 +173,7 @@ def kci_test_vector(
     eigvecs_kex = eigvecs_kex[:, :num_eig]
 
     # === THRESHOLD EIGENVALUES AND EIGENVECTORS ===
-    ixs_yx = eigvals_kyx > np.max(eigvals_kyx)*thresh
+    ixs_yx = eigvals_kyx > np.max(eigvals_kyx) * thresh
     eigvals_kyx = eigvals_kyx[ixs_yx]
     eigvecs_kyx = eigvecs_kyx[:, ixs_yx]
     ixs_ex = eigvals_kex > np.max(eigvals_kex) * thresh
@@ -188,41 +188,41 @@ def kci_test_vector(
     d_yx = eigprod_kyx.shape[1]
     d_ex = eigprod_kex.shape[1]
 
-    w = np.zeros([d_yx*d_ex, n])
+    w = np.zeros([d_yx * d_ex, n])
     for i, j in itr.product(range(d_yx), range(d_ex)):
-        w[(i-1)*d_ex+j] = eigprod_kyx[:, i] * eigprod_kex[:, j]  # TODO: CHECK
-    ww = w @ w.T if d_yx*d_ex < n else w.T @ w
+        w[(i - 1) * d_ex + j] = eigprod_kyx[:, i] * eigprod_kex[:, j]  # TODO: CHECK
+    ww = w @ w.T if d_yx * d_ex < n else w.T @ w
 
     if not gamma_approx:
         # TODO
         raise NotImplementedError
     else:
         mean_approx = np.sum(np.diag(ww))
-        var_approx = 2*np.sum(np.diag(ww**2))
-        k_approx = mean_approx**2/var_approx
-        prec_approx = var_approx/mean_approx
+        var_approx = 2 * np.sum(np.diag(ww ** 2))
+        k_approx = mean_approx ** 2 / var_approx
+        prec_approx = var_approx / mean_approx
 
-        critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
+        critval = gamma.ppf(1 - alpha, k_approx, scale=prec_approx)
         pval = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
 
-    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic>critval)
+    return dict(statistic=statistic, critval=critval, p_value=pval, reject=statistic > critval)
 
 
 def kci_test(
         suffstat: np.array,
         i,
         j,
-        cond_set: Union[List[int], int]=None,
-        width: float=0.,
-        alpha: float=0.05,
-        unbiased: bool=False,
-        gamma_approx: bool=True,
-        regress: bool=True,
-        n_draws: int=500,
-        lam: float=1e-3,
-        thresh: float=1e-5,
-        num_eig: int=0,
-        categorical_e: bool=False
+        cond_set: Union[List[int], int] = None,
+        width: float = 0.,
+        alpha: float = 0.05,
+        unbiased: bool = False,
+        gamma_approx: bool = True,
+        regress: bool = True,
+        n_draws: int = 500,
+        lam: float = 1e-3,
+        thresh: float = 1e-5,
+        num_eig: int = 0,
+        categorical_e: bool = False
 ) -> Dict:
     if isinstance(cond_set, int):
         cond_set = [cond_set]
@@ -271,11 +271,3 @@ def kci_test(
                 num_eig=num_eig,
                 catgorical_e=categorical_e
             )
-
-
-
-
-
-
-
-
