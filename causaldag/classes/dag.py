@@ -12,6 +12,7 @@ from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
 from networkx.utils import UnionFind
 import random
+import csv
 
 
 class CycleError(Exception):
@@ -81,17 +82,14 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])
         >>> cd.DAG.from_amat(amat)
         TODO
         """
         nodes = set(range(amat.shape[0]))
-        arcs = set()
-        d = DAG(nodes=nodes)
-        for (i, j), val in np.ndenumerate(amat):
-            if val != 0:
-                d.add_arc(i, j)
-        return d
+        arcs = {(i, j) for i, j in itr.permutations(nodes, 2) if amat[i, j] != 0}
+        return DAG(nodes=nodes, arcs=arcs)
 
     def copy(self):
         """
@@ -99,6 +97,12 @@ class DAG:
         """
         # return DAG(nodes=self._nodes, arcs=self._arcs)
         return DAG(dag=self)
+
+    def rename_nodes(self, name_map: Dict):
+        return DAG(
+            nodes={name_map[n] for n in self._nodes},
+            arcs={(name_map[i], name_map[j]) for i, j in self._arcs}
+        )
 
     # === PROPERTIES
     @property
@@ -235,6 +239,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.is_upstream_of(1, 3)
         True
@@ -259,6 +264,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG()
         >>> g.add_node(1)
         >>> g.add_node(2)
@@ -284,6 +290,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG({1, 2})
         >>> g.add_arc(1, 2)
         >>> g.arcs
@@ -334,6 +341,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g.topological_sort
         [1, 2, 3]
@@ -362,6 +370,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG({1, 2})
         >>> g.add_nodes_from({'a', 'b'})
         >>> g.add_nodes_from(range(3, 6))
@@ -386,6 +395,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2)})
         >>> g.add_arcs_from({(1, 3), (2, 3)})
         >>> g.arcs
@@ -427,6 +437,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2)})
         >>> g.reverse_arc(1, 2)
         >>> g.arcs
@@ -450,6 +461,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2)})
         >>> g.remove_arc(1, 2)
         >>> g.arcs
@@ -495,6 +507,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2)})
         >>> g.remove_node(2)
         >>> g.nodes
@@ -531,6 +544,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.sources()
         {1)
@@ -548,6 +562,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.sinks()
         {3)
@@ -566,6 +581,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.reversible_arcs()
         {(1, 2), (2, 3))
@@ -591,6 +607,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.is_reversible(1, 2)
         True
@@ -612,17 +629,12 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
         >>> g.arcs_in_vstructures()
         {(1, 3), (2, 3))
         """
-        vstruct_arcs = set()
-        for node in self._nodes:
-            for p1, p2 in itr.combinations(self._parents[node], 2):
-                if p1 not in self._parents[p2] and p2 not in self._parents[p1]:
-                    vstruct_arcs.add((p1, node))
-                    vstruct_arcs.add((p2, node))
-        return vstruct_arcs
+        return {(i, j) for i, j in self._arcs if self._parents[j] - self._neighbors[i] - {i}}
 
     def vstructures(self) -> Set[Tuple]:
         """
@@ -698,6 +710,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g1 = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g2 = cd.DAG(arcs={(2, 1), (2, 3)})
         >>> g1.shd(g2)
@@ -729,6 +742,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g1 = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g2 = cd.DAG(arcs={(2, 1), (2, 3)})
         >>> g1.shd_skeleton(g2)
@@ -768,6 +782,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
         >>> g.local_markov_statements()
         {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}
@@ -795,6 +810,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
         >>> other = cd.DAG(arcs={(1, 2)})
         >>> g.is_imap(other)
@@ -828,6 +844,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
         >>> other = cd.DAG(arcs={(1, 2)})
         >>> g.is_minimal_imap(other)
@@ -868,6 +885,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g.downstream(1)
         {2, 3}
@@ -902,6 +920,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
         >>> g.upstream(3)
         {1, 2, 3g}
@@ -930,6 +949,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.incident_arcs(2)
         {(1, 2), (2, 3)}
@@ -961,6 +981,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.incoming_arcs(2)
         {(1, 2)}
@@ -990,6 +1011,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.outgoing_arcs(2)
         {(2, 3)}
@@ -1019,6 +1041,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.outdegree(1)
         2
@@ -1047,6 +1070,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.indegree(1)
         0
@@ -1348,6 +1372,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.to_amat()[0]
         array([[0, 1, 1],
@@ -1368,6 +1393,15 @@ class DAG:
 
         return amat, node_list
 
+    def to_csv(self, filename):
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
+
+    def to_sparse(self):
+        raise NotImplementedError
+
     def induced_subgraph(self, nodes: Set[Node]):
         """
         Return the induced subgraph over only `nodes`
@@ -1384,6 +1418,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})
         >>> d.induced_subgraph({1, 2, 3})
         TODO
@@ -1471,6 +1506,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
         >>> g.cpdag()
 
@@ -1478,6 +1514,16 @@ class DAG:
         from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
         pdag.remove_unprotected_orientations()
+        return pdag
+
+    def cpdag_new(self, new=False):
+        from causaldag import PDAG
+        vstruct = self.arcs_in_vstructures()
+        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
+        if new:
+            pdag.to_complete_pdag_new()
+        else:
+            pdag.to_complete_pdag()
         return pdag
 
     def moral_graph(self):
@@ -1491,6 +1537,7 @@ class DAG:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
         >>> g.moral_graph()
         TODO
@@ -1728,7 +1775,7 @@ class DAG:
         raise NotImplementedError()
 
     # === SEPARATIONS
-    def dsep(self, A, B, C=set(), verbose=False, certify=False) -> bool:
+    def dsep(self, A: Union[Set[Node], Node], B: Union[Set[Node], Node], C: Union[Set[Node], Node]=set(), verbose=False, certify=False) -> bool:
         """
         Check if A and B are d-separated given C, using the Bayes ball algorithm.
 
@@ -1753,6 +1800,7 @@ class DAG:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
         >>> g.dsep(1, 3)
         True

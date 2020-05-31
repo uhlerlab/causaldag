@@ -1,5 +1,6 @@
 import itertools as itr
 from numpy import abs
+from typing import Iterable, Callable, Any
 
 
 def ix_map_from_list(l):
@@ -15,9 +16,20 @@ def defdict2dict(defdict, keys):
     return d
 
 
-def powerset(s, r_min=0, r_max=None):
+def powerset(s: Iterable, r_min=0, r_max=None) -> Iterable:
     if r_max is None: r_max = len(s)
-    return itr.chain(*(itr.combinations(s, r) for r in range(r_min, r_max+1)))
+    return map(set, itr.chain(*(itr.combinations(s, r) for r in range(r_min, r_max+1))))
+
+
+def powerset_predicate(s: Iterable, predicate: Callable[[Any], bool]) -> Iterable:
+    for set_size in range(len(s)+1):
+        any_satisfy = False
+        for subset in itr.combinations(s, set_size):
+            if predicate(subset):
+                any_satisfy = True
+                yield set(subset)
+        if not any_satisfy:
+            break
 
 
 def to_set(o):
@@ -44,3 +56,7 @@ def to_list(o):
 
 def is_symmetric(matrix, tol=1e-8):
     return (abs(matrix - matrix.T) <= tol).all()
+
+
+if __name__ == '__main__':
+    res = list(powerset_predicate(set(range(10)), lambda ss: len(ss) < 4))

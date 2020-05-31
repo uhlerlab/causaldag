@@ -3,7 +3,7 @@ import random
 from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
 from typing import Union, List, Callable
-from networkx import barabasi_albert_graph
+from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 
 
@@ -57,6 +57,11 @@ def directed_erdos(nnodes, density, size=1, as_list=False) -> Union[DAG, List[DA
     >>> d = cd.rand.directed_erdos(5, .5)
     """
     if size == 1:
+        if density < .01:
+            print('here')
+            random_nx = fast_gnp_random_graph(nnodes, density, directed=True)
+            d = DAG(nodes=set(range(nnodes)), arcs=random_nx.edges)
+            return [d] if as_list else d
         bools = _coin(density, size=int(nnodes * (nnodes - 1) / 2))
         arcs = {(i, j) for (i, j), b in zip(itr.combinations(range(nnodes), 2), bools) if b}
         d = DAG(nodes=set(range(nnodes)), arcs=arcs)

@@ -10,7 +10,7 @@ from typing import Set, Iterable, Dict
 class UndirectedGraph:
     def __init__(self, nodes=set(), edges=set()):
         self._nodes = set(nodes)
-        self._edges = {frozenset({i, j}) for i, j in edges}
+        self._edges = {frozenset({i, j}) for i, j in edges if i != j}
         self._neighbors = defaultdict(set)
         self._degrees = defaultdict(int)
         for i, j in self._edges:
@@ -29,6 +29,12 @@ class UndirectedGraph:
         nx_graph.add_nodes_from(self._nodes)
         nx_graph.add_edges_from(self._edges)
         return nx_graph
+
+    def rename_nodes(self, name_map):
+        return UndirectedGraph(
+            nodes={name_map[n] for n in self._nodes},
+            edges={(name_map[i], name_map[j]) for i, j in self._edges}
+        )
 
     def to_amat(self, node_list=None, sparse=False) -> np.ndarray:
         """

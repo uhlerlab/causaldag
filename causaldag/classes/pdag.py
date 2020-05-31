@@ -11,7 +11,8 @@ from typing import Set
 from collections import namedtuple
 from scipy.special import factorial
 import networkx as nx
-from typing import Set, FrozenSet
+from typing import Set, FrozenSet, Iterable
+import csv
 
 SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'children_dict', 'level'])
 
@@ -19,10 +20,11 @@ SmallDag = namedtuple('SmallDag', ['arcs', 'reversible_arcs', 'parents_dict', 'c
 class PDAG:
     def __init__(
             self,
-            nodes: Set=set(),
-            arcs: Set=set(),
-            edges: Set=set(),
-            known_arcs=set()
+            nodes: Set = set(),
+            arcs: Set = set(),
+            edges: Set = set(),
+            known_arcs=set(),
+            new=False
     ):
         self._nodes = set(nodes)
         self._arcs = set()
@@ -31,29 +33,70 @@ class PDAG:
         self._children = defaultdict(set)
         self._neighbors = defaultdict(set)
         self._undirected_neighbors = defaultdict(set)
-        for i, j in arcs:
-            self._add_arc(i, j)
-        for i, j in edges:
-            self._add_edge(i, j)
+        if new:  # for some reason this is slower than the old way. memory?
+            self._add_arcs_from(arcs)
+            self._add_edges_from(edges)
+        else:
+            for arc in arcs:
+                self._add_arc(*arc)
+            for edge in edges:
+                self._add_edge(*edge)
 
         self._known_arcs = known_arcs.copy()
 
     @classmethod
-    def from_amat(cls, amat):
+    def from_df(cls, df, source_axis=0):
+        arcs = set()
+        edges = set()
+
+        amat = df.values
+        nodes = set(df.index)
+        name_map = dict(enumerate(df.index))
+
+        for i, j in zip(*np.triu_indices_from(amat, k=1)):
+            if amat[i, j] != 0 and amat[j, i] != 0:
+                edges.add((i, j))
+            elif amat[i, j] != 0:
+                arcs.add((i, j) if source_axis == 0 else (j, i))
+            elif amat[j, i] != 0:
+                arcs.add((j, i) if source_axis == 0 else (i, j))
+
+        arcs = {(name_map[i], name_map[j]) for i, j in arcs}
+        edges = {(name_map[i], name_map[j]) for i, j in edges}
+
+        return PDAG(nodes, arcs, edges)
+
+    @classmethod
+    def from_sparse(cls, sparse_amat, source_axis=0):
+        raise NotImplementedError
+
+    @classmethod
+    def from_csv(cls, filename):
+        raise NotImplementedError
+
+    @classmethod
+    def from_amat(cls, amat: np.ndarray, source_axis=0):
         """Return a PDAG with arcs/edges given by amat
         """
         nrows, ncols = amat.shape
         arcs = set()
         edges = set()
-        for (i, j), val in np.ndenumerate(amat):
-            if val != 0:
-                if (j, i) in arcs:
-                    arcs.remove((j, i))
-                    edges.add((i, j))
-                else:
-                    arcs.add((i, j))
+
+        for i, j in zip(*np.triu_indices_from(amat, k=1)):
+            if amat[i, j] != 0 and amat[j, i] != 0:
+                edges.add((i, j))
+            elif amat[i, j] != 0:
+                arcs.add((i, j) if source_axis == 0 else (j, i))
+            elif amat[j, i] != 0:
+                arcs.add((j, i) if source_axis == 0 else (j, i))
+
         return PDAG(set(range(nrows)), arcs, edges)
 
+    @classmethod
+    def from_nx(cls, nx_graph):
+        return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
+
+    # CONVERTERS
     def to_nx(self):
         if self._arcs:
             raise NotImplementedError
@@ -61,9 +104,76 @@ class PDAG:
         g.add_edges_from(self._edges)
         return g
 
-    @classmethod
-    def from_nx(cls, nx_graph):
-        return PDAG(nodes=nx_graph.nodes, edges=nx_graph.edges)
+    def to_csv(self, filename):
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
+            for node1, node2 in self._edges:
+                writer.writerow([node1, node2])
+                writer.writerow([node2, node1])
+
+    def to_df(self, node_list=None, source_axis=0):
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        from pandas import DataFrame
+        return DataFrame(amat, index=node_list, columns=node_list)
+
+    def to_sparse(self, node_list: list = None, source_axis=0):
+        from scipy.sparse import lil_matrix
+        shape = (len(self._nodes), len(self._nodes))
+
+        amat = lil_matrix(shape, dtype=int)
+
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        return amat, node_list
+
+    def to_amat(self, node_list: list = None, source_axis=0) -> (np.ndarray, list):
+        """Return an adjacency matrix for the graph
+        """
+        if node_list is None:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+
+        for source, target in self._arcs:
+            if source_axis == 0:
+                amat[node2ix[source], node2ix[target]] = 1
+            else:
+                amat[node2ix[target], node2ix[source]] = 1
+        for i, j in self._edges:
+            amat[node2ix[i], node2ix[j]] = 1
+            amat[node2ix[j], node2ix[i]] = 1
+
+        return amat, node_list
 
     def __eq__(self, other):
         same_nodes = self._nodes == other._nodes
@@ -90,6 +200,13 @@ class PDAG:
         """Return a copy of the graph
         """
         return PDAG(nodes=self._nodes, arcs=self._arcs, edges=self._edges, known_arcs=self._known_arcs)
+
+    def rename_nodes(self, name_map):
+        return PDAG(
+            nodes={name_map[n] for n in self._nodes},
+            arcs={(name_map[i], name_map[j]) for i, j in self._arcs},
+            edges={(name_map[i], name_map[j]) for i, j in self._edges}
+        )
 
     # === PROPERTIES
     @property
@@ -275,6 +392,32 @@ class PDAG:
         self._children[i].add(j)
         self._parents[j].add(i)
 
+    def _add_arcs_from(self, arcs):
+        if not arcs:
+            return
+        sources, sinks = zip(*arcs)
+        self._nodes.update(sources)
+        self._nodes.update(sinks)
+        self._arcs.update(arcs)
+        for i, j in arcs:
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+            self._children[i].add(j)
+            self._parents[j].add(i)
+
+    def _add_edges_from(self, edges):
+        if not edges:
+            return
+        s1, s2 = zip(*edges)
+        self._nodes.update(s1)
+        self._nodes.update(s2)
+        self._edges.update(map(frozenset, edges))
+        for i, j in edges:
+            self._undirected_neighbors[i].add(j)
+            self._undirected_neighbors[j].add(i)
+            self._neighbors[i].add(j)
+            self._neighbors[j].add(i)
+
     def _add_edge(self, i, j):
         self._nodes.add(i)
         self._nodes.add(j)
@@ -299,6 +442,27 @@ class PDAG:
             else:
                 raise e
 
+    def remove_edges_from(self, edges):
+        for i, j in edges:
+            self.remove_edge(i, j)
+
+    def remove_arc(self, i, j, ignore_error=False):
+        try:
+            self._arcs.remove((i, j))
+            self._children[i].remove(j)
+            self._parents[j].remove(i)
+            self._neighbors[i].remove(j)
+            self._neighbors[j].remove(i)
+        except KeyError as e:
+            if ignore_error:
+                pass
+            else:
+                raise e
+
+    def remove_arcs_from(self, arcs):
+        for i, j in arcs:
+            self.remove_arc(i, j)
+
     def remove_node(self, node):
         """Remove a node from the graph
         """
@@ -318,6 +482,13 @@ class PDAG:
         del self._children[node]
         del self._neighbors[node]
         del self._undirected_neighbors[node]
+
+    def remove_nodes_from(self, nodes):
+        for node in nodes:
+            self.remove_node(node)
+
+    def remove_all_arcs(self):
+        self.remove_arcs_from(set(self._arcs))
 
     def replace_edge_with_arc(self, arc, ignore_error=False):
         try:
@@ -352,6 +523,45 @@ class PDAG:
         for c in self._undirected_neighbors[node] - parents:
             self._replace_edge_with_arc((node, c))
         self.to_complete_pdag(verbose=verbose)
+
+    def to_complete_pdag_new(self, verbose=False):
+        protected_parents = defaultdict(set)
+        protected_children = defaultdict(set)
+        undecided_edges = {(i, j) for i, j in self._edges}
+        neighbors = self._undirected_neighbors.copy()
+
+        while True:
+            chain_arcs1 = {(i, j) for i, j in undecided_edges if protected_parents[i] - self._neighbors[j]}
+            undecided_edges -= chain_arcs1
+            chain_arcs2 = {(j, i) for i, j in undecided_edges if protected_parents[j] - self._neighbors[i]}
+            undecided_edges -= set(map(reversed, chain_arcs2))
+
+            cycle_arcs1 = {(i, j) for i, j in undecided_edges if protected_children[i] & protected_parents[j]}
+            undecided_edges -= cycle_arcs1
+            cycle_arcs2 = {(j, i) for i, j in undecided_edges if protected_children[j] & protected_parents[i]}
+            undecided_edges -= set(map(reversed, cycle_arcs2))
+
+            a1 = {
+                (i, j) for i, j in undecided_edges
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in
+                       itr.combinations(neighbors[i] & protected_parents[j], 2))
+            }
+            undecided_edges -= a1
+            a2 = {
+                (j, i) for i, j in undecided_edges
+                if any((not self.has_edge_or_arc(k1, k2)) for k1, k2 in
+                       itr.combinations(neighbors[j] & protected_parents[i], 2))
+            }
+            undecided_edges -= a1
+
+            new_arcs = chain_arcs1 | chain_arcs2 | cycle_arcs1 | cycle_arcs2 | a1 | a2
+            if len(new_arcs) == 0:
+                break
+            for i, j in new_arcs:
+                protected_children[i].add(j)
+                protected_parents[j].add(i)
+                neighbors[i].remove(j)
+                neighbors[j].remove(i)
 
     def to_complete_pdag(self, verbose=False, solve_conflict=False):
         """
@@ -501,31 +711,6 @@ class PDAG:
         raise NotImplementedError
 
     # === MUTATORS
-    def to_amat(self, node_list=None, mode='dataframe'):
-        """Return an adjacency matrix for the graph
-        """
-        if node_list is None:
-            node_list = sorted(self._nodes)
-        node2ix = {node: i for i, node in enumerate(node_list)}
-
-        shape = (len(self._nodes), len(self._nodes))
-        if mode == 'dataframe' or mode == 'numpy':
-            amat = np.zeros(shape, dtype=int)
-        else:
-            from scipy.sparse import lil_matrix
-            amat = lil_matrix(shape, dtype=int)
-
-        for source, target in self._arcs:
-            amat[node2ix[source], node2ix[target]] = 1
-        for i, j in self._edges:
-            amat[node2ix[i], node2ix[j]] = 1
-            amat[node2ix[j], node2ix[i]] = 1
-
-        if mode == 'dataframe':
-            from pandas import DataFrame
-            return DataFrame(amat, index=node_list, columns=node_list)
-        else:
-            return amat, node_list
 
     def _possible_sinks(self):
         return {node for node in self._nodes if len(self._children[node]) == 0}
@@ -567,16 +752,17 @@ class PDAG:
     def mec_size(self):
         """Return the number of DAGs in the MEC represented by this PDAG
         """
-        raise NotImplementedError
+        if self.num_arcs > 0:
+            return len(self.all_dags())
 
-        if self.num_arcs != 0:
-            pass
-        elif self.num_edges == nnodes - 1:
-            return nnodes
-        elif self.num_edges == nnodes*(nnodes-1)/2:
-            return factorial(nnodes)
+        if self.num_edges == self.nnodes:
+            return 2*self.nnodes
+        elif self.num_edges == self.nnodes - 1:
+            return self.nnodes
+        elif self.num_edges == self.nnodes * (self.nnodes - 1) / 2:
+            return factorial(self.nnodes)
         else:
-            pass
+            return len(self.all_dags())
 
     def exact_sample(self, save_sampler=True, nsamples=1):
         """Return a DAG sampled uniformly at random from the MEC represented by this PDAG
@@ -590,7 +776,7 @@ class PDAG:
         arcs = dag._arcs
         all_arcs = set()
 
-        orig_reversible_arcs = dag.reversible_arcs() - self._known_arcs
+        orig_reversible_arcs = dag.reversible_arcs() - self._arcs
         orig_parents_dict = dag.parents
         orig_children_dict = dag.children
 
@@ -619,29 +805,39 @@ class PDAG:
 
                     new_reversible_arcs = dag.reversible_arcs.copy()
                     for k in dag.parents_dict[j]:
-                        if (new_parents_dict[j] - {k}) == new_parents_dict[k] and (k, j) not in self._known_arcs:
+                        if (new_parents_dict[j] - {k}) == new_parents_dict[k] and (k, j) not in self._arcs:
                             new_reversible_arcs.add((k, j))
                         else:
                             new_reversible_arcs.discard((k, j))
                     for k in dag.children_dict[j]:
-                        if new_parents_dict[j] == (new_parents_dict[k] - {j}) and (j, k) not in self._known_arcs:
+                        if new_parents_dict[j] == (new_parents_dict[k] - {j}) and (j, k) not in self._arcs:
                             new_reversible_arcs.add((j, k))
                         else:
                             new_reversible_arcs.discard((j, k))
                     for k in dag.parents_dict[i]:
-                        if (new_parents_dict[i] - {k}) == new_parents_dict[k] and (k, i) not in self._known_arcs:
+                        if (new_parents_dict[i] - {k}) == new_parents_dict[k] and (k, i) not in self._arcs:
                             new_reversible_arcs.add((k, i))
                         else:
                             new_reversible_arcs.discard((k, i))
                     for k in dag.children_dict[i]:
-                        if new_parents_dict[i] == (new_parents_dict[k] - {i}) and (i, k) not in self._known_arcs:
+                        if new_parents_dict[i] == (new_parents_dict[k] - {i}) and (i, k) not in self._arcs:
                             new_reversible_arcs.add((i, k))
                         else:
                             new_reversible_arcs.discard((i, k))
 
-                    q.append(SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level+1))
+                    q.append(
+                        SmallDag(new_arcs, new_reversible_arcs, new_parents_dict, new_children_dict, dag.level + 1))
 
         return all_arcs
+
+    def is_edge_clique(self, s):
+        """
+        Check if every pair of nodes in s is adjacent.
+        """
+        return all(self.has_edge(i, j) for i, j in itr.combinations(s, 2))
+
+    def possible_parents(self, node) -> Iterable:
+        return core_utils.powerset_predicate(self._undirected_neighbors[node], self.is_edge_clique)
 
     # === COMPARISON
     def shd(self, other):
@@ -656,8 +852,8 @@ class PDAG:
         diff_type = {
             (i, j) for i, j in self_undirected & other_undirected
             if ((i, j) in self._arcs and (i, j) not in other._arcs) or
-               ((j, i) in self._arcs and (j, i) not in other._arcs) or
-               (frozenset({i, j}) in self._edges and frozenset({i, j}) not in other._edges)
+                               ((j, i) in self._arcs and (j, i) not in other._arcs) or
+                               (frozenset({i, j}) in self._edges and frozenset({i, j}) not in other._edges)
         }
         return num_additions + num_deletions + len(diff_type)
 
