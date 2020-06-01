@@ -32,7 +32,7 @@ def powerset_predicate(s: Iterable, predicate: Callable[[Any], bool]) -> Iterabl
             break
 
 
-def to_set(o):
+def to_set(o) -> set:
     if not isinstance(o, set):
         try:
             return set(o)

@@ -10,5 +10,6 @@ from . import ancestral_graph, dag, pdag
 from .undirected_graph import UndirectedGraph
 from .ggm import GGM
 from .sample_dag import SampleDAG
+from .semi_markovian import SemiMarkovian, IDFormula, MarginalDistribution, Product, ProbabilityTerm
 
 
