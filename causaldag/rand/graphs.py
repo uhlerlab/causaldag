@@ -37,7 +37,7 @@ def unif_away_original(original, dist_original=.25, low=.25, high=1):
     return np.random.uniform(a, b)
 
 
-def directed_erdos(nnodes, density, size=1, as_list=False) -> Union[DAG, List[DAG]]:
+def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, random_order=True) -> Union[DAG, List[DAG]]:
     """
     Generate random Erdos-Renyi DAG(s) on `nnodes` nodes with density `density`.
 
@@ -54,8 +54,11 @@ def directed_erdos(nnodes, density, size=1, as_list=False) -> Union[DAG, List[DA
 
     Examples
     --------
+    >>> import causaldag as cd
     >>> d = cd.rand.directed_erdos(5, .5)
     """
+    assert density is not None or exp_nbrs is not None
+    density = density if density is not None else exp_nbrs/(nnodes-1)
     if size == 1:
         if density < .01:
             print('here')
@@ -65,6 +68,9 @@ def directed_erdos(nnodes, density, size=1, as_list=False) -> Union[DAG, List[DA
         bools = _coin(density, size=int(nnodes * (nnodes - 1) / 2))
         arcs = {(i, j) for (i, j), b in zip(itr.combinations(range(nnodes), 2), bools) if b}
         d = DAG(nodes=set(range(nnodes)), arcs=arcs)
+        if random_order:
+            nodes = list(range(nnodes))
+            d = d.rename_nodes(dict(enumerate(np.random.permutation(nodes))))
         return [d] if as_list else d
     else:
         return [directed_erdos(nnodes, density) for _ in range(size)]
@@ -83,6 +89,7 @@ def rand_weights(dag, rand_weight_fn=unif_away_zero) -> GaussDAG:
 
     Examples
     --------
+    >>> import causaldag as cd
     >>> d = cd.DAG(arcs={(1, 2), (2, 3)})
     >>> g = cd.rand.rand_weights(d)
     """
