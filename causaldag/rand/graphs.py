@@ -2,9 +2,13 @@ import numpy as np
 import random
 from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
-from typing import Union, List, Callable
+from typing import Union, List, Callable, Protocol
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
+
+
+class RandWeightFn(Protocol):
+    def __call__(self, size: int) -> Union[float, List[float]]: ...
 
 
 def _coin(p, size=1):
@@ -76,7 +80,7 @@ def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, r
         return [directed_erdos(nnodes, density) for _ in range(size)]
 
 
-def rand_weights(dag, rand_weight_fn=unif_away_zero) -> GaussDAG:
+def rand_weights(dag, rand_weight_fn: RandWeightFn = unif_away_zero) -> GaussDAG:
     """
     Generate a GaussDAG from a DAG, with random edge weights independently drawn from `rand_weight_fn`.
 
@@ -97,18 +101,56 @@ def rand_weights(dag, rand_weight_fn=unif_away_zero) -> GaussDAG:
     return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))
 
 
-def rand_nn_functions(dag: DAG, num_layers=3) -> SampleDAG:
+def _leaky_relu(vals):
+    return np.where(vals > 0, vals, vals*.01)
+
+
+def rand_nn_functions(
+        dag: DAG,
+        num_layers=3,
+        nonlinearity=_leaky_relu,
+        noise=lambda: np.random.laplace(0, 1)
+) -> SampleDAG:
     s = SampleDAG(dag._nodes, arcs=dag._arcs)
+
+    # for each node, create the conditional
     for node in dag._nodes:
+        nparents = dag.indegree(node)
+        layer_mats = [np.random.rand(nparents, nparents)*2 for _ in range(num_layers)]
+
         def conditional(parent_vals):
-            p = len(parent_vals)
             vals = parent_vals
-            for _ in range(num_layers):
-                a = np.random.random((p, p))*2
+            for a in layer_mats:
                 vals = a @ vals
-                vals = np.where(vals > 0, vals, vals*.01)
-            return np.random.random(p)*2 @ vals + np.random.laplace(0, 1)
+                vals = nonlinearity(vals)
+            return vals + noise()
+
         s.set_conditional(node, conditional)
+
+    return s
+
+
+def rand_additive_basis(
+        dag: DAG,
+        basis: list,
+        rand_weight_fn: RandWeightFn = unif_away_zero,
+        noise=lambda: np.random.laplace(0, 1)
+):
+    s = SampleDAG(dag._nodes, arcs=dag._arcs)
+
+    # for each node, create the conditional
+    for node in dag._nodes:
+        nparents = dag.indegree(node)
+        parent_bases = random.choices(basis, k=nparents)
+        parent_weights = rand_weight_fn(size=nparents)
+
+        def conditional(parent_vals):
+            return sum([
+                weight*base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
+            ]) + noise()
+
+        s.set_conditional(node, conditional)
+
     return s
 
 
@@ -225,7 +267,8 @@ __all__ = [
     'directed_random_graph',
     'rand_nn_functions',
     'unif_away_original',
-    'alter_weights'
+    'alter_weights',
+    'rand_additive_basis'
 ]
 
 
