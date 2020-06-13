@@ -208,7 +208,12 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(0,1), (0,2)})
+        >>> g.neighbors_of(0)
+        {1, 2}
+        >>> g.neighbors_of(2)
+        {0}
         """
         return self._neighbors[node].copy()
 
@@ -521,9 +526,9 @@ class DAG:
             for child in self._children[node]:
                 self._parents[child].remove(node)
                 self._neighbors[child].remove(node)
-            del self._neighbors[node]
-            del self._parents[node]
-            del self._children[node]
+            self._neighbors.pop(node, None)
+            self._parents.pop(node, None)
+            self._children.pop(node, None)
             self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
 
         except KeyError as e:

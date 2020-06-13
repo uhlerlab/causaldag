@@ -1,8 +1,9 @@
 import numpy as np
+from collections import defaultdict
 import random
 from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
-from typing import Union, List, Callable, Protocol
+from typing import Union, List, Callable, Protocol, Optional
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 
@@ -133,25 +134,95 @@ def rand_nn_functions(
 def rand_additive_basis(
         dag: DAG,
         basis: list,
+        snr_dict: Optional[dict] = None,
         rand_weight_fn: RandWeightFn = unif_away_zero,
-        noise=lambda: np.random.laplace(0, 1)
+        noise=lambda: np.random.normal(0, 1),
+        internal_variance: int = 1,
+        num_monte_carlo: int = 10000
 ):
-    s = SampleDAG(dag._nodes, arcs=dag._arcs)
+    """
+    Generate a random structural causal model (SCM), using `dag` as the structure, and with each variable
+    being a general additive model (GAM) of its parents.
+
+    Parameters
+    ----------
+    dag:
+        A DAG to use as the structure for the model.
+    basis:
+        Basis functions for the GAM.
+    snr_dict:
+        A dictionary mapping each number of parents to the desired signal-to-noise ratio (SNR) for nodes
+        with that many parents. By default, 1/2 for any number of parents.
+    rand_weight_fn:
+        A function to generate random weights for each parent.
+    noise:
+        A function to generate random internal noise for each node.
+    internal_variance:
+        The variance of the above noise function.
+    num_monte_carlo:
+        The number of Monte Carlo samples used when computing coefficients to achieve the desired SNR.
+
+    Examples
+    --------
+    >>> import causaldag as cd
+    >>> import numpy as np
+    >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
+    >>> basis = [np.sin, np.cos, np.exp]
+    >>> snr_dict = {1: 1/2, 2: 2/3}
+    >>> g = cd.rand.rand_additive_basis(d, basis, snr_dict)
+    """
+    if snr_dict is None:
+        snr_dict = defaultdict(lambda: 1/2)
+
+    sample_dag = SampleDAG(dag._nodes, arcs=dag._arcs)
+    top_order = dag.topological_sort()
+    sample_dict = defaultdict(list)
 
     # for each node, create the conditional
-    for node in dag._nodes:
+    for node in top_order:
+        parents = dag.parents_of(node)
         nparents = dag.indegree(node)
         parent_bases = random.choices(basis, k=nparents)
         parent_weights = rand_weight_fn(size=nparents)
 
+        if nparents > 0:
+            values_from_parents = []
+            for i in range(num_monte_carlo):
+                val = sum([
+                    weight*base(sample_dict[parent][i])
+                    for weight, base, parent in zip(parent_weights, parent_bases, parents)
+                ])
+                values_from_parents.append(val)
+            variance_from_parents = np.var(values_from_parents)
+
+            try:
+                desired_snr = snr_dict[nparents]
+            except ValueError:
+                raise Exception(f"`snr_dict` does not specify a desired SNR for nodes with {nparents} parents")
+            c_node = internal_variance / variance_from_parents * desired_snr / (1 - desired_snr)
+
         def conditional(parent_vals):
             return sum([
-                weight*base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
+                c_node*weight*base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
             ]) + noise()
 
-        s.set_conditional(node, conditional)
+        for i in range(num_monte_carlo):
+            val = conditional([sample_dict[parent][i] for parent in parents])
+            sample_dict[node].append(val)
+        sample_dag.set_conditional(node, conditional)
 
-    return s
+    return sample_dag
+
+
+# OPTION 1
+# - equally predictable given parents (signal to noise ratio): internal variance \propto variance from the parents
+# - compute variance of each parent. add up. set my internal noise variance \propto variance from parents
+# - always keep noise variance same, scale signal coefficients
+
+# OPTION 2
+# - bound each variable
+
+# OPTION 3
 
 
 def directed_random_graph(nnodes: int, random_graph_model: Callable, size=1, as_list=False) -> Union[DAG, List[DAG]]:
