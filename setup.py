@@ -25,6 +25,7 @@ setuptools.setup(
         'scikit_learn',
         'typing',
         'pygam',
+        'tqdm',
         'numba',
         'networkx',
         'joblib'
