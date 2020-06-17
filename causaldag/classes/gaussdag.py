@@ -602,6 +602,12 @@ class GaussDAG(DAG):
         else:
             return id_min_a_inv.T @ np.diag(self._variances) @ id_min_a_inv
 
+    def interventional_dag(self, interventions: Dict[Any, Tuple[float, float]]):
+        remaining_arcs = {(i, j): w for (i, j), w in self.arc_weights.items() if j not in interventions}
+        new_means = [self._means[node] if node not in interventions else interventions[node][0] for node in self._nodes]
+        new_variances = [self._variances[node] if node not in interventions else interventions[node][1] for node in self._nodes]
+        return GaussDAG(nodes=self._nodes, arcs=remaining_arcs, means=new_means, variances=new_variances)
+
     # def logpdf(self, samples: np.array, interventions: Intervention = None) -> np.array:
     #     self._ensure_covariance()
     #
