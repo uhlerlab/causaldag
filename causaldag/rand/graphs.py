@@ -3,13 +3,16 @@ from collections import defaultdict
 import random
 from causaldag import DAG, GaussDAG, SampleDAG
 import itertools as itr
-from typing import Union, List, Callable, Protocol, Optional
+from typing import Union, List, Callable, Optional, Any
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 
 
-class RandWeightFn(Protocol):
-    def __call__(self, size: int) -> Union[float, List[float]]: ...
+# class RandWeightFn(Protocol):
+#     def __call__(self, size: int) -> Union[float, List[float]]: ...
+
+
+RandWeightFn = Any
 
 
 def _coin(p, size=1):
