@@ -33,7 +33,9 @@ DCI is a structure learning algorithm that directly learns the difference betwee
 
 ![](images/dci.png)
 
-
+### [Unknown Target Interventional Greedy Sparsest Permutations (UT-IGSP)](./utigsp.html)
+UT-IGSP is a structure learning algorithm that uses interventional data, with unknown or only partially known targets,
+to discover a causal graph. It has been applied to learning protein signalling networks from protein mass spectroscopy data.
 
 ## License
 

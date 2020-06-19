@@ -51,7 +51,7 @@ iv_samples_list = [g.sample_interventional(iv, nsamples_iv) for iv in ivs]
 obs_suffstat = gauss_ci_suffstat(obs_samples)
 invariance_suffstat = gauss_invariance_suffstat(obs_samples, iv_samples_list)
 
-
+# Create conditional independence tester and invariance tester
 alpha = 1e-3
 alpha_inv = 1e-3
 ci_tester = MemoizedCI_Tester(gauss_ci_test, obs_suffstat, alpha=alpha)
