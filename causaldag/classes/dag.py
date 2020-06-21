@@ -360,6 +360,10 @@ class DAG:
                 self._mark_children_visited(node, any_visited, curr_path_visited, curr_path, stack)
         return list(reversed(stack))
 
+    def is_topological(self, order: list) -> bool:
+        node2ix = {node: ix for ix, node in enumerate(order)}
+        return all(node2ix[i] < node2ix[j] for i, j in self._arcs)
+
     def add_nodes_from(self, nodes: Iterable):
         """
         Add nodes to the graph from a collection
