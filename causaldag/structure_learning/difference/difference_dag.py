@@ -431,15 +431,15 @@ def dci_orient(
     for i, j in skeleton:
         for cond_i, cond_j in zip(powerset(nodes_cond_set - {i}, r_max=max_set_size), powerset(nodes_cond_set - {j}, r_max=max_set_size)):
             # compute residual variances for i
-            beta1_i, var1_i, _ = rh1.regression(i, cond_i)
-            beta2_i, var2_i, _ = rh2.regression(i, cond_i)
+            beta1_i, var1_i, _ = rh1.regression(i, list(cond_i))
+            beta2_i, var2_i, _ = rh2.regression(i, list(cond_i))
             # compute p-value for invariance of residual variances for i
             pvalue_i = ncfdtr(n1 - len(cond_i), n2 - len(cond_i), 0, var1_i / var2_i)
             pvalue_i = 2 * min(pvalue_i, 1 - pvalue_i)
 
             # compute residual variances for j
-            beta1_j, var1_j, _ = rh1.regression(j, cond_j)
-            beta2_j, var2_j, _ = rh2.regression(j, cond_j)
+            beta1_j, var1_j, _ = rh1.regression(j, list(cond_j))
+            beta2_j, var2_j, _ = rh2.regression(j, list(cond_j))
             # compute p-value for invariance of residual variances for j
             pvalue_j = ncfdtr(n1 - len(cond_j), n2 - len(cond_j), 0, var1_j / var2_j)
             pvalue_j = 2 * min(pvalue_j, 1 - pvalue_j)
