@@ -24,6 +24,7 @@ import itertools
 from joblib import Parallel, delayed
 from sklearn.utils import safe_mask
 from sklearn.utils.random import sample_without_replacement
+import networkx as nx
 
 
 def dci(
