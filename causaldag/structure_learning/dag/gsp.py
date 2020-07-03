@@ -9,7 +9,7 @@ import random
 from causaldag.structure_learning.undirected import threshold_ug
 from causaldag import UndirectedGraph
 import numpy as np
-from tqdm import trange
+from tqdm import trange, tqdm
 from causaldag.utils.core_utils import powerset
 
 
@@ -20,7 +20,9 @@ def perm2dag(
         fixed_adjacencies: Set[UndirectedEdge]=set(),
         fixed_gaps: Set[UndirectedEdge]=set(),
         node2nbrs=None,
-        older=False):
+        older=False,
+        progress=False
+):
     """
     Given a permutation, find the minimal IMAP consistent with that permutation and the results of conditional independence
     tests from ci_tester.
@@ -61,7 +63,7 @@ def perm2dag(
 
     d = DAG(nodes=set(perm))
     ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
-    for i, j in ixs:
+    for i, j in tqdm(ixs):
         pi_i, pi_j = perm[i], perm[j]
 
         # === IF FIXED, DON'T TEST

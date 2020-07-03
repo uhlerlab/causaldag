@@ -2,7 +2,7 @@ import pygam
 import numpy as np
 
 
-def residuals(samples, i, j, cond_set):
+def residuals(samples: np.ndarray, i, j, cond_set):
     cond_set = list(cond_set)
     g = pygam.GAM()
     g.fit(samples[:, cond_set], samples[:, i])
