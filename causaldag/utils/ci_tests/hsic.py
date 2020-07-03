@@ -1,4 +1,4 @@
-from typing import Any, Union, List
+from typing import Union, List, Dict
 import numpy as np
 from causaldag.utils.ci_tests import kernels
 from scipy.stats import gamma
@@ -6,7 +6,30 @@ from causaldag.utils.ci_tests._utils import residuals
 from causaldag.utils.core_utils import to_list
 
 
-def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alpha=0.05):
+def hsic_test_vector(
+        x: np.ndarray,
+        y: np.ndarray,
+        sig: float=1/np.sqrt(2),
+        alpha=0.05
+) -> Dict:
+    """
+    Test for independence of X and Y using the Hilbert-Schmidt Information Criterion.
+
+    Parameters
+    ----------
+    x:
+        vector of samples from X.
+    y:
+        vector of samples from Y.
+    sig:
+        width parameter.
+    alpha:
+        significance level.
+
+    Returns
+    -------
+
+    """
     if x.ndim == 1:
         x = x.reshape((len(x), 1))
     if y.ndim == 1:
@@ -50,12 +73,33 @@ def hsic_test_vector(x: np.ndarray, y: np.ndarray, sig: float=1/np.sqrt(2), alph
 
 
 def hsic_test(
-        suffstat: Any,
+        suffstat: np.ndarray,
         i: int,
         j: int,
         cond_set: Union[List[int], int]=None,
         alpha: float=0.05
-):
+) -> Dict:
+    """
+    Test for (conditional) independence using the Hilbert-Schmidt Information Criterion. If a conditioning set is
+    specified, first perform non-parametric regression, then test residuals.
+
+    Parameters
+    ----------
+    suffstat:
+        Matrix of samples.
+    i:
+        column position of first variable.
+    j:
+        column position of second variable.
+    cond_set:
+        column positions of conditioning set.
+    alpha:
+        Significance level of the test.
+
+    Returns
+    -------
+
+    """
     cond_set = to_list(cond_set)
     if len(cond_set) == 0:
         return hsic_test_vector(suffstat[:, i], suffstat[:, j], alpha=alpha)

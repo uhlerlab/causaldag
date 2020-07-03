@@ -1,13 +1,29 @@
 import numpy as np
-import itertools as itr
 import ipdb
 
 
-def order_vector(x):
+def order_vector(x) -> np.ndarray:
+    """
+    Return vector of ranks for each element of x. For example, [1.1, 2.2, 0.5] -> [1, 2, 0]
+    """
     return np.argsort(np.argsort(x))
 
 
 def fadcor_test_vector(x: np.ndarray, y: np.ndarray, verbose=True):
+    """
+    Test for independence of X and Y using Fast Computing for Distance Covariance (FaDCor).
+
+    Parameters
+    ----------
+    x:
+        vector of samples from X.
+    y:
+        vector of samples from Y.
+
+    Returns
+    -------
+
+    """
     n = len(x)
 
     # STEP 1
@@ -47,6 +63,9 @@ def fadcor_test_vector(x: np.ndarray, y: np.ndarray, verbose=True):
 
 
 def partial_sum2d(x: np.ndarray, y: np.ndarray, c: np.ndarray) -> np.ndarray:
+    """
+    Return \gamma, with \gamma_i = \sum_{j \neq i} c_j S_{ij} for S_{ij} = sign((x_i - x_j)*(y_i - y_j)).
+    """
     # STEP 1
     x_ixs = np.argsort(x)
     rank_x = order_vector(x)
@@ -70,18 +89,21 @@ def partial_sum2d(x: np.ndarray, y: np.ndarray, c: np.ndarray) -> np.ndarray:
     s_x = np.cumsum(c) - c
 
     # STEP 5
-    cdot = c.sum()
+    c_dot = c.sum()
 
     # STEP 6
     d = dyad_update(order_vector(y), c)
 
     # STEP 7
-    gamma = cdot - c - 2*s_y - 2*s_x + 4 * d
+    gamma = c_dot - c - 2*s_y - 2*s_x + 4 * d
 
     return gamma[rank_x]
 
 
 def dyad_update(y, c) -> np.ndarray:
+    """
+    Return \gamma, with \gamma_i = \sum_{j < i, y_j < y_i} c_j
+    """
     y = np.array(y)
 
     # STEP 1
@@ -106,7 +128,7 @@ def dyad_update(y, c) -> np.ndarray:
             ks = ks * 2.**-ells
             ks = (ks - 1).astype(int)
 
-            # === REPLACE WITH ABOVE FOR SPEED
+            # === REPLACED WITH ABOVE FOR SPEED
             # ks = np.zeros(len(ells))
             # for j in range(1, len(ells)):
             #     ks[j] = np.sum(2**ells[m] for m in range(j)) * 2.**(-ells[j])
@@ -119,6 +141,9 @@ def dyad_update(y, c) -> np.ndarray:
 
 
 def get_ells(y) -> np.ndarray:
+    """
+    Return vector ell of length L s.t. 2**l[1] + ... + 2**l[L] = y, sorted in descending order
+    """
     b = bin(y)[2:]
     length = len(b)
     ells = [(length - 1 - i) for i, val in enumerate(b) if val == '1']
