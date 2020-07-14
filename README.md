@@ -13,6 +13,8 @@ $ pip3 install causaldag
 ### Documentation
 Documentation is available at https://causaldag.readthedocs.io/en/latest/index.html
 
+Examples for specific algorithms can be found at https://uhlerlab.github.io/causaldag/
+
 ### Simple Example
 Find the CPDAG (complete partially directed acyclic graph,
 AKA the *essential graph*) corresponding to a DAG:
