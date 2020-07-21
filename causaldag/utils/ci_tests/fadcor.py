@@ -188,8 +188,7 @@ if __name__ == '__main__':
     d = cd.GaussDAG(nodes=[0, 1], arcs=set())
     samples = d.sample(1000)
 
-
-    TEST_TIME = True
+    TEST_TIME = False
     if TEST_TIME:
         samples_list = [d.sample(nsamples) for _ in range(ntrials)]
         for samples in tqdm(samples_list):
