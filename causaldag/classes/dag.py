@@ -7,7 +7,7 @@ import numpy as np
 import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
-from causaldag.classes.custom_types import Node, DirectedEdge
+from causaldag.classes.custom_types import Node, DirectedEdge, NodeSet
 from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
 from networkx.utils import UnionFind
@@ -158,7 +158,7 @@ class DAG:
         p = len(self._nodes)
         return len(self._arcs) / p / (p-1) * 2
 
-    def parents_of(self, node: Node) -> Set[Node]:
+    def parents_of(self, node: NodeSet) -> Set[Node]:
         """
         Return all nodes that are parents of `node`.
 
@@ -174,9 +174,12 @@ class DAG:
         --------
         TODO
         """
-        return self._parents[node].copy()
+        if isinstance(node, set):
+            return set.union(*(self._parents[n] for n in node))
+        else:
+            return self._parents[node].copy()
 
-    def children_of(self, node: Node) -> Set[Node]:
+    def children_of(self, node: NodeSet) -> Set[Node]:
         """
         Return all nodes that are children of `node`.
 
@@ -192,9 +195,12 @@ class DAG:
         --------
         TODO
         """
-        return self._children[node].copy()
+        if isinstance(node, set):
+            return set.union(*(self._children[n] for n in node))
+        else:
+            return self._children[node].copy()
 
-    def neighbors_of(self, node: Node) -> Set[Node]:
+    def neighbors_of(self, node: NodeSet) -> Set[Node]:
         """
         Return all nodes that are adjacent to `node`.
 
@@ -215,7 +221,10 @@ class DAG:
         >>> g.neighbors_of(2)
         {0}
         """
-        return self._neighbors[node].copy()
+        if isinstance(node, set):
+            return set.union(*(self._neighbors[n] for n in node))
+        else:
+            return self._neighbors[node].copy()
 
     def has_arc(self, source: Node, target: Node) -> bool:
         """

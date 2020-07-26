@@ -185,6 +185,23 @@ class TestAncestralGraph(TestCase):
         self.assertEqual(ancestor_dict[3], {1})
         self.assertEqual(ancestor_dict[4], {0, 1, 2, 3})
 
+    def test_fast_markov_equivalence_simple(self):
+        g1 = cd.AncestralGraph(directed={(0, 1), (1, 3)}, bidirected={(1, 2), (2, 3)})
+        g2 = cd.AncestralGraph(directed={(0, 1), (1, 3), (1, 2)}, bidirected={(2, 3)})
+        g3 = cd.AncestralGraph(directed={(0, 1), (1, 2), (1, 3), (3, 2)})
+        self.assertFalse(g1.fast_markov_equivalent(g2))
+        self.assertFalse(g1.fast_markov_equivalent(g3))
+        self.assertTrue(g2.fast_markov_equivalent(g3))
+
+    def test_fast_markov_equivalence_all(self):
+        s = 123231
+        random.seed(s)
+        np.random.seed(s)
+        d = cd.rand.directed_erdos(10, exp_nbrs=2)
+        g = d.marginal_mag({0, 1})
+        for g_ in g.get_all_mec():
+            self.assertTrue(g.fast_markov_equivalent(g_))
+
 
 if __name__ == '__main__':
     unittest.main()

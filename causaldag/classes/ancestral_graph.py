@@ -4,7 +4,7 @@ import itertools as itr
 import numpy as np
 import random
 from typing import List, Iterable, Set, Dict, Hashable, Tuple, FrozenSet, Union
-from causaldag.classes.custom_types import Node, DirectedEdge, BidirectedEdge, UndirectedEdge
+from causaldag.classes.custom_types import Node, DirectedEdge, BidirectedEdge, UndirectedEdge, NodeSet
 
 
 class CycleError(Exception):
@@ -578,17 +578,29 @@ class AncestralGraph:
     def skeleton(self) -> Set[UndirectedEdge]:
         return {frozenset({i, j}) for i, j in self._bidirected | self._undirected | self._directed}
 
-    def children_of(self, i: Node) -> Set[Node]:
-        return self._children[i].copy()
+    def children_of(self, i: NodeSet) -> Set[Node]:
+        if isinstance(i, set):
+            return set.union(*(self._children[n] for n in i))
+        else:
+            return self._children[i].copy()
 
-    def parents_of(self, i: Node) -> Set[Node]:
-        return self._parents[i].copy()
+    def parents_of(self, i: NodeSet) -> Set[Node]:
+        if isinstance(i, set):
+            return set.union(*(self._parents[n] for n in i))
+        else:
+            return self._parents[i].copy()
 
-    def spouses_of(self, i: Node) -> Set[Node]:
-        return self._spouses[i].copy()
+    def spouses_of(self, i: NodeSet) -> Set[Node]:
+        if isinstance(i, set):
+            return set.union(*(self._spouses[n] for n in i))
+        else:
+            return self._spouses[i].copy()
 
-    def neighbors_of(self, i: Node) -> Set[Node]:
-        return self._neighbors[i].copy()
+    def neighbors_of(self, i: NodeSet) -> Set[Node]:
+        if isinstance(i, set):
+            return set.union(*(self._neighbors[n] for n in i))
+        else:
+            return self._neighbors[i].copy()
 
     def _add_ancestors(self, ancestors, node, exclude_arcs=set()):
         for parent in self._parents[node]:
@@ -660,6 +672,35 @@ class AncestralGraph:
             node2ancestors_plus_self[node] -= {node}
 
         return core_utils.defdict2dict(node2ancestors_plus_self, self._nodes)
+
+    def descendant_dict(self) -> dict:
+        """
+        Return a dictionary from each node to its descendants.
+
+        See Also
+        --------
+        ancestors_of
+
+        Return
+        ------
+        Dict[node,Set]
+            Mapping node to ancestors
+
+        Example
+        -------
+        """
+        top_sort = self.topological_sort()
+
+        node2descendants_plus_self = defaultdict(set)
+        for node in reversed(top_sort):
+            node2descendants_plus_self[node].add(node)
+            for parent in self._parents[node]:
+                node2descendants_plus_self[parent].update(node2descendants_plus_self[node])
+
+        for node in self._nodes:
+            node2descendants_plus_self[node] -= {node}
+
+        return core_utils.defdict2dict(node2descendants_plus_self, self._nodes)
 
     def descendants_of(self, node: Node, exclude_arcs=set()) -> Set[Node]:
         """
@@ -805,11 +846,12 @@ class AncestralGraph:
         """
         return {node for node in self._nodes if len(self._parents[node] | self._spouses[node]) >= 2}
 
-    def _bidirected_reachable(self, node, tmp: Set[Node], visited: Set[Node]) -> Set[Node]:
+    def _bidirected_reachable(self, node, tmp: Set[Node], visited: Set[Node], node_subset=None) -> Set[Node]:
+        node_subset = self._nodes if node_subset is None else node_subset
         visited.add(node)
         tmp.add(node)
-        for spouse in filter(lambda spouse: spouse not in visited, self._spouses[node]):
-            tmp = self._bidirected_reachable(spouse, tmp, visited)
+        for spouse in filter(lambda spouse: spouse not in visited, self._spouses[node] & node_subset):
+            tmp = self._bidirected_reachable(spouse, tmp, visited, node_subset=node_subset)
         return tmp
 
     def c_components(self) -> List[set]:
@@ -836,9 +878,10 @@ class AncestralGraph:
 
         return components
 
-    def district_of(self, node: Node) -> Set[Node]:
+    def district_of(self, node: Node, node_subset=None) -> Set[Node]:
         """
-        Return the district of a node, i.e., the set of nodes reachable by bidirected edges.
+        Return the district of a node, i.e., the set of nodes reachable by bidirected edges. If `node_subset` is
+        provided, do this on the induced subgraph on that subset of nodes.
 
         Return
         ------
@@ -849,7 +892,7 @@ class AncestralGraph:
         --------
         TODO
         """
-        return self._bidirected_reachable(node, set(), set())
+        return self._bidirected_reachable(node, set(), set(), node_subset=node_subset)
 
     def discriminating_paths(self, verbose=False) -> Dict[Tuple, str]:
         """
@@ -1343,6 +1386,55 @@ class AncestralGraph:
         )
 
         return same_skeleton and same_vstructures and same_discriminating
+
+    def fast_markov_equivalent(self, other) -> bool:
+        """
+        Use Algorithm 1 of "Faster algorithms for Markov equivalence" (Hu and Evans, 2020) to check for Markov
+        equivalence between two graphs.
+        """
+        if self.skeleton != other.skeleton:
+            return False
+        if self.vstructures() != other.vstructures():
+            return False
+        if self.discriminating_triples() != other.discriminating_triples():
+            return False
+        return True
+
+    def _tail_of(self, v: Node, w: Node, ancestor_dict: dict):
+        ancestors = ancestor_dict[v] | ancestor_dict[w] | {v, w}
+        d = self.district_of(v, ancestors)
+        p = self.parents_of(d)
+        return p | d - {v, w}
+
+    def discriminating_triples(self, verbose=False):
+        """
+        Return the discriminating triples of the graph, which are triples of nodes that determine the discriminating
+        paths.
+        """
+        d_triples = set()
+        ancestor_dict = self.ancestor_dict()
+        desc_dict = self.descendant_dict()
+
+        for v, w in self._bidirected:
+            tail_vw = self._tail_of(v, w, ancestor_dict)
+
+            # LINES 10-12
+            for z in tail_vw:
+                if not (self.has_any_edge(v, z) and self.has_any_edge(w, z)):
+                    if verbose: print(f"{z} in tail of ({v, w})")
+                    d_triples.add(frozenset({v, w, z}))
+
+            # LINES 13-17
+            a = ancestor_dict[v] | ancestor_dict[w] | {v, w}
+            d = desc_dict[v] | desc_dict[w] | {v, w}
+            for z in self.spouses_of(a) & self.district_of(v) - (a | d):
+                if not (self.has_any_edge(v, z) and self.has_any_edge(w, z)):
+                    dis = self.district_of(v, a | ancestor_dict[z] | {z})
+                    if z in dis:
+                        if verbose: print(f"{z} in district of {v} restricted to spouses, district")
+                        d_triples.add(frozenset({v, w, z}))
+
+        return d_triples | {frozenset(vstruct) for vstruct in self.vstructures()}
 
     def get_all_mec(self):
         """

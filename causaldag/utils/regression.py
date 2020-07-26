@@ -6,7 +6,7 @@ class RegressionHelper:
     def __init__(self, suffstat):
         self.suffstat = suffstat
         self.S = suffstat['S']
-        self.P = suffstat['P']
+        self.P = suffstat.get('P', None)
         self.p = self.suffstat['S'].shape[0]
         self.n = self.suffstat['n']
 
@@ -20,7 +20,7 @@ class RegressionHelper:
             S_inv = None
 
         # use Schur complement when conditioning to keep inverted submatrix small
-        elif len(c) < self.p / 2:
+        elif len(c) < self.p / 2 or P is None:
             S_inv = inv(S[ix_(c, c)])
             coefs = S_inv @ S[c, i]
             var = S[i, i] - S[i, c] @ S_inv @ S[c, i]
