@@ -22,7 +22,7 @@ class RegressionHelper:
 
         # use Schur complement when conditioning to keep inverted submatrix small
         elif len(c) < self.p / 2 or P is None:
-            if np.isclose(np.diag(S[ix_(c, c)]), 0).any():
+            if lam == 0 and np.isclose(np.diag(S[ix_(c, c)]), 0).any():
                 coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
                 var = S[i, i] - S[i, c] @ coefs
                 S_inv = None
