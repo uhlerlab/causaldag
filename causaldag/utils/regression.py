@@ -1,5 +1,5 @@
 from numpy import ix_
-from numpy.linalg import inv
+from numpy.linalg import inv, lstsq, LinAlgError
 
 
 class RegressionHelper:
@@ -10,7 +10,7 @@ class RegressionHelper:
         self.p = self.suffstat['S'].shape[0]
         self.n = self.suffstat['n']
 
-    def regression(self, i: int, c: list=None):
+    def regression(self, i: int, c: list=None, lam=0):
         S, P = self.S, self.P
         d = [j for j in range(self.p) if j not in c and j != i] + [i]
 
@@ -21,9 +21,14 @@ class RegressionHelper:
 
         # use Schur complement when conditioning to keep inverted submatrix small
         elif len(c) < self.p / 2 or P is None:
-            S_inv = inv(S[ix_(c, c)])
-            coefs = S_inv @ S[c, i]
-            var = S[i, i] - S[i, c] @ S_inv @ S[c, i]
+            try:
+                S_inv = inv(S[ix_(c, c)] + lam*np.eye(len(c)))
+                coefs = S_inv @ S[c, i]
+                var = S[i, i] - S[i, c] @ S_inv @ S[c, i]
+            except LinAlgError:
+                coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
+                var = S[i, i] - S[i, c] @ coefs
+                S_inv = None
 
         # use Schur complement when marginalizing to keep inverted submatrix small
         else:
@@ -60,11 +65,11 @@ if __name__ == '__main__':
     for i in trange(nnodes):
         for c in powerset(nodes - {i}, r_min=1):
             c = list(c)
-            coefs, var = reg_helper.regression(i, c)
+            coefs, var, _ = reg_helper.regression(i, c)
             lr.fit(samples[:, c], samples[:, i])
             var2 = np.var(samples[:, c] @ coefs - samples[:, i], ddof=len(c))
-            if not np.isclose(coefs, lr.coef_).all():
-                print(coefs, lr.coef_)
-            if not np.isclose(var, var2):
-                print(var, var2)
+            # if not np.isclose(coefs, lr.coef_).all():
+            #     print(coefs, lr.coef_)
+            # if not np.isclose(var, var2):
+            #     print(var, var2)
 

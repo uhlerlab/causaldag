@@ -327,7 +327,10 @@ def dci_skeleton(
 
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
-            stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
+            if precision1 is None or precision2 is None:
+                stat_i = 0
+            else:
+                stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
                      inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
             pval_i = ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
             pval_i = 2 * min(pval_i, 1 - pval_i)
