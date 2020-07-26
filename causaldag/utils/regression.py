@@ -1,5 +1,5 @@
 from numpy import ix_
-from numpy.linalg import inv, lstsq, LinAlgError
+from numpy.linalg import inv, lstsq, LinAlgError, pinv
 import numpy as np
 
 
@@ -25,7 +25,7 @@ class RegressionHelper:
             if lam == 0 and np.isclose(np.diag(S[ix_(c, c)]), 0).any():
                 coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
                 var = S[i, i] - S[i, c] @ coefs
-                S_inv = None
+                S_inv = pinv(S[ix_(c, c)])
             else:
                 try:
                     S_inv = inv(S[ix_(c, c)] + lam*np.eye(len(c)))
@@ -34,7 +34,7 @@ class RegressionHelper:
                 except LinAlgError:
                     coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
                     var = S[i, i] - S[i, c] @ coefs
-                    S_inv = None
+                    S_inv = pinv(S[ix_(c, c)])
 
         # use Schur complement when marginalizing to keep inverted submatrix small
         else:

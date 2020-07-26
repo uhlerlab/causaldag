@@ -337,11 +337,8 @@ def dci_skeleton(
 
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
-            if precision1 is None or precision2 is None:
-                stat_i = 0
-            else:
-                stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
-                     inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
+            stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
+                 inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
             pval_i = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
 
             #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
@@ -359,11 +356,8 @@ def dci_skeleton(
 
             # compute statistic and p-value
             i_ix = cond_set_j.index(i)
-            if precision1 is None or precision2 is None:
-                stat_j = 0
-            else:
-                stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
-                     inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
+            stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
+                 inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
             pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
 
             #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
