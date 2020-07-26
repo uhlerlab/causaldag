@@ -1,5 +1,6 @@
 from numpy import ix_
 from numpy.linalg import inv, lstsq, LinAlgError
+import numpy as np
 
 
 class RegressionHelper:
@@ -21,14 +22,19 @@ class RegressionHelper:
 
         # use Schur complement when conditioning to keep inverted submatrix small
         elif len(c) < self.p / 2 or P is None:
-            try:
-                S_inv = inv(S[ix_(c, c)] + lam*np.eye(len(c)))
-                coefs = S_inv @ S[c, i]
-                var = S[i, i] - S[i, c] @ S_inv @ S[c, i]
-            except LinAlgError:
+            if np.isclose(np.diag(S[ix_(c, c)]), 0).any():
                 coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
                 var = S[i, i] - S[i, c] @ coefs
                 S_inv = None
+            else:
+                try:
+                    S_inv = inv(S[ix_(c, c)] + lam*np.eye(len(c)))
+                    coefs = S_inv @ S[c, i]
+                    var = S[i, i] - S[i, c] @ S_inv @ S[c, i]
+                except LinAlgError:
+                    coefs, var, _, _ = lstsq(S[ix_(c, c)], S[c, i])
+                    var = S[i, i] - S[i, c] @ coefs
+                    S_inv = None
 
         # use Schur complement when marginalizing to keep inverted submatrix small
         else:

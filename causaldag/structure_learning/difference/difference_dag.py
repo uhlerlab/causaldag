@@ -342,16 +342,16 @@ def dci_skeleton(
             else:
                 stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
                      inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
-            pval_i = ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
-            pval_i = 2 * min(pval_i, 1 - pval_i)
+            pval_i = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
 
             #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
             i_invariant = pval_i > alpha
             if i_invariant:
                 if verbose > 0:
-                    print("Removing edge %d-%d since p-value=%.5f > alpha=%.5f" % (i, j, pval_i, alpha))
+                    print("Removing edge %d->%d since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_i, alpha, cond_set_i))
                 skeleton.remove((i, j))
                 break
+            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_i, alpha, cond_set_i))
 
             # calculate regression coefficients (i regressed on cond_set_i) for both datasets
             beta1_j, var1_j, precision1 = rh1.regression(j, cond_set_j)
@@ -359,18 +359,21 @@ def dci_skeleton(
 
             # compute statistic and p-value
             i_ix = cond_set_j.index(i)
-            stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
+            if precision1 is None or precision2 is None:
+                stat_j = 0
+            else:
+                stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
                      inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
             pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
-            pval_j = 2 * min(pval_j, 1 - pval_j)
 
             #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
             j_invariant = pval_j > alpha
             if j_invariant:
                 if verbose > 0:
-                    print("Removing edge %d-%d since p-value=%.5f < alpha=%.5f" % (i, j, pval_j, alpha))
+                    print("Removing edge %d->%d since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_j, alpha, cond_set_j))
                 skeleton.remove((i, j))
                 break
+            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_j, alpha, cond_set_j))
 
     return skeleton
 
