@@ -351,7 +351,7 @@ def dci_skeleton(
                     print("Removing edge %d->%d since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_i, alpha, cond_set_i))
                 skeleton.remove((i, j))
                 break
-            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_i, alpha, cond_set_i))
+            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f < alpha=%.5f with cond set %s" % (i, j, pval_i, alpha, cond_set_i))
 
             # calculate regression coefficients (i regressed on cond_set_i) for both datasets
             beta1_j, var1_j, precision1 = rh1.regression(j, cond_set_j)
@@ -373,7 +373,7 @@ def dci_skeleton(
                     print("Removing edge %d->%d since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_j, alpha, cond_set_j))
                 skeleton.remove((i, j))
                 break
-            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f > alpha=%.5f with cond set %s" % (i, j, pval_j, alpha, cond_set_j))
+            elif verbose > 0: print(f"Keeping edge %d->%d for now, since p-value=%.5f < alpha=%.5f with cond set %s" % (i, j, pval_j, alpha, cond_set_j))
 
     return skeleton
 
