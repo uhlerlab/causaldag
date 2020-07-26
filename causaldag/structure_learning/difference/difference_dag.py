@@ -38,7 +38,8 @@ def dci(
         nodes_cond_set: set = None,
         max_iter: int = 1000,
         edge_threshold: float = 0,
-        verbose: int = 0
+        verbose: int = 0,
+        lam: float = 0
 ):
     """
     Uses the Difference Causal Inference (DCI) algorithm to estimate the difference-DAG between two settings.
@@ -73,6 +74,8 @@ def dci(
         Edge weight cutoff for keeping an edge for KLIEP algorithm (all edges above or equal to this threshold are kept).
     verbose: int, default = 0
         The verbosity level of logging messages.
+    lam: float, default = 0
+        Amount of regularization for regression (becomes ridge regression if nonzero).
 
     See Also
     --------
@@ -108,7 +111,7 @@ def dci(
                                              verbose=verbose)
     
     # estimate the skeleton of the difference-DAG 
-    skeleton = dci_skeleton(X1, X2, difference_ug, nodes_cond_set, rh1=rh1, rh2=rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose)
+    skeleton = dci_skeleton(X1, X2, difference_ug, nodes_cond_set, rh1=rh1, rh2=rh2, alpha=alpha_skeleton, max_set_size=max_set_size, verbose=verbose, lam=lam)
     # orient edges of the skeleton of the difference-DAG
     adjacency_matrix = dci_orient(X1, X2, skeleton, nodes_cond_set, rh1=rh1, rh2=rh2, alpha=alpha_orient, max_set_size=max_set_size,
                                                   verbose=verbose)
@@ -131,7 +134,8 @@ def dci_stability_selection(
         bootstrap_threshold: float = 0.5,
         n_jobs: int = 1,
         random_state: int = None,
-        verbose: int = 0
+        verbose: int = 0,
+        lam: float = 0
 ):
     """
     Runs Difference Causal Inference (DCI) algorithm with stability selection to estimate the difference-DAG between two settings. 
@@ -179,6 +183,8 @@ def dci_stability_selection(
         Seed used by the random number generator.
     verbose: int, default = 0
         The verbosity level of logging messages.
+    lam: float, default = 0
+        Amount of regularization for regression (becomes ridge regression if nonzero).
 
     See Also
     --------
@@ -230,7 +236,8 @@ def dci_stability_selection(
                                                     nodes_cond_set=nodes_cond_set,
                                                     max_iter=max_iter,
                                                     edge_threshold=edge_threshold,
-                                                    verbose=verbose)
+                                                    verbose=verbose,
+                                                    lam=lam)
                                        for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
 
         stability_scores[idx] = np.array(bootstrap_results).mean(axis=0)
@@ -262,7 +269,8 @@ def dci_skeleton(
         rh2: RegressionHelper = None,
         alpha: float = 0.1,
         max_set_size: int = 3,
-        verbose: int = 0
+        verbose: int = 0,
+        lam: float = 0
 ):
     """
     Estimates the skeleton of the difference-DAG.
@@ -289,6 +297,8 @@ def dci_skeleton(
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
     verbose: int, default = 0
         The verbosity level of logging messages.
+    lam: float, default = 0
+        Amount of regularization for regression (becomes ridge regression if nonzero).
 
     See Also
     --------
@@ -322,8 +332,8 @@ def dci_skeleton(
             cond_set_i, cond_set_j = [*cond_set, j], [*cond_set, i]
 
             # calculate regression coefficients (j regressed on cond_set_j) for both datasets
-            beta1_i, var1_i, precision1 = rh1.regression(i, cond_set_i)
-            beta2_i, var2_i, precision2 = rh2.regression(i, cond_set_i)
+            beta1_i, var1_i, precision1 = rh1.regression(i, cond_set_i, lam=lam)
+            beta2_i, var2_i, precision2 = rh2.regression(i, cond_set_i, lam=lam)
 
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
