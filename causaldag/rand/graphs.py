@@ -7,7 +7,6 @@ from typing import Union, List, Callable, Optional, Any
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 
-
 # class RandWeightFn(Protocol):
 #     def __call__(self, size: int) -> Union[float, List[float]]: ...
 
@@ -27,25 +26,27 @@ def unif_away_zero(low=.25, high=1, size=1, all_positive=False):
 
 def unif_away_original(original, dist_original=.25, low=.25, high=1):
     if dist_original < low:
-        raise ValueError("the lowest absolute value of weights must be larger than the distance between old weights and new weights")
+        raise ValueError(
+            "the lowest absolute value of weights must be larger than the distance between old weights and new weights")
     regions = []
     if original < 0:
         regions.append((low, high))
         if original - dist_original >= -high:
-            regions.append((-high, original-dist_original))
+            regions.append((-high, original - dist_original))
         if original + dist_original <= -low:
-            regions.append((original+dist_original, -low))
+            regions.append((original + dist_original, -low))
     else:
         regions.append((-high, -low))
         if original + dist_original <= high:
-            regions.append((original+dist_original, high))
+            regions.append((original + dist_original, high))
         if original - dist_original >= low:
-            regions.append((low, original-dist_original))
-    a, b = random.choices(regions, weights=[b-a for a, b in regions])[0]
+            regions.append((low, original - dist_original))
+    a, b = random.choices(regions, weights=[b - a for a, b in regions])[0]
     return np.random.uniform(a, b)
 
 
-def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, random_order=True) -> Union[DAG, List[DAG]]:
+def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, random_order=True) -> Union[
+    DAG, List[DAG]]:
     """
     Generate random Erdos-Renyi DAG(s) on `nnodes` nodes with density `density`.
 
@@ -66,7 +67,7 @@ def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, r
     >>> d = cd.rand.directed_erdos(5, .5)
     """
     assert density is not None or exp_nbrs is not None
-    density = density if density is not None else exp_nbrs/(nnodes-1)
+    density = density if density is not None else exp_nbrs / (nnodes - 1)
     if size == 1:
         if density < .01:
             print('here')
@@ -81,7 +82,47 @@ def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, r
             d = d.rename_nodes(dict(enumerate(np.random.permutation(nodes))))
         return [d] if as_list else d
     else:
-        return [directed_erdos(nnodes, density) for _ in range(size)]
+        return [directed_erdos(nnodes, density, random_order=random_order) for _ in range(size)]
+
+
+def directed_erdos_with_confounders(
+        nnodes: int,
+        density: Optional[float] = None,
+        exp_nbrs: Optional[float] = None,
+        num_confounders: int = 1,
+        confounder_pervasiveness: float = 1,
+        size=1,
+        as_list=False,
+        random_order=True
+) -> Union[DAG, List[DAG]]:
+    assert density is not None or exp_nbrs is not None
+    density = density if density is not None else exp_nbrs / (nnodes - 1)
+
+    if size == 1:
+        confounders = list(range(num_confounders))
+        nonconfounders = list(range(num_confounders, nnodes+num_confounders))
+        bools = _coin(confounder_pervasiveness, size=int(num_confounders*nnodes))
+        confounder_arcs = {(i, j) for (i, j), b in zip(itr.product(confounders, nonconfounders), bools) if b}
+        bools = _coin(density, size=int(nnodes * (nnodes - 1) / 2))
+        local_arcs = {(i, j) for (i, j), b in zip(itr.combinations(nonconfounders, 2), bools) if b}
+        d = DAG(nodes=set(range(nnodes)), arcs=confounder_arcs|local_arcs)
+
+        if random_order:
+            nodes = list(range(nnodes+num_confounders))
+            d = d.rename_nodes(dict(enumerate(np.random.permutation(nodes))))
+
+        return [d] if as_list else d
+    else:
+        return [
+            directed_erdos_with_confounders(
+                nnodes,
+                density,
+                num_confounders=num_confounders,
+                confounder_pervasiveness=confounder_pervasiveness,
+                random_order=random_order
+            )
+            for _ in range(size)
+        ]
 
 
 def rand_weights(dag, rand_weight_fn: RandWeightFn = unif_away_zero) -> GaussDAG:
@@ -106,7 +147,7 @@ def rand_weights(dag, rand_weight_fn: RandWeightFn = unif_away_zero) -> GaussDAG
 
 
 def _leaky_relu(vals):
-    return np.where(vals > 0, vals, vals*.01)
+    return np.where(vals > 0, vals, vals * .01)
 
 
 def rand_nn_functions(
@@ -120,7 +161,7 @@ def rand_nn_functions(
     # for each node, create the conditional
     for node in dag._nodes:
         nparents = dag.indegree(node)
-        layer_mats = [np.random.rand(nparents, nparents)*2 for _ in range(num_layers)]
+        layer_mats = [np.random.rand(nparents, nparents) * 2 for _ in range(num_layers)]
 
         def conditional(parent_vals):
             vals = parent_vals
@@ -175,7 +216,7 @@ def rand_additive_basis(
     >>> g = cd.rand.rand_additive_basis(d, basis, snr_dict)
     """
     if snr_dict is None:
-        snr_dict = defaultdict(lambda: 1/2)
+        snr_dict = defaultdict(lambda: 1 / 2)
 
     sample_dag = SampleDAG(dag._nodes, arcs=dag._arcs)
     top_order = dag.topological_sort()
@@ -192,7 +233,7 @@ def rand_additive_basis(
             values_from_parents = []
             for i in range(num_monte_carlo):
                 val = sum([
-                    weight*base(sample_dict[parent][i])
+                    weight * base(sample_dict[parent][i])
                     for weight, base, parent in zip(parent_weights, parent_bases, parents)
                 ])
                 values_from_parents.append(val)
@@ -206,7 +247,7 @@ def rand_additive_basis(
 
         def conditional(parent_vals):
             return sum([
-                c_node*weight*base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
+                c_node * weight * base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
             ]) + noise()
 
         for i in range(num_monte_carlo):
@@ -302,10 +343,12 @@ def alter_weights(
     if num_removed is None and prob_removed is None:
         raise ValueError("Must specify at least one of `prob_removed` or `num_removed`.")
     if num_altered + num_removed > gdag.num_arcs:
-        raise ValueError(f"Tried altering {num_altered} arcs and removing {num_removed} arcs, but there are only {gdag.num_arcs} arcs in this DAG.")
+        raise ValueError(
+            f"Tried altering {num_altered} arcs and removing {num_removed} arcs, but there are only {gdag.num_arcs} arcs in this DAG.")
     num_missing_arcs = comb(gdag.nnodes, 2) - gdag.num_arcs
     if num_added > num_missing_arcs:
-        raise ValueError(f"Tried adding {num_added} arcs but there are only {num_missing_arcs} arcs missing from the DAG.")
+        raise ValueError(
+            f"Tried adding {num_added} arcs but there are only {num_missing_arcs} arcs missing from the DAG.")
 
     # GET NUMBER ADDED/CHANGED/REMOVED
     num_altered = num_altered if num_altered is not None else np.random.binomial(gdag.num_arcs, prob_altered)
@@ -335,6 +378,7 @@ def alter_weights(
 
 __all__ = [
     'directed_erdos',
+    'directed_erdos_with_confounders',
     'rand_weights',
     'unif_away_zero',
     'directed_barabasi',
@@ -344,5 +388,3 @@ __all__ = [
     'alter_weights',
     'rand_additive_basis'
 ]
-
-
