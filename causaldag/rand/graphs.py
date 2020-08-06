@@ -6,6 +6,8 @@ import itertools as itr
 from typing import Union, List, Callable, Optional, Any
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
+from tqdm import tqdm
+from functools import partial
 
 # class RandWeightFn(Protocol):
 #     def __call__(self, size: int) -> Union[float, List[float]]: ...
@@ -175,6 +177,12 @@ def rand_nn_functions(
     return s
 
 
+def _cam_conditional(parent_vals, c_node, parent_weights, parent_bases, noise):
+    return sum([
+        c_node * weight * base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
+    ]) + noise()
+
+
 def rand_additive_basis(
         dag: DAG,
         basis: list,
@@ -182,7 +190,8 @@ def rand_additive_basis(
         rand_weight_fn: RandWeightFn = unif_away_zero,
         noise=lambda: np.random.normal(0, 1),
         internal_variance: int = 1,
-        num_monte_carlo: int = 10000
+        num_monte_carlo: int = 10000,
+        progress=False
 ):
     """
     Generate a random structural causal model (SCM), using `dag` as the structure, and with each variable
@@ -216,19 +225,21 @@ def rand_additive_basis(
     >>> g = cd.rand.rand_additive_basis(d, basis, snr_dict)
     """
     if snr_dict is None:
-        snr_dict = defaultdict(lambda: 1 / 2)
+        snr_dict = {nparents: 1/2 for nparents in range(dag.nnodes)}
 
     sample_dag = SampleDAG(dag._nodes, arcs=dag._arcs)
     top_order = dag.topological_sort()
     sample_dict = defaultdict(list)
 
     # for each node, create the conditional
-    for node in top_order:
+    node_iterator = top_order if not progress else tqdm(top_order)
+    for node in node_iterator:
         parents = dag.parents_of(node)
         nparents = dag.indegree(node)
         parent_bases = random.choices(basis, k=nparents)
         parent_weights = rand_weight_fn(size=nparents)
 
+        c_node = None
         if nparents > 0:
             values_from_parents = []
             for i in range(num_monte_carlo):
@@ -245,10 +256,7 @@ def rand_additive_basis(
                 raise Exception(f"`snr_dict` does not specify a desired SNR for nodes with {nparents} parents")
             c_node = internal_variance / variance_from_parents * desired_snr / (1 - desired_snr)
 
-        def conditional(parent_vals):
-            return sum([
-                c_node * weight * base(val) for weight, base, val in zip(parent_weights, parent_bases, parent_vals)
-            ]) + noise()
+        conditional = partial(_cam_conditional, c_node=c_node, parent_weights=parent_weights, parent_bases=parent_bases, noise=noise)
 
         for i in range(num_monte_carlo):
             val = conditional([sample_dict[parent][i] for parent in parents])
