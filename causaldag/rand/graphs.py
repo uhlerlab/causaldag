@@ -24,7 +24,6 @@ def unif_away_zero(low=.25, high=1, size=1, all_positive=False):
     if all_positive:
         return np.random.uniform(low, high, size=size)
     signs = (_coin(.5, size) - .5) * 2
-    print('sampled signs')
     return signs * np.random.uniform(low, high, size=size)
 
 
@@ -147,7 +146,6 @@ def rand_weights(dag, rand_weight_fn: RandWeightFn = unif_away_zero) -> GaussDAG
     >>> g = cd.rand.rand_weights(d)
     """
     weights = rand_weight_fn(size=len(dag.arcs))
-    print('sampled weights')
     return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))
 
 
