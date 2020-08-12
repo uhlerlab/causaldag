@@ -27,7 +27,6 @@ class GaussDAG(DAG):
             means=None,
             variances=None
     ):
-        arcs_set = arcs if isinstance(arcs, set) else set(arcs.keys())
         self._weight_mat = np.zeros((len(nodes), len(nodes)))
         self._node_list = nodes
         self._node2ix = core_utils.ix_map_from_list(self._node_list)
@@ -39,7 +38,7 @@ class GaussDAG(DAG):
         self._covariance = None
         self._correlation = None
 
-        super().__init__(set(nodes), arcs_set)
+        super(GaussDAG, self).__init__(set(nodes), arcs)
 
         for node1, node2 in arcs:
             w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
@@ -191,7 +190,16 @@ class GaussDAG(DAG):
             super().add_arc(i, j)
 
     def set_arc_weights(self, arcs):
-        pass  # TODO
+        ixs, ws = zip(*arcs.items())
+        ixs = np.array(ixs)
+        ws = np.array(ws)
+        amat_ixs = [(self._node2ix[i], self._node2ix[j]) for i, j in ixs]
+        rows, cols = zip(*amat_ixs)
+        self._weight_mat[rows, cols] = ws
+        zeros = np.where(ws == 0)[0]
+        nonzeros = np.where(ws != 0)[0]
+        super().remove_arcs(ixs[zeros], ignore_error=True)
+        super().add_arcs_from(ixs[nonzeros])
 
     def set_node_mean(self, i, mean):
         self._means[i] = mean
@@ -359,7 +367,7 @@ class GaussDAG(DAG):
         self._weight_mat = self._weight_mat[np.ix_(self._node_list, self._node_list)]
         super().remove_node(node)
 
-    def add_arcs_from(self, arcs, unsafe=False):
+    def add_arcs_from(self, arcs: Union[Dict, Set], unsafe=False):
         """
         TODO
 
@@ -372,8 +380,9 @@ class GaussDAG(DAG):
         --------
         TODO
         """
-        for i, j in arcs:
-            self.add_arc(i, j, unsafe=unsafe)
+        # super().add_arcs_from(arcs)
+        arcs = arcs if isinstance(arcs, dict) else {arc: 1 for arc in arcs}
+        self.set_arc_weights(arcs)
 
     def add_nodes_from(self, nodes):
         raise NotImplementedError

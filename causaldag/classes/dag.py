@@ -421,7 +421,9 @@ class DAG:
         >>> g.arcs
         {(1, 2), (1, 3), (2, 3)}
         """
-        if not arcs:
+        if not isinstance(arcs, set):
+            arcs = {(i, j) for i, j in arcs}
+        if len(arcs) == 0:
             return
 
         sources, sinks = zip(*arcs)
