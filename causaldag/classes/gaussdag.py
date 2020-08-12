@@ -41,7 +41,6 @@ class GaussDAG(DAG):
 
         super().__init__(set(nodes), arcs_set)
 
-        print('here')
         for node1, node2 in arcs:
             w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
             self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
