@@ -2,7 +2,7 @@ from typing import Dict
 from math import erf
 import numba
 from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate, cov
-from numpy.linalg import inv
+from numpy.linalg import inv, pinv
 from . import MemoizedCI_Tester
 
 
@@ -28,12 +28,12 @@ def gauss_ci_suffstat(samples, invert=True):
     dictionary of sufficient statistics
     """
     n, p = samples.shape
-    S = cov(samples, rowvar=False)
-    C = corrcoef(samples, rowvar=False)
+    S = cov(samples, rowvar=False)  # sample covariance matrix
+    C = corrcoef(samples, rowvar=False)  # sample correlation matrix
     if invert and n >= p:
-        K = numba_inv(C)
-        P = numba_inv(S)
-        rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]
+        K = pinv(C)
+        P = pinv(S)  # sample precision (inverse covariance) matrix
+        rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]  # sample partial correlation matrix
         return dict(P=P, S=S, C=C, n=n, K=K, rho=rho)
     return dict(S=S, C=C, n=n)
 
@@ -84,10 +84,10 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
         if len(rest) == 1:
             theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ K[ix_(rest, [i, j])] / K[rest[0], rest[0]]
         else:
-            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ numba_inv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]  # TODO: what to do if not invertible?
+            theta_ij = K[ix_([i, j], [i, j])] - K[ix_([i, j], rest)] @ pinv(K[ix_(rest, rest)]) @ K[ix_(rest, [i, j])]  # TODO: what to do if not invertible?
         r = -theta_ij[0, 1] / sqrt(theta_ij[0, 0] * theta_ij[1, 1])
     else:
-        theta = numba_inv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])  # TODO: what to do if not invertible?
+        theta = pinv(C[ix_([i, j, *cond_set], [i, j, *cond_set])])  # TODO: what to do if not invertible?
         r = -theta[0, 1]/sqrt(theta[0, 0] * theta[1, 1])
 
     return r

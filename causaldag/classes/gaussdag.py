@@ -41,6 +41,7 @@ class GaussDAG(DAG):
 
         super().__init__(set(nodes), arcs_set)
 
+        print('here')
         for node1, node2 in arcs:
             w = arcs[(node1, node2)] if isinstance(arcs, dict) else 1
             self._weight_mat[self._node2ix[node1], self._node2ix[node2]] = w
@@ -189,6 +190,9 @@ class GaussDAG(DAG):
             super().remove_arc(i, j)
         if val != 0 and (i, j) not in self._arcs:
             super().add_arc(i, j)
+
+    def set_arc_weights(self, arcs):
+        pass  # TODO
 
     def set_node_mean(self, i, mean):
         self._means[i] = mean

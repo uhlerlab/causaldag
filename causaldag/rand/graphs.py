@@ -23,7 +23,9 @@ def _coin(p, size=1):
 def unif_away_zero(low=.25, high=1, size=1, all_positive=False):
     if all_positive:
         return np.random.uniform(low, high, size=size)
-    return (_coin(.5, size) - .5) * 2 * np.random.uniform(low, high, size=size)
+    signs = (_coin(.5, size) - .5) * 2
+    print('sampled signs')
+    return signs * np.random.uniform(low, high, size=size)
 
 
 def unif_away_original(original, dist_original=.25, low=.25, high=1):
@@ -71,11 +73,11 @@ def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, r
     assert density is not None or exp_nbrs is not None
     density = density if density is not None else exp_nbrs / (nnodes - 1)
     if size == 1:
-        if density < .01:
-            print('here')
-            random_nx = fast_gnp_random_graph(nnodes, density, directed=True)
-            d = DAG(nodes=set(range(nnodes)), arcs=random_nx.edges)
-            return [d] if as_list else d
+        # if density < .01:
+        #     print('here')
+        #     random_nx = fast_gnp_random_graph(nnodes, density, directed=True)
+        #     d = DAG(nodes=set(range(nnodes)), arcs=random_nx.edges)
+        #     return [d] if as_list else d
         bools = _coin(density, size=int(nnodes * (nnodes - 1) / 2))
         arcs = {(i, j) for (i, j), b in zip(itr.combinations(range(nnodes), 2), bools) if b}
         d = DAG(nodes=set(range(nnodes)), arcs=arcs)
@@ -145,6 +147,7 @@ def rand_weights(dag, rand_weight_fn: RandWeightFn = unif_away_zero) -> GaussDAG
     >>> g = cd.rand.rand_weights(d)
     """
     weights = rand_weight_fn(size=len(dag.arcs))
+    print('sampled weights')
     return GaussDAG(nodes=list(range(len(dag.nodes))), arcs=dict(zip(dag.arcs, weights)))
 
 

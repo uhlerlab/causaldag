@@ -13,6 +13,7 @@ import networkx as nx
 from networkx.utils import UnionFind
 import random
 import csv
+import ipdb
 
 
 class CycleError(Exception):
@@ -49,6 +50,7 @@ class DAG:
             self._neighbors = defaultdict(set)
             self._parents = defaultdict(set)
             self._children = defaultdict(set)
+            # print('before call to add arcs from')
             self.add_arcs_from(arcs, unsafe=True)
 
     def __eq__(self, other):
