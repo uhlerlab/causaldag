@@ -190,6 +190,8 @@ class GaussDAG(DAG):
             super().add_arc(i, j)
 
     def set_arc_weights(self, arcs):
+        if len(arcs) == 0:
+            return
         ixs, ws = zip(*arcs.items())
         ixs = np.array(ixs)
         ws = np.array(ws)
