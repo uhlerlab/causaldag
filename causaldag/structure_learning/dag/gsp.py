@@ -63,7 +63,8 @@ def perm2dag(
 
     d = DAG(nodes=set(perm))
     ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
-    for i, j in tqdm(ixs):
+    ixs = ixs if not progress else tqdm(ixs)
+    for i, j in ixs:
         pi_i, pi_j = perm[i], perm[j]
 
         # === IF FIXED, DON'T TEST
