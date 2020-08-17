@@ -11,6 +11,7 @@ from causaldag import UndirectedGraph
 import numpy as np
 from tqdm import trange, tqdm
 from causaldag.utils.core_utils import powerset
+from math import factorial
 
 
 def perm2dag(
@@ -85,6 +86,49 @@ def perm2dag(
         if verbose: print(f"{pi_i} is independent of {pi_j} given {mb}: {is_ci}")
 
     return d
+
+
+def sparsest_permutation(nodes, ci_tester, progress=False):
+    """
+    Run the Sparsest Permutation algorithm, finding the sparsest minimal IMAP associated with any permutation.
+
+    Parameters
+    ----------
+    nodes:
+        list of nodes.
+    ci_tester:
+        object for testing conditional independence.
+    progress:
+        if True, show a progress bar over the enumeration of permutations.
+
+    Examples
+    --------
+    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, gauss_ci_test, gauss_ci_suffstat
+    >>> import causaldag as cd
+    >>> import random
+    >>> import numpy as np
+    >>> random.seed(1212)
+    >>> np.random.seed(12131)
+    >>> nnodes = 7
+    >>> d = cd.rand.directed_erdos(nnodes, exp_nbrs=2)
+    >>> g = cd.rand.rand_weights(d)
+    >>> samples = g.sample(1000)
+    >>> suffstat = gauss_ci_suffstat(samples)
+    >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat, alpha=1e-3)
+    >>> est_dag = cd.sparsest_permutation(set(range(nnodes)), ci_tester, progress=True)
+    >>> true_cpdag = d.cpdag()
+    >>> est_cpdag = est_dag.cpdag()
+    >>> print(true_cpdag.shd(est_cpdag))
+    >>> 0
+    """
+    permutations = itr.permutations(nodes, len(nodes))
+    permutations = tqdm(permutations, total=factorial(len(nodes))) if progress else permutations
+    min_dag, min_num_arcs = None, float('inf')
+    for perm in permutations:
+        dag = perm2dag(list(perm), ci_tester)
+        if dag.num_arcs < min_num_arcs:
+            min_dag, min_num_arcs = dag, dag.num_arcs
+    return min_dag
 
 
 def perm2dag_subsets(perm, ci_tester, max_subset_size=None):
