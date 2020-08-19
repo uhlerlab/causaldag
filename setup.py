@@ -28,7 +28,8 @@ setuptools.setup(
         'tqdm',
         'numba',
         'networkx',
-        'joblib'
+        'joblib',
+        'ipdb'
     ]
 )
 

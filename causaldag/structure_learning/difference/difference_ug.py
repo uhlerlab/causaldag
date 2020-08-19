@@ -47,16 +47,16 @@ def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, ver
 
     if verbose > 0:
         print("Running KLIEP to get difference undirected graph...")
-        
+
     k1 = kernel_linear(X1)
     k2 = kernel_linear(X2)
-    theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=1000, verbose=verbose)
+    theta = naive_subgradient_descent(k1, k2, alpha=alpha, max_iter=max_iter, verbose=verbose)
     difference_ug = compute_difference_graph(X1, theta, edge_threshold=edge_threshold)
     
     # get nodes to be considered in the conditioning sets
     nodes_cond_set = get_nodes_in_graph(difference_ug)
     # remove self-edges from the difference undirected graph
-    difference_ug = [tuple((i,j)) for i, j in difference_ug if i != j]
+    difference_ug = [tuple((i, j)) for i, j in difference_ug if i != j]
     
     if verbose > 0:
         print("Difference undirected graph: ", difference_ug)
@@ -150,7 +150,7 @@ def compute_difference_graph(X, theta, edge_threshold=0):
     Obtain difference undirected graph from estimated parameters.
     """
     n, d = X.shape
-    delta_ug = np.zeros((d,d))
+    delta_ug = np.zeros((d, d))
     delta_ug[np.triu_indices(d, 1)] = theta[0:-d].flatten()
     delta_ug = delta_ug + delta_ug.T
     # set the diagonal
@@ -159,6 +159,7 @@ def compute_difference_graph(X, theta, edge_threshold=0):
     delta_ug[np.abs(delta_ug) < edge_threshold] = 0
     g = nx.from_numpy_matrix(delta_ug)
     return list(g.edges())
+
 
 def get_nodes_in_graph(graph):
     """
