@@ -43,7 +43,8 @@ def dci(
         edge_threshold: float = 0,
         verbose: int = 0,
         lam: float = 0,
-        progress: bool = False
+        progress: bool = False,
+        order_independent: bool = True
 ):
     """
     Uses the Difference Causal Inference (DCI) algorithm to estimate the difference-DAG between two settings.
@@ -119,6 +120,7 @@ def dci(
             edge_threshold=edge_threshold,
             verbose=verbose
         )
+        if verbose > 0: print(f"{len(difference_ug)} edges in the difference UG, over {len(nodes_cond_set)} nodes")
     
     # estimate the skeleton of the difference-DAG 
     skeleton = dci_skeleton(
@@ -134,8 +136,11 @@ def dci(
         lam=lam,
         progress=progress
     )
+    if verbose > 0: print(f"{len(skeleton)} edges in the difference skeleton")
+
     # orient edges of the skeleton of the difference-DAG
-    adjacency_matrix = dci_orient(
+    orient_algorithm = dci_orient if not order_independent else dci_orient_order_independent
+    adjacency_matrix = orient_algorithm(
         X1,
         X2,
         skeleton,
@@ -168,6 +173,7 @@ def dci_regularization_path(
         random_state: int = None,
         verbose: int = 0,
         lam: float = 0,
+        order_independent: bool = True
 ):
     _, n_variables = X1.shape
     n_params = len(alpha_ug_grid) * len(alpha_skeleton_grid) * len(alpha_orient_grid)
@@ -198,7 +204,8 @@ def dci_regularization_path(
                                                     max_iter=max_iter,
                                                     edge_threshold=edge_threshold,
                                                     verbose=verbose,
-                                                    lam=lam)
+                                                    lam=lam,
+                                                    order_independent=order_independent)
                                        for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
 
         stability_scores[idx] = np.array(bootstrap_results).mean(axis=0)
@@ -225,6 +232,7 @@ def dci_stability_selection(
         random_state: int = None,
         verbose: int = 0,
         lam: float = 0,
+        order_independent: bool = True
 ):
     """
     Runs Difference Causal Inference (DCI) algorithm with stability selection to estimate the difference-DAG between two settings. 
@@ -326,7 +334,8 @@ def dci_stability_selection(
                                                     max_iter=max_iter,
                                                     edge_threshold=edge_threshold,
                                                     verbose=verbose,
-                                                    lam=lam)
+                                                    lam=lam,
+                                                    order_independent=order_independent)
                                        for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
 
         stability_scores[idx] = np.array(bootstrap_results).mean(axis=0)
@@ -435,11 +444,11 @@ def dci_skeleton(
             #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
             i_invariant = pval_i > alpha
             if i_invariant:
-                if verbose > 0:
+                if verbose > 1:
                     print(f"Removing edge {j}->{i} since p-value={pval_i:.5f} > alpha={alpha:.5f} with cond set {cond_set_i}")
                 skeleton.remove((i, j))
                 break
-            elif verbose > 0:
+            elif verbose > 1:
                 print(f"Keeping edge {i}-{j} for now, since p-value={pval_i:.5f} < alpha={alpha:.5f} with cond set {cond_set_i}")
 
             # calculate regression coefficients (i regressed on cond_set_i) for both datasets
@@ -455,11 +464,11 @@ def dci_skeleton(
             #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
             j_invariant = pval_j > alpha
             if j_invariant:
-                if verbose > 0:
+                if verbose > 1:
                     print(f"Removing edge {i}->{j} since p-value={pval_j:.5f} > alpha={alpha:.5f} with cond set {cond_set_j}")
                 skeleton.remove((i, j))
                 break
-            elif verbose > 0:
+            elif verbose > 1:
                 print(f"Keeping edge {i}-{j} for now, since p-value={pval_j:.5f} < alpha={alpha:.5f} with cond set {cond_set_j}")
 
     return skeleton
@@ -488,35 +497,55 @@ def dci_orient_order_independent(
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
+    skeleton = {frozenset({i, j}) for i, j in skeleton}
     nodes = {i for i, j in skeleton} | {j for i, j in skeleton}
-    oriented_edges = set()
+    d_nx = nx.DiGraph()
+    d_nx.add_nodes_from(nodes)
+    nodes_with_decided_parents = set()
 
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
-    for parent_set_size in range(max_set_size):
+    for parent_set_size in range(max_set_size+2):
+        if verbose > 0: print(f"Trying parent sets of size {parent_set_size}")
         pvalue_dict = dict()
-        for i in nodes:
+        for i in nodes - nodes_with_decided_parents:
             for cond_i in itertools.combinations(nodes_cond_set - {i}, parent_set_size):
-                beta1_i, var1_i = rh1.regression(i, list(cond_i))
-                beta2_i, var2_i = rh2.regression(i, list(cond_i))
+                beta1_i, var1_i, _ = rh1.regression(i, list(cond_i))
+                beta2_i, var2_i, _ = rh2.regression(i, list(cond_i))
                 pvalue_i = ncfdtr(n1 - parent_set_size, n2 - parent_set_size, 0, var1_i / var2_i)
                 pvalue_i = 2*min(pvalue_i, 1 - pvalue_i)
                 pvalue_dict[(i, frozenset(cond_i))] = pvalue_i
         # sort p-value dict
         sorted_pvalue_dict = [
             (pvalue, i, cond_i)
-            for (i, cond_i), pvalue in sorted(pvalue_dict.items(), key=op.itemgetter(1))
+            for (i, cond_i), pvalue in sorted(pvalue_dict.items(), key=op.itemgetter(1), reverse=True)
             if pvalue > alpha
         ]
         while sorted_pvalue_dict:
             _, i, cond_i = sorted_pvalue_dict.pop(0)
-            if any((j, i) in oriented_edges for j in cond_i):
-                continue
-            # add to graph if it doesn't cause a cycle
+            i_children = {j for j in nodes - cond_i - {i} if frozenset({i, j}) in skeleton}
 
+            # don't use this parent set if it contradicts the existing edges
+            if any(j in d_nx.successors(i) for j in cond_i):
+                continue
+            if any(j in d_nx.predecessors(i) for j in i_children):
+                continue
+
+            # don't use this parent set if it creates a cycle
+            if any(j in nx.descendants(d_nx, i) for j in cond_i):
+                continue
+            if any(j in nx.ancestors(d_nx, i) for j in i_children):
+                continue
+
+            edges = {(j, i) for j in cond_i if frozenset({i, j}) in skeleton} | \
+                    {(i, j) for j in nodes - cond_i - {i} if frozenset({i, j}) in skeleton}
+            nodes_with_decided_parents.add(i)
+            if verbose > 0: print(f"Adding {edges}")
+            d_nx.add_edges_from(edges)
 
     # orient edges via graph traversal
-    unoriented_edges_before_traversal = skeleton - oriented_edges - {(j, i) for i, j in oriented_edges}
+    oriented_edges = set(d_nx.edges)
+    unoriented_edges_before_traversal = skeleton - {frozenset({j, i}) for i, j in oriented_edges}
     unoriented_edges = unoriented_edges_before_traversal.copy()
     g = nx.DiGraph()
     for i, j in oriented_edges:
@@ -527,14 +556,14 @@ def dci_orient_order_independent(
         chain_path = list(nx.all_simple_paths(g, source=i, target=j))
         if len(chain_path) > 0:
             oriented_edges.add((i, j))
-            unoriented_edges.remove((i, j))
+            unoriented_edges.remove(frozenset({i, j}))
             if verbose > 0:
                 print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (i, j)))
         else:
             chain_path = list(nx.all_simple_paths(g, source=j, target=i))
             if len(chain_path) > 0:
                 oriented_edges.add((j, i))
-                unoriented_edges.remove((i, j))
+                unoriented_edges.remove(frozenset({i, j}))
                 if verbose > 0:
                     print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (j, i)))
 
