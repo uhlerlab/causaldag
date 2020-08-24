@@ -139,6 +139,7 @@ def naive_subgradient_descent(k1, k2, alpha=1, max_iter=1000, verbose=0):
         slength = step*np.linalg.norm(g)/(iter + 1)
 
         loglik_diff = np.abs(loglik - loglik_old)
+        loglik_old = loglik
         iter = iter + 1
         if (verbose > 0) & (iter == max_iter):
             print('Maximum iteration reached')

@@ -25,7 +25,7 @@ from joblib import Parallel, delayed
 from sklearn.utils import safe_mask
 from sklearn.utils.random import sample_without_replacement
 import networkx as nx
-from typing import Optional
+from typing import Optional, Set
 from tqdm import tqdm
 import operator as op
 
@@ -155,63 +155,147 @@ def dci(
     return adjacency_matrix
 
 
-def dci_regularization_path(
+def dci_skeleton_multiple(
         X1,
         X2,
-        alpha_ug_grid: list = [0.1, 1, 10],
         alpha_skeleton_grid: list = [0.1, 0.5],
-        alpha_orient_grid: list = [0.001, 0.1],
         max_set_size: int = 3,
         difference_ug: list = None,
         nodes_cond_set: set = None,
-        max_iter: int = 1000,
+        rh1: RegressionHelper = None,
+        rh2: RegressionHelper = None,
+        verbose: int = 0,
+        lam: float = 0,
+        progress: bool = False,
+        true_diff: Optional[Set] = None
+):
+    if verbose > 0:
+        print("DCI skeleton estimation...")
+
+    if rh1 is None or rh2 is None:
+        # obtain sufficient statistics
+        suffstat1 = gauss_ci_suffstat(X1)
+        suffstat2 = gauss_ci_suffstat(X2)
+        rh1 = RegressionHelper(suffstat1)
+        rh2 = RegressionHelper(suffstat2)
+
+    n1 = rh1.suffstat['n']
+    n2 = rh2.suffstat['n']
+
+    for alpha in alpha_skeleton_grid:
+        assert 0 <= alpha <= 1, "alpha must be in [0,1] range."
+    min_alpha = min(alpha_skeleton_grid)
+
+    skeletons = {alpha: {(i, j) for i, j in difference_ug} for alpha in alpha_skeleton_grid}
+    difference_ug = tqdm(difference_ug) if (progress and len(difference_ug) != 0) else difference_ug
+
+    for i, j in difference_ug:
+        for cond_set in powerset(nodes_cond_set - {i, j}, r_max=max_set_size):
+            cond_set_i, cond_set_j = [*cond_set, j], [*cond_set, i]
+
+            # calculate regression coefficients (j regressed on cond_set_j) for both datasets
+            beta1_i, var1_i, precision1 = rh1.regression(i, cond_set_i, lam=lam)
+            beta2_i, var2_i, precision2 = rh2.regression(i, cond_set_i, lam=lam)
+
+            # compute statistic and p-value
+            j_ix = cond_set_i.index(j)
+            stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
+                 inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
+            pval_i = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
+
+            #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
+            i_invariant = pval_i > min_alpha
+            if i_invariant:
+                removed_alphas = [alpha for alpha in alpha_skeleton_grid if pval_i > alpha]
+                if verbose > 1:
+                    print(f"Removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.5f} with cond set {cond_set_i}")
+                for alpha in removed_alphas:
+                    skeletons[alpha].discard((i, j))
+                if true_diff is not None and (i, j) in true_diff or (j, i) in true_diff:
+                    print(f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.5f} with cond set {cond_set_i}")
+                if len(removed_alphas) == len(alpha_skeleton_grid):
+                    break
+            elif verbose > 1:
+                print(f"Keeping edge {i}-{j} for now, since p-value={pval_i:.5f} with cond set {cond_set_i}")
+
+            # calculate regression coefficients (i regressed on cond_set_i) for both datasets
+            beta1_j, var1_j, precision1 = rh1.regression(j, cond_set_j)
+            beta2_j, var2_j, precision2 = rh2.regression(j, cond_set_j)
+
+            # compute statistic and p-value
+            i_ix = cond_set_j.index(i)
+            stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
+                 inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
+            pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
+
+            #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
+            j_invariant = pval_j > min_alpha
+            if j_invariant:
+                removed_alphas = [alpha for alpha in alpha_skeleton_grid if pval_j > alpha]
+                if verbose > 1:
+                    print(f"Removing edge {i}->{j} for alpha={removed_alphas} since p-value={pval_j:.5f} with cond set {cond_set_j}")
+                for alpha in removed_alphas:
+                    skeletons[alpha].discard((i, j))
+                if true_diff is not None and (i, j) in true_diff or (j, i) in true_diff:
+                    print(f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.5f} with cond set {cond_set_i}")
+                if len(removed_alphas) == len(alpha_skeleton_grid):
+                    break
+            elif verbose > 1:
+                print(f"Keeping edge {i}-{j} for now, since p-value={pval_j:.5f}with cond set {cond_set_j}")
+
+    return skeletons
+
+
+def dci_skeletons_bootstrap_multiple(
+        X1,
+        X2,
+        alpha_skeleton_grid: list = [0.1, 0.5],
+        max_set_size: int = 3,
+        difference_ug: list = None,
+        nodes_cond_set: set = None,
         edge_threshold: float = 0.05,
         sample_fraction: float = 0.7,
         n_bootstrap_iterations: int = 50,
-        bootstrap_threshold: float = 0.5,
+        alpha_ug: float = 1.,
+        max_iter: int = 1000,
         n_jobs: int = 1,
         random_state: int = None,
         verbose: int = 0,
         lam: float = 0,
-        order_independent: bool = True
+        true_diff: Optional[Set] = None
 ):
-    _, n_variables = X1.shape
-    n_params = len(alpha_ug_grid) * len(alpha_skeleton_grid) * len(alpha_orient_grid)
+    if difference_ug is None or nodes_cond_set is None:
+        difference_ug, nodes_cond_set = dci_undirected_graph(
+            X1,
+            X2,
+            alpha=alpha_ug,
+            max_iter=max_iter,
+            edge_threshold=edge_threshold,
+            verbose=verbose
+        )
+        if verbose > 0: print(f"{len(difference_ug)} edges in the difference UG, over {len(nodes_cond_set)} nodes")
 
-    hyperparams = itertools.product(alpha_ug_grid, alpha_skeleton_grid, alpha_orient_grid)
-    stability_scores = np.zeros((n_params, n_variables, n_variables))
+    bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state)
+    bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X2, random_state=random_state)
 
-    for idx, params in enumerate(hyperparams):
-        if verbose > 0:
-            print(
-                "Fitting estimator for alpha_ug = %.5f, alpha_skeleton = %.5f, alpha_orient = %.5f with %d bootstrap iterations" %
-                (params[0], params[1], params[2], n_bootstrap_iterations))
+    bootstrap_results = Parallel(n_jobs, verbose=verbose
+                                 )(delayed(dci_skeleton_multiple)(X1[safe_mask(X1, subsample1), :],
+                                                X2[safe_mask(X2, subsample2), :],
+                                                alpha_skeleton_grid=alpha_skeleton_grid,
+                                                max_set_size=max_set_size,
+                                                difference_ug=difference_ug,
+                                                nodes_cond_set=nodes_cond_set,
+                                                verbose=verbose,
+                                                lam=lam, true_diff=true_diff)
+                                   for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
 
-        bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction,
-                                                 X1, random_state=random_state)
-        bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction,
-                                                 X2, random_state=random_state)
+    p = X1.shape[1]
+    alpha2adjacency = {alpha: np.zeros([p, p]) for alpha in alpha_skeleton_grid}
+    for res in bootstrap_results:
+        for alpha in alpha_skeleton_grid:
+            alpha2adjacency[alpha] += 1/n_bootstrap_iterations * edges2adjacency(X1.shape[1], res[alpha], undirected=True)
 
-        bootstrap_results = Parallel(n_jobs, verbose=verbose
-                                     )(delayed(dci)(X1[safe_mask(X1, subsample1), :],
-                                                    X2[safe_mask(X2, subsample2), :],
-                                                    alpha_ug=params[0],
-                                                    alpha_skeleton=params[1],
-                                                    alpha_orient=params[2],
-                                                    max_set_size=max_set_size,
-                                                    difference_ug=difference_ug,
-                                                    nodes_cond_set=nodes_cond_set,
-                                                    max_iter=max_iter,
-                                                    edge_threshold=edge_threshold,
-                                                    verbose=verbose,
-                                                    lam=lam,
-                                                    order_independent=order_independent)
-                                       for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2))
-
-        stability_scores[idx] = np.array(bootstrap_results).mean(axis=0)
-
-    adjacency_matrix = choose_stable_variables(stability_scores, bootstrap_threshold=bootstrap_threshold)
-    return adjacency_matrix, stability_scores
+    return bootstrap_results, alpha2adjacency
 
 
 def dci_stability_selection(
