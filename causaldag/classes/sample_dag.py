@@ -3,6 +3,7 @@ import numpy as np
 from causaldag.utils import core_utils
 from typing import Callable
 from causaldag.classes.interventions import Intervention, SoftInterventionalDistribution, PerfectInterventionalDistribution
+from tqdm import trange
 
 
 class SampleDAG(DAG):
@@ -15,10 +16,11 @@ class SampleDAG(DAG):
     def set_conditional(self, node, conditional_distribution: Callable[[np.ndarray], np.ndarray]):
         self.conditionals[node] = conditional_distribution
 
-    def sample(self, nsamples: int = 1) -> np.array:
+    def sample(self, nsamples: int = 1, progress=False) -> np.array:  # TODO: parallelize?
         samples = np.zeros((nsamples, len(self._nodes)))
         t = self.topological_sort()
-        for sample_num in range(nsamples):
+        r = trange if progress else range
+        for sample_num in r(nsamples):
             for node in t:
                 node_ix = self._node2ix[node]
                 parent_ixs = [self._node2ix[p] for p in self._parents[node]]

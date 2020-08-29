@@ -1,13 +1,14 @@
 import numpy as np
 from collections import defaultdict
 import random
-from causaldag import DAG, GaussDAG, SampleDAG
+from causaldag import DAG, GaussDAG, SampleDAG, CamDAG
 import itertools as itr
 from typing import Union, List, Callable, Optional, Any
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 from tqdm import tqdm
 from functools import partial
+import ipdb
 
 # class RandWeightFn(Protocol):
 #     def __call__(self, size: int) -> Union[float, List[float]]: ...
@@ -184,12 +185,27 @@ def _cam_conditional(parent_vals, c_node, parent_weights, parent_bases, noise):
     ]) + noise()
 
 
+def _cam_mean_function(
+        parent_vals: np.ndarray,
+        parents: list,
+        c_node: float,
+        parent_weights: np.ndarray,
+        parent2base: dict
+):
+    if len(parents) == 0:
+        return np.zeros(parent_vals.shape[0])
+    parent_contribs = np.array([parent2base[parent](parent_vals[:, ix]) for ix, parent in enumerate(parents)]).T
+    parent_contribs = parent_contribs * parent_weights
+    parent_contrib = parent_contribs.sum(axis=1)
+    return c_node * parent_contrib
+
+
 def rand_additive_basis(
         dag: DAG,
         basis: list,
         snr_dict: Optional[dict] = None,
         rand_weight_fn: RandWeightFn = unif_away_zero,
-        noise=lambda: np.random.normal(0, 1),
+        noise=lambda size: np.random.normal(0, 1, size=size),
         internal_variance: int = 1,
         num_monte_carlo: int = 10000,
         progress=False
@@ -228,27 +244,23 @@ def rand_additive_basis(
     if snr_dict is None:
         snr_dict = {nparents: 1/2 for nparents in range(dag.nnodes)}
 
-    sample_dag = SampleDAG(dag._nodes, arcs=dag._arcs)
+    cam_dag = CamDAG(dag._nodes, arcs=dag._arcs)
     top_order = dag.topological_sort()
-    sample_dict = defaultdict(list)
+    sample_dict = dict()
 
     # for each node, create the conditional
     node_iterator = top_order if not progress else tqdm(top_order)
     for node in node_iterator:
         parents = dag.parents_of(node)
         nparents = dag.indegree(node)
-        parent_bases = random.choices(basis, k=nparents)
+        parent2base = dict(zip(parents, random.choices(basis, k=nparents)))
         parent_weights = rand_weight_fn(size=nparents)
+        parent_vals = np.array([sample_dict[parent] for parent in parents]).T if nparents > 0 else np.zeros(num_monte_carlo)
 
-        c_node = None
+        c_node = 1
         if nparents > 0:
-            values_from_parents = []
-            for i in range(num_monte_carlo):
-                val = sum([
-                    weight * base(sample_dict[parent][i])
-                    for weight, base, parent in zip(parent_weights, parent_bases, parents)
-                ])
-                values_from_parents.append(val)
+            mean_function_no_c = partial(_cam_mean_function, c_node=1, parent_weights=parent_weights, parent2base=parent2base)
+            values_from_parents = mean_function_no_c(parent_vals, parents)
             variance_from_parents = np.var(values_from_parents)
 
             try:
@@ -257,14 +269,15 @@ def rand_additive_basis(
                 raise Exception(f"`snr_dict` does not specify a desired SNR for nodes with {nparents} parents")
             c_node = internal_variance / variance_from_parents * desired_snr / (1 - desired_snr)
 
-        conditional = partial(_cam_conditional, c_node=c_node, parent_weights=parent_weights, parent_bases=parent_bases, noise=noise)
+        mean_function = partial(_cam_mean_function, c_node=c_node, parent_weights=parent_weights, parent2base=parent2base)
 
-        for i in range(num_monte_carlo):
-            val = conditional([sample_dict[parent][i] for parent in parents])
-            sample_dict[node].append(val)
-        sample_dag.set_conditional(node, conditional)
+        mean_vals = mean_function(parent_vals, parents)
+        sample_dict[node] = mean_vals + noise(size=num_monte_carlo)
 
-    return sample_dag
+        cam_dag.set_mean_function(node, mean_function)
+        cam_dag.set_noise(node, noise)
+
+    return cam_dag
 
 
 # OPTION 1
@@ -397,3 +410,10 @@ __all__ = [
     'alter_weights',
     'rand_additive_basis'
 ]
+
+
+if __name__ == '__main__':
+    d = directed_erdos(10, .5, random_order=False)
+    cam_dag = rand_additive_basis(d, [np.sin])
+    samples = cam_dag.sample(100)
+    cond_means = cam_dag.conditional_mean(cond_values=np.ones([10, 1]), cond_nodes=[0])

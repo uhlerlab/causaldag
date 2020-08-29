@@ -441,7 +441,7 @@ class GaussDAG(DAG):
         return self.weight_mat
 
     def cpdag(self):
-        raise NotImplementedError
+        return super().cpdag()
 
     def optimal_intervention_greedy(self, cpdag=None):
         return super().optimal_intervention_greedy(cpdag=cpdag)
