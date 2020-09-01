@@ -3,7 +3,7 @@ from collections import defaultdict
 import random
 from causaldag import DAG, GaussDAG, SampleDAG, CamDAG
 import itertools as itr
-from typing import Union, List, Callable, Optional, Any
+from typing import Union, List, Callable, Optional, Any, Dict
 from networkx import barabasi_albert_graph, fast_gnp_random_graph
 from scipy.special import comb
 from tqdm import tqdm
@@ -192,6 +192,10 @@ def _cam_mean_function(
         parent_weights: np.ndarray,
         parent2base: dict
 ):
+    assert parent_vals.shape[1] == len(parents)
+    assert len(parent_weights) == len(parents)
+    assert all(parent in parent2base for parent in parents)
+
     if len(parents) == 0:
         return np.zeros(parent_vals.shape[0])
     parent_contribs = np.array([parent2base[parent](parent_vals[:, ix]) for ix, parent in enumerate(parents)]).T
@@ -203,7 +207,7 @@ def _cam_mean_function(
 def rand_additive_basis(
         dag: DAG,
         basis: list,
-        snr_dict: Optional[dict] = None,
+        snr_dict: Optional[Union[Dict[int, float], float]] = None,
         rand_weight_fn: RandWeightFn = unif_away_zero,
         noise=lambda size: np.random.normal(0, 1, size=size),
         internal_variance: int = 1,
@@ -243,6 +247,8 @@ def rand_additive_basis(
     """
     if snr_dict is None:
         snr_dict = {nparents: 1/2 for nparents in range(dag.nnodes)}
+    if isinstance(snr_dict, float):
+        snr_dict = {nparents: snr_dict for nparents in range(dag.nnodes)}
 
     cam_dag = CamDAG(dag._nodes, arcs=dag._arcs)
     top_order = dag.topological_sort()
@@ -255,7 +261,7 @@ def rand_additive_basis(
         nparents = dag.indegree(node)
         parent2base = dict(zip(parents, random.choices(basis, k=nparents)))
         parent_weights = rand_weight_fn(size=nparents)
-        parent_vals = np.array([sample_dict[parent] for parent in parents]).T if nparents > 0 else np.zeros(num_monte_carlo)
+        parent_vals = np.array([sample_dict[parent] for parent in parents]).T if nparents > 0 else np.zeros([num_monte_carlo, 0])
 
         c_node = 1
         if nparents > 0:
@@ -268,6 +274,8 @@ def rand_additive_basis(
             except ValueError:
                 raise Exception(f"`snr_dict` does not specify a desired SNR for nodes with {nparents} parents")
             c_node = internal_variance / variance_from_parents * desired_snr / (1 - desired_snr)
+            if np.isnan(c_node):
+                raise ValueError
 
         mean_function = partial(_cam_mean_function, c_node=c_node, parent_weights=parent_weights, parent2base=parent2base)
 

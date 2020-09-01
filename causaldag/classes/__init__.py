@@ -2,6 +2,7 @@ from .dag import DAG, CycleError
 from .pag import PAG
 from .pdag import PDAG
 from .gaussdag import GaussDAG
+from .camdag import CamDAG
 from .interventions import SoftIntervention, PerfectIntervention, SoftInterventionalDistribution, \
     PerfectInterventionalDistribution, ScalingIntervention, GaussIntervention, BinaryIntervention, \
     ConstantIntervention, MultinomialIntervention, ShiftIntervention
