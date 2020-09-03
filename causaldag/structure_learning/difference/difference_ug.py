@@ -14,7 +14,25 @@ References
 
 import numpy as np 
 import scipy
-import networkx as nx 
+import networkx as nx
+from numpy.linalg import pinv
+import itertools as itr
+from scipy.special import ncfdtr
+import ipdb
+
+
+def constraint_diff_ug(X1, X2, alpha=.01):
+    n1, n2, p = X1.shape[0], X2.shape[0], X1.shape[1]
+    K1 = pinv(np.cov(X1, rowvar=False))
+    K2 = pinv(np.cov(X2, rowvar=False))
+    D1 = np.diag(K1)
+    D2 = np.diag(K2)
+    stats = (K1 - K2)**2 * 1/((np.outer(D1, D1) + K1**2)/n1 + (np.outer(D2, D2) + K2**2)/n2)
+    pvals = 1 - ncfdtr(1, n1 + n2 - 2*p + 2, 0, stats)
+
+    diff_ug = {frozenset({i, j}) for i, j in itr.combinations(range(p), 2) if pvals[i, j] < alpha}
+    cond_nodes = {i for i, _ in diff_ug} | {j for _, j in diff_ug}
+    return diff_ug, cond_nodes
 
 
 def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, verbose=0):

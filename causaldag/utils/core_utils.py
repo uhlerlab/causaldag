@@ -1,6 +1,7 @@
 import itertools as itr
 from numpy import abs
 from typing import Iterable, Callable, Any
+import random
 
 
 def ix_map_from_list(l):
@@ -56,6 +57,15 @@ def to_list(o):
 
 def is_symmetric(matrix, tol=1e-8):
     return (abs(matrix - matrix.T) <= tol).all()
+
+
+def random_max(d, minimize=False):
+    max_val = max(d.values()) if not minimize else min(d.values())
+    max_keys = [k for k, v in d.items() if v == max_val]
+    if len(max_keys) == 1:
+        return max_keys[0]
+    else:
+        return random.choice(max_keys)
 
 
 if __name__ == '__main__':
