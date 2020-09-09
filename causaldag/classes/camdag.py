@@ -22,7 +22,7 @@ class CamDAG(DAG):
     def sample(self, nsamples: int = 1, progress=False) -> np.array:
         samples = np.zeros((nsamples, len(self._nodes)))
         t = self.topological_sort()
-        t = t if progress else tqdm(t)
+        t = t if not progress else tqdm(t)
 
         for node in t:
             parents = list(self._parents[node])
