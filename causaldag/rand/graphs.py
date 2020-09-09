@@ -207,7 +207,7 @@ def _cam_mean_function(
 def rand_additive_basis(
         dag: DAG,
         basis: list,
-        snr_dict: Optional[Union[Dict[int, float], float]] = None,
+        r2_dict: Optional[Union[Dict[int, float], float]] = None,
         rand_weight_fn: RandWeightFn = unif_away_zero,
         noise=lambda size: np.random.normal(0, 1, size=size),
         internal_variance: int = 1,
@@ -224,7 +224,7 @@ def rand_additive_basis(
         A DAG to use as the structure for the model.
     basis:
         Basis functions for the GAM.
-    snr_dict:
+    r2_dict:
         A dictionary mapping each number of parents to the desired signal-to-noise ratio (SNR) for nodes
         with that many parents. By default, 1/2 for any number of parents.
     rand_weight_fn:
@@ -242,13 +242,13 @@ def rand_additive_basis(
     >>> import numpy as np
     >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
     >>> basis = [np.sin, np.cos, np.exp]
-    >>> snr_dict = {1: 1/2, 2: 2/3}
-    >>> g = cd.rand.rand_additive_basis(d, basis, snr_dict)
+    >>> r2_dict = {1: 1/2, 2: 2/3}
+    >>> g = cd.rand.rand_additive_basis(d, basis, r2_dict)
     """
-    if snr_dict is None:
-        snr_dict = {nparents: 1/2 for nparents in range(dag.nnodes)}
-    if isinstance(snr_dict, float):
-        snr_dict = {nparents: snr_dict for nparents in range(dag.nnodes)}
+    if r2_dict is None:
+        r2_dict = {nparents: 1/2 for nparents in range(dag.nnodes)}
+    if isinstance(r2_dict, float):
+        r2_dict = {nparents: r2_dict for nparents in range(dag.nnodes)}
 
     cam_dag = CamDAG(dag._nodes, arcs=dag._arcs)
     top_order = dag.topological_sort()
@@ -270,12 +270,13 @@ def rand_additive_basis(
             variance_from_parents = np.var(values_from_parents)
 
             try:
-                desired_snr = snr_dict[nparents]
+                desired_r2 = r2_dict[nparents]
             except ValueError:
-                raise Exception(f"`snr_dict` does not specify a desired SNR for nodes with {nparents} parents")
-            c_node = internal_variance / variance_from_parents * desired_snr / (1 - desired_snr)
+                raise Exception(f"`snr_dict` does not specify a desired R^2 for nodes with {nparents} parents")
+            c_node = internal_variance / variance_from_parents * desired_r2 / (1 - desired_r2)
             if np.isnan(c_node):
                 raise ValueError
+            print(node, parents, variance_from_parents, parent_weights, c_node)
 
         mean_function = partial(_cam_mean_function, c_node=c_node, parent_weights=parent_weights, parent2base=parent2base)
 
