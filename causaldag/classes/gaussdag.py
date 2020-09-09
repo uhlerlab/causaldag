@@ -9,7 +9,7 @@ from typing import Any, Dict, Union, Set, Tuple, List
 import numpy as np
 from numpy import sqrt, diag
 from numpy.linalg import inv
-from scipy.linalg import ldl
+from scipy.linalg import cholesky
 from scipy.stats import norm
 
 from causaldag.classes import DAG
@@ -81,7 +81,7 @@ class GaussDAG(DAG):
         return cls(nodes=nodes, arcs=arcs, means=means, variances=variances)
 
     @classmethod
-    def from_covariance(cls, covariance_matrix: np.ndarray, node_order=None):
+    def from_covariance(cls, covariance_matrix: np.ndarray, node_order=None, check=False):
         """
         Return a GaussDAG with the specified covariance matrix and topological ordering of nodes.
 
@@ -99,12 +99,14 @@ class GaussDAG(DAG):
         if not core_utils.is_symmetric(covariance_matrix):
             raise ValueError('Covariance matrix is not symmetric')
         precision = inv(covariance_matrix)
-        return GaussDAG.from_precision(precision, node_order)
+        return GaussDAG.from_precision(precision, node_order, check=check)
 
     @classmethod
-    def from_precision(cls, precision_matrix, node_order=None):
+    def from_precision(cls, precision_matrix, node_order=None, check=False):
         """
-        Return a GaussDAG with the specified precision matrix and topological ordering of nodes.
+        Return a GaussDAG with the specified precision matrix and topological ordering of nodes. Note that the precision
+        matrix \Theta has the formula \Theta = (I - B)^T @ \Sigma^-1 @ (I - B), where B is the adjacency matrix s.t.
+        B[i,j] \neq 0 if i->j, and \Sigma is the diagonal matrix of node variances.
 
         Parameters
         ----------
@@ -124,26 +126,31 @@ class GaussDAG(DAG):
         if node_order is None:
             node_order = list(range(p))
 
-        # === permute precision matrix into  correct order for LDL
-        precision_matrix = precision_matrix.copy()
-        precision_matrix = precision_matrix[node_order]
-        precision_matrix = precision_matrix[:, node_order]
+        # === permute precision matrix into correct order for LDL
+        precision_matrix_perm = precision_matrix.copy()
+        rev_node_order = list(reversed(node_order))
+        precision_matrix_perm = precision_matrix_perm[rev_node_order]
+        precision_matrix_perm = precision_matrix_perm[:, rev_node_order]
 
         # === perform ldl decomposition and correct for floating point errors
-        u, d, perm_ = ldl(precision_matrix, lower=False)
-        u[np.isclose(u, 0)] = 0
+        u_chol = cholesky(precision_matrix_perm, lower=True)  # compute L s.t. precision = L @ L.T
+        u_chol[np.isclose(u_chol, 0)] = 0
+        u_diag = np.diag(u_chol)
+        d = u_diag**2
+        u = u_chol / u_diag
 
         # === permute back
-        inv_node_order = [i for i, j in sorted(enumerate(node_order), key=op.itemgetter(1))]
-        u = u.copy()
-        u = u[inv_node_order]
-        u = u[:, inv_node_order]
-        d = d.copy()
-        d = d[inv_node_order]
-        d = d[:, inv_node_order]
+        inv_node_order = [i for i, j in sorted(enumerate(rev_node_order), key=op.itemgetter(1))]
+        u_perm = u.copy()
+        u_perm = u_perm[inv_node_order]
+        u_perm = u_perm[:, inv_node_order]
+        d_perm = d[inv_node_order]
 
-        amat = np.eye(p) - u
-        variances = np.diag(d) ** -1
+        amat = np.eye(p) - u_perm
+        variances = d_perm ** -1
+        if check:
+            assert (np.diag(amat) == 0).all()
+            assert np.isclose((u_perm @ np.diag(d_perm) @ u_perm.T), precision_matrix).all()
 
         # adj_mat[np.isclose(adj_mat, 0)] = 0
         return GaussDAG.from_amat(amat, variances=variances)
@@ -246,6 +253,23 @@ class GaussDAG(DAG):
             else:
                 means[i] = iv_value
         return means
+
+    def deterministic_intervention_counterfactuals(self, samples, intervention: Dict[Any, float]):
+        counterfactuals = np.zeros(samples.shape)
+        t = self.topological_sort()
+        exogenous_noises = samples @ (np.eye(samples.shape[1]) - self._weight_mat)
+        assert exogenous_noises.shape == samples.shape
+
+        for node in t:
+            node_ix = self._node2ix[node]
+            if node in intervention:
+                counterfactuals[:, node_ix] = intervention[node]
+            else:
+                parent_ixs = [self._node2ix[p] for p in self._parents[node]]
+                parent_weights = self._weight_mat[parent_ixs, node]
+                counterfactuals[:, node_ix] = counterfactuals[:, parent_ixs] @ parent_weights + exogenous_noises[:, node_ix]
+
+        return counterfactuals
 
     @property
     def nodes(self):
