@@ -28,9 +28,10 @@ def gauss_ci_suffstat(samples, invert=True):
     dictionary of sufficient statistics
     """
     n, p = samples.shape
-    S = cov(samples, rowvar=False)  # sample covariance matrix
+    S = cov(samples, rowvar=False)  # sample covariance matrix\
+    # TODO: NaN when variable is deterministic. Replace w/ 1 and 0?
     C = corrcoef(samples, rowvar=False)  # sample correlation matrix
-    if invert and n >= p:
+    if invert:
         K = pinv(C)
         P = pinv(S)  # sample precision (inverse covariance) matrix
         rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]  # sample partial correlation matrix
