@@ -6,6 +6,7 @@ from causaldag.utils.ci_tests._utils import residuals
 from causaldag.utils.core_utils import to_list
 from scipy.special import gdtr
 import ipdb
+import numexpr as ne
 
 
 def hsic_test_vector(
@@ -46,17 +47,23 @@ def hsic_test_vector(
     # === COMPUTE CENTRALIZED KERNEL MATRICES
     kx = kernels.rbf_kernel_fast(x, kernel_precision)
     ky = kernels.rbf_kernel_fast(y, kernel_precision)
-    kx_centered = kernels.center(kx)
-    ky_centered = kernels.center(ky)
+    kx_off_diag_sum = kx.sum() - kx.trace()
+    ky_off_diag_sum = ky.sum() - ky.trace()
+    kx_centered = kernels.center_fast_mutate(kx)
+    # print(np.max(np.abs(kx_centered - kx_centered_)))
+    ky_centered = kernels.center_fast_mutate(ky)
+    # print(np.max(np.abs(ky_centered - ky_centered_)))
     # ipdb.set_trace()
 
     # === COMPUTE STATISTIC
-    statistic = 1/n**2 * np.sum(kx_centered * ky_centered.T)  # SAME AS trace(kx_centered @ ky_centered)
+    statistic = 1/n**2 * ne.evaluate('sum(a * b)', {'a': kx_centered, 'b': ky_centered})  # SAME AS trace(kx_centered @ ky_centered)
 
-    mu_x = 1/(n*(n-1)) * np.sum(kx - np.diag(np.diag(kx)))  # SUM OFF-DIAGONALS
-    mu_y = 1/(n*(n-1)) * np.sum(ky - np.diag(np.diag(ky)))
+    # Theorem 3
+    mu_x = 1/(n*(n-1)) * kx_off_diag_sum
+    mu_y = 1/(n*(n-1)) * ky_off_diag_sum
     mean_approx = 1/n * (1 + mu_x*mu_y - mu_x - mu_y)
-    var_approx = 2*(n-4)*(n-5)/(n*(n-1)*(n-2)*(n-3)) * np.sum(kx_centered * kx_centered.T) * np.sum(ky_centered * ky_centered.T) / n**4
+    # Theorem 4
+    var_approx = 2*(n-4)*(n-5)/(n*(n-1)*(n-2)*(n-3)) * np.linalg.norm(kx_centered, 'fro') * np.linalg.norm(ky_centered, 'fro') / n**4
 
     # NEW
     k_approx = mean_approx ** 2 / var_approx
@@ -121,6 +128,7 @@ if __name__ == '__main__':
     X1 = np.random.laplace(0, 1, size=1000)
     X2 = np.random.laplace(0, 1, size=1000)
     lp.add_function(hsic_test_vector)
+    lp.add_function(kernels.center_fast_mutate)
     for _ in range(10):
         lp.runcall(hsic_test_vector, X1, X2)
     lp.print_stats()
