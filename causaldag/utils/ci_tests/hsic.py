@@ -50,10 +50,7 @@ def hsic_test_vector(
     kx_off_diag_sum = kx.sum() - kx.trace()
     ky_off_diag_sum = ky.sum() - ky.trace()
     kx_centered = kernels.center_fast_mutate(kx)
-    # print(np.max(np.abs(kx_centered - kx_centered_)))
     ky_centered = kernels.center_fast_mutate(ky)
-    # print(np.max(np.abs(ky_centered - ky_centered_)))
-    # ipdb.set_trace()
 
     # === COMPUTE STATISTIC
     statistic = 1/n**2 * ne.evaluate('sum(a * b)', {'a': kx_centered, 'b': ky_centered})  # SAME AS trace(kx_centered @ ky_centered)
@@ -63,20 +60,17 @@ def hsic_test_vector(
     mu_y = 1/(n*(n-1)) * ky_off_diag_sum
     mean_approx = 1/n * (1 + mu_x*mu_y - mu_x - mu_y)
     # Theorem 4
-    var_approx = 2*(n-4)*(n-5)/(n*(n-1)*(n-2)*(n-3)) * np.linalg.norm(kx_centered, 'fro') * np.linalg.norm(ky_centered, 'fro') / n**4
+    var_coef = 2*(n-4)*(n-5)/(n*(n-1)*(n-2)*(n-3))
+    B = (kx_centered * ky_centered)**2
+    var_approx = var_coef * (B.sum() - np.trace(B)) / n**2
 
-    # NEW
-    k_approx = mean_approx ** 2 / var_approx
-    prec_approx = var_approx / mean_approx
+    alpha = mean_approx ** 2 / var_approx
+    beta = var_approx / mean_approx
 
-    # critval = gamma.ppf(1-alpha, k_approx, scale=prec_approx)
-    # p_value = 1 - gamma.cdf(statistic, k_approx, scale=prec_approx)
-    p_value = 1 - gdtr(1/prec_approx, k_approx, statistic)
-    # print(p_value, p_value_)
+    p_value = 1 - gdtr(1/beta, alpha, statistic)
 
     return dict(
         statistic=statistic,
-        # critval=critval,
         p_value=p_value,
         reject=p_value < alpha,
         mean_approx=mean_approx,
@@ -125,11 +119,12 @@ if __name__ == '__main__':
     from line_profiler import LineProfiler
 
     lp = LineProfiler()
-    X1 = np.random.laplace(0, 1, size=1000)
-    X2 = np.random.laplace(0, 1, size=1000)
+
     lp.add_function(hsic_test_vector)
     lp.add_function(kernels.center_fast_mutate)
     for _ in range(10):
+        X1 = np.random.laplace(0, 1, size=1000)
+        X2 = np.random.laplace(0, 1, size=1000)
         lp.runcall(hsic_test_vector, X1, X2)
     lp.print_stats()
 
