@@ -1,9 +1,22 @@
 import numpy as np
-from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import rbf_kernel as rbf
+from scipy.linalg.blas import sgemm
+import numexpr as ne
 
 
-def rbf_kernel(mat, precision):
-    return np.exp(-precision/2 * euclidean_distances(mat, squared=True))
+def rbf_kernel_fast(X, precision):
+    gamma = precision / 2
+    X_norm = -gamma * np.einsum('ij,ij->i', X, X)
+    return ne.evaluate('exp(A + B + C)', {
+        'A': X_norm[:, None],
+        'B': X_norm[None, :],
+        'C': sgemm(alpha=2.0 * gamma, a=X, b=X, trans_b=True),
+        'g': gamma,
+    })
+
+
+def rbf_kernel_basic(mat, precision):
+    return rbf(mat, gamma=precision / 2)
 
 
 def delta_kernel(vec):
@@ -13,9 +26,17 @@ def delta_kernel(vec):
 
 
 def center(m):
-    n = m.shape[0]
-    c = m - m.sum(axis=0)/n - m.sum(axis=1)[:, np.newaxis]/n + m.sum()/n**2  # centralized kernel matrix
-    return c
+    return m - m.mean(axis=0) - m.sum(axis=1)[:, None] + m.mean()
+
+
+def center_fast_mutate(m):
+    row_mean = m.mean(axis=0)[None, :]
+    col_mean = m.mean(axis=1)[:, np.newaxis]
+    s = m.mean()
+    np.subtract(m, row_mean, m)
+    np.subtract(m, col_mean, m)
+    np.add(m, s, m)
+    return m
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ from networkx.utils import UnionFind
 import random
 import csv
 import ipdb
+from scipy.special import comb
 
 
 class CycleError(Exception):
@@ -746,6 +747,77 @@ class DAG:
             deletions = self._arcs - other._arcs - other_arcs_reversed
             reversals = self.arcs & other_arcs_reversed
             return len(additions) + len(deletions) + len(reversals)
+
+    def confusion_matrix(self, other, rates_only=False):
+        self_cpdag = self.cpdag()
+        other_cpdag = other.cpdag()
+
+        # HELPER SETS SELF
+        self_arcs_as_edges = {frozenset(arc) for arc in self_cpdag._arcs}
+        self_edges_as_arcs1 = {(i, j) for i, j in self_cpdag._edges}
+        self_edges_as_arcs2 = {(j, i) for i, j in self_edges_as_arcs1}
+
+        # HELPER SETS OTHER
+        other_arcs_reversed = {(j, i) for i, j in other_cpdag._arcs}
+        other_arcs_as_edges = {frozenset(arc) for arc in other_cpdag._arcs}
+        other_edges_as_arcs1 = {(i, j) for i, j in other_cpdag._edges}
+        other_edges_as_arcs2 = {(j, i) for i, j in other_edges_as_arcs1}
+
+        # MISSING IN TRUE GRAPH
+        false_positive_arcs = other_cpdag._arcs - self_cpdag._arcs - self_edges_as_arcs1 - self_edges_as_arcs2
+        false_positive_edges = other_cpdag._edges - self_cpdag._edges - self_arcs_as_edges
+
+        # ARC IN TRUE GRAPH
+        false_negative_arcs = self_cpdag._arcs - other_cpdag._arcs - other_edges_as_arcs1 - other_edges_as_arcs2
+        true_positive_arcs = self_cpdag._arcs & other_cpdag._arcs
+        reversed_arcs = self_cpdag._arcs & other_arcs_reversed
+        mistaken_arcs_for_edges = self_cpdag._arcs & (other_edges_as_arcs1 | other_edges_as_arcs2)
+
+        # EDGE IN TRUE GRAPH
+        false_negative_edges = self_cpdag._edges - other_cpdag._edges - other_arcs_as_edges
+        true_positive_edges = self_cpdag._edges & other_cpdag._edges
+        mistaken_edges_for_arcs = self_cpdag._edges & other_arcs_as_edges
+
+        # COMBINED_RESULTS
+        num_false_positives = len(false_positive_edges) + len(false_negative_arcs)
+        num_false_negatives = len(false_negative_arcs) + len(false_negative_edges) + len(mistaken_arcs_for_edges) + len(reversed_arcs)
+        num_true_positives = len(true_positive_edges) + len(true_positive_arcs) + len(mistaken_edges_for_arcs)
+        num_true_negatives = comb(self.nnodes, 2) - num_false_positives - num_false_negatives - num_true_positives
+
+        # RATES
+        num_negatives = comb(self.nnodes, 2) - self.num_arcs
+        num_positives = self.num_arcs
+        num_returned_positives = (num_true_positives + num_false_positives)
+        fpr = num_false_positives/num_negatives if num_negatives != 0 else 0
+        tpr = num_true_positives/num_positives if num_positives != 0 else 1
+        precision = num_true_positives/num_returned_positives if num_returned_positives != 0 else 1
+
+        if rates_only:
+            return dict(
+                fpr=fpr,
+                tpr=tpr,
+                precision=precision
+            )
+
+        res = dict(
+            false_positive_arcs=false_positive_arcs,
+            false_positive_edges=false_positive_edges,
+            false_negative_arcs=false_negative_arcs,
+            true_positive_arcs=true_positive_arcs,
+            reversed_arcs=reversed_arcs,
+            mistaken_arcs_for_edges=mistaken_arcs_for_edges,
+            false_negative_edges=false_negative_edges,
+            true_positive_edges=true_positive_edges,
+            mistaken_edges_for_arcs=mistaken_edges_for_arcs,
+            num_false_positives=num_false_positives,
+            num_false_negatives=num_false_negatives,
+            num_true_positives=num_true_positives,
+            num_true_negatives=num_true_negatives,
+            fpr=fpr,
+            tpr=tpr
+        )
+
+        return res
 
     def shd_skeleton(self, other) -> int:
         """
