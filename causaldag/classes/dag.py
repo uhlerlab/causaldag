@@ -376,6 +376,10 @@ class DAG:
         node2ix = {node: ix for ix, node in enumerate(order)}
         return all(node2ix[i] < node2ix[j] for i, j in self._arcs)
 
+    def permutation_score(self, order: list) -> int:
+        node2ix = {node: ix for ix, node in enumerate(order)}
+        return sum(node2ix[i] > node2ix[j] for i, j in self._arcs)
+
     def add_nodes_from(self, nodes: Iterable):
         """
         Add nodes to the graph from a collection
@@ -747,6 +751,39 @@ class DAG:
             deletions = self._arcs - other._arcs - other_arcs_reversed
             reversals = self.arcs & other_arcs_reversed
             return len(additions) + len(deletions) + len(reversals)
+
+    def confusion_matrix_skeleton(self, other):
+        self_skeleton = self.skeleton
+        other_skeleton = other.skeleton
+
+        true_positives = self_skeleton & other_skeleton
+        false_positives = other_skeleton - self_skeleton
+        false_negatives = self_skeleton - other_skeleton
+
+        num_true_positives = len(true_positives)
+        num_false_positives = len(false_positives)
+        num_false_negatives = len(false_negatives)
+        num_true_negatives = comb(self.nnodes, 2) - num_true_positives - num_false_positives - num_false_negatives
+
+        num_positives = len(self_skeleton)
+        num_negatives = comb(self.nnodes, 2) - num_positives
+
+        tpr = num_true_positives / num_positives if num_positives != 0 else 1
+        fpr = num_false_positives / num_negatives if num_negatives != 0 else 0
+
+        res = dict(
+            true_positives=true_positives,
+            false_positives=false_positives,
+            false_negatives=false_negatives,
+            num_true_positives=num_true_positives,
+            num_false_positives=num_false_positives,
+            num_true_negatives=num_true_negatives,
+            num_false_negatives=num_false_negatives,
+            tpr=tpr,
+            fpr=fpr
+        )
+
+        return res
 
     def confusion_matrix(self, other, rates_only=False):
         self_cpdag = self.cpdag()
