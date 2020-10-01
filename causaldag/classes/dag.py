@@ -787,7 +787,12 @@ class DAG:
 
     def confusion_matrix(self, other, rates_only=False):
         self_cpdag = self.cpdag()
-        other_cpdag = other.cpdag()
+
+        from causaldag.classes.pdag import PDAG
+        if isinstance(other, PDAG):
+            other_cpdag = other
+        else:
+            other_cpdag = other.cpdag()
 
         # HELPER SETS SELF
         self_arcs_as_edges = {frozenset(arc) for arc in self_cpdag._arcs}
