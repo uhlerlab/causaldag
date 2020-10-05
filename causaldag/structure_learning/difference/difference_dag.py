@@ -13,7 +13,7 @@ References
     Journal of the Royal Statistical Society: Series B (Statistical Methodology), 72(4), pp.417-473.
 """
 
-from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph, constraint_diff_ug
+from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph
 from causaldag.utils.ci_tests import gauss_ci_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
@@ -47,10 +47,11 @@ def bootstrap_generator(n_bootstrap_iterations, sample_fraction, X, random_state
 def dci(
         X1,
         X2,
-        alpha_ug: float = 1.0,
+        alpha_ug: float = 0.01,
         alpha_skeleton: float = 0.1,
         alpha_orient: float = 0.1,
         max_set_size: Optional[int] = 3,
+        difference_ug_method = 'constraint',
         difference_ug: list = None,
         nodes_cond_set: set = None,
         max_iter: int = 1000,
@@ -69,8 +70,12 @@ def dci(
         First dataset.    
     X2: array, shape = [n_samples, n_features]
         Second dataset.
-    alpha_ug: float, default = 1.0
-        L1 regularization parameter for estimating the difference undirected graph via KLIEP algorithm.
+    alpha_ug: float, default = 0.01
+        Parameter for determining the difference undirected graph.
+        If difference_ug_method = 'constraint', alpha_ug is the significance level parameter (must be in [0,1] range),
+        with higher alpha_ug resulting in more edges in the difference undirected graph.
+        If difference_ug_method = 'kliep', alpha_ug is the L1 regularization parameter for estimating 
+        the difference undirected graph via KLIEP algorithm.
     alpha_skeleton: float, default = 0.1
         Significance level parameter for determining presence of edges in the skeleton of the difference graph. 
         Lower alpha_skeleton results in sparser difference graph.
@@ -81,12 +86,17 @@ def dci(
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
         If None, conditioning sets of all sizes will be used.
+    difference_ug_method: str, default = 'constraint'
+        Method for computing the undirected difference graph. Must be 'constraint' for constraint-based
+        method or 'kliep' for KLIEP.
     difference_ug: list, default = None
         List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
-        KLIEP algorithm for estimating the difference undirected graph will be run. 
+        constraint-based or KLIEP algorithm for estimating the difference undirected graph will be run. 
         If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
-    nodes_cond_set: set
-        Nodes to be considered as conditioning sets.
+    nodes_cond_set: set, default = None
+        Nodes to be considered as conditioning sets. If nodes_cond_set is None, 
+        constraint-based or KLIEP algorithm for estimating the difference undirected graph will be run. 
+        If the number of nodes is small, , default = None could be taken to be all the nodes.
     max_iter: int, default = 1000
         Maximum number of iterations for gradient descent in KLIEP algorithm.
     edge_threshold: float, default = 0
@@ -124,17 +134,18 @@ def dci(
     rh1 = RegressionHelper(suffstat1)
     rh2 = RegressionHelper(suffstat2)
 
-    # compute the difference undirected graph via KLIEP if the differece_ug is not provided
+    # compute the difference undirected graph via KLIEP or constraint-based method 
+    # if the differece_ug or nodes_cond_set is not provided
     if difference_ug is None or nodes_cond_set is None:
         difference_ug, nodes_cond_set = dci_undirected_graph(
             X1,
             X2,
+            difference_ug_method = difference_ug_method,
             alpha=alpha_ug,
             max_iter=max_iter,
             edge_threshold=edge_threshold,
-            verbose=verbose
-        )
-        if verbose > 0: print(f"{len(difference_ug)} edges in the difference UG, over {len(nodes_cond_set)} nodes")
+            verbose=verbose)
+
 
     # estimate the skeleton of the difference-DAG 
     skeleton = dci_skeleton(
@@ -285,19 +296,14 @@ def dci_multiple(
         difference_ug_method: str = 'constraint'
 ):
     if difference_ug is None or nodes_cond_set is None:
-        if difference_ug_method == 'constraint':
-            difference_ug, nodes_cond_set = constraint_diff_ug(X1, X2, alpha=alpha_ug)
-        elif difference_ug_method == 'kliep':
-            difference_ug, nodes_cond_set = dci_undirected_graph(
-                X1,
-                X2,
-                alpha=alpha_ug,
-                max_iter=max_iter,
-                edge_threshold=edge_threshold,
-                verbose=verbose
-            )
-        else:
-            raise ValueError("`difference_ug_method` should be either 'constraint' or 'kliep'")
+        difference_ug, nodes_cond_set = dci_undirected_graph(
+            X1,
+            X2,
+            difference_ug_method = difference_ug_method,
+            alpha=alpha_ug,
+            max_iter=max_iter,
+            edge_threshold=edge_threshold,
+            verbose=verbose)
     if verbose > 0:
         print(f"{len(difference_ug)} edges in the difference UG, over {len(nodes_cond_set)} nodes")
     if true_diff:
@@ -374,11 +380,11 @@ def dci_skeletons_bootstrap_multiple(
         difference_ug, nodes_cond_set = dci_undirected_graph(
             X1,
             X2,
+            difference_ug_method = difference_ug_method,
             alpha=alpha_ug,
             max_iter=max_iter,
             edge_threshold=edge_threshold,
-            verbose=verbose
-        )
+            verbose=verbose)
         if verbose > 0: print(f"{len(difference_ug)} edges in the difference UG, over {len(nodes_cond_set)} nodes")
 
     bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state)

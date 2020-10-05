@@ -21,7 +21,85 @@ from scipy.special import ncfdtr
 import ipdb
 
 
-def constraint_diff_ug(X1, X2, alpha=.01):
+def dci_undirected_graph(X1, X2, difference_ug_method = 'constraint', alpha=0.01, max_iter=1000, edge_threshold=0, verbose=0):
+    """
+    Estimates the difference between two undirected graphs directly from two data sets
+    using constraint-based or Kullback-Leibler importance estimation procedure (KLIEP).
+
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    difference_ug_method: str, default = 'constraint'
+        Method for computing the undirected difference graph. Must be 'constraint' for constraint-based
+        method or 'kliep' for KLIEP.
+    alpha: float, default = 1.0
+        Parameter for determining the difference undirected graph.
+        If difference_ug_method = 'constraint', alpha_ug is the significance level parameter (must be in [0,1] range),
+        with higher alpha_ug resulting in more edges in the difference undirected graph.
+        If difference_ug_method = 'kliep', alpha_ug is the L1 regularization parameter for estimating 
+        the difference undirected graph via KLIEP algorithm.
+    max_iter: int, default = 1000
+        Maximum number of iterations for gradient descent (KLIEP only).
+    edge_threshold: float, default = 0.05
+        Edge weight cutoff for keeping an edge where all edges above or equal to this threshold are kept (KLIEP only).
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+
+    Returns
+    -------
+    difference_ug: list
+        List of tuple of edges in the difference undirected graph.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    """
+    if difference_ug_method == 'constraint':
+        difference_ug, nodes_cond_set = constraint_diff_ug(X1, X2, alpha=alpha, verbose=verbose)
+    elif difference_ug_method == 'kliep':
+        difference_ug, nodes_cond_set = kliep_diff_ug(
+            X1,
+            X2,
+            alpha=alpha,
+            max_iter=max_iter,
+            edge_threshold=edge_threshold,
+            verbose=verbose
+        )
+    else:
+        raise ValueError("`difference_ug_method` should be either 'constraint' or 'kliep'")
+    return difference_ug, nodes_cond_set
+
+
+def constraint_diff_ug(X1, X2, alpha=0.01, verbose=0):
+    """
+    Estimates the difference between two undirected graphs directly from two data sets
+    using constraint-based method that relies on comparing precision matrices corresponding
+    to each data set.
+
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    alpha: float, default = 0.01
+        Parameter for the constraint-based method, which corresponds to a p-value cutoff
+        for hypothesis testing. Higher alpha leads to more edges in the difference undirected graph.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+
+    Returns
+    -------
+    difference_ug: list
+        List of tuple of edges in the difference undirected graph.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    """
+    assert 0 <= alpha <= 1, "alpha must be in [0,1] range."
+    if verbose > 0:
+        print("Running constraint-based method to get difference undirected graph...")
+
     n1, n2, p = X1.shape[0], X2.shape[0], X1.shape[1]
     K1 = pinv(np.cov(X1, rowvar=False))
     K2 = pinv(np.cov(X2, rowvar=False))
@@ -30,12 +108,16 @@ def constraint_diff_ug(X1, X2, alpha=.01):
     stats = (K1 - K2)**2 * 1/((np.outer(D1, D1) + K1**2)/n1 + (np.outer(D2, D2) + K2**2)/n2)
     pvals = 1 - ncfdtr(1, n1 + n2 - 2*p + 2, 0, stats)
 
-    diff_ug = {frozenset({i, j}) for i, j in itr.combinations(range(p), 2) if pvals[i, j] < alpha}
+    diff_ug = {frozenset({i, j}) for i, j in itr.combinations(range(p), 2) if pvals[i, j] <= alpha}
     cond_nodes = {i for i, _ in diff_ug} | {j for _, j in diff_ug}
+    
+    if verbose > 0:
+        print("Difference undirected graph: ", difference_ug)
+
     return diff_ug, cond_nodes
 
 
-def dci_undirected_graph(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, verbose=0):
+def kliep_diff_ug(X1, X2, alpha=1.0, max_iter=1000, edge_threshold=0, verbose=0):
     """
     Estimates the difference between two undirected graphs directly from two data sets
     using Kullback-Leibler importance estimation procedure (KLIEP).
