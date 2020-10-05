@@ -3,7 +3,7 @@ from typing import Union, List, Optional
 from sklearn.linear_model import LinearRegression
 from causaldag.utils.core_utils import to_list
 from scipy.special import stdtr, ncfdtr
-from numpy.linalg import inv
+from numpy.linalg import pinv
 
 lr = LinearRegression()
 
@@ -88,8 +88,8 @@ def gauss_invariance_test(
         cond_ix = cond_set if zero_mean else [*cond_set, -1]
         gram1 = suffstat['obs']['G'][np.ix_(cond_ix, cond_ix)]
         gram2 = suffstat['contexts'][context]['G'][np.ix_(cond_ix, cond_ix)]
-        coefs1 = np.linalg.inv(gram1) @ obs_samples[:, cond_ix].T @ obs_samples[:, i]
-        coefs2 = np.linalg.inv(gram2) @ iv_samples[:, cond_ix].T @ iv_samples[:, i]
+        coefs1 = pinv(gram1) @ obs_samples[:, cond_ix].T @ obs_samples[:, i]
+        coefs2 = pinv(gram2) @ iv_samples[:, cond_ix].T @ iv_samples[:, i]
 
         residuals1 = obs_samples[:, i] - obs_samples[:, cond_ix] @ coefs1
         residuals2 = iv_samples[:, i] - iv_samples[:, cond_ix] @ coefs2
@@ -111,7 +111,7 @@ def gauss_invariance_test(
     # calculate regression coefficient invariance statistic
     if len(cond_ix) != 0 and not same_coeffs:
         p = len(cond_ix)
-        rc_stat = (coefs1 - coefs2) @ inv(var1 * inv(gram1) + var2 * inv(gram2)) @ (coefs1 - coefs2).T / p
+        rc_stat = (coefs1 - coefs2) @ pinv(var1 * pinv(gram1) + var2 * pinv(gram2)) @ (coefs1 - coefs2).T / p
         rc_pvalue = ncfdtr(p, n1 + n2 - p, 0, rc_stat)
         rc_pvalue = 2 * min(rc_pvalue, 1 - rc_pvalue)
 

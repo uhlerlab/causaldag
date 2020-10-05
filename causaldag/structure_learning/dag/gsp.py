@@ -555,7 +555,7 @@ def igsp(
         1) if {i} is an intervention, then f^{i}(j) = f(j)
         """
         setting_num = interventions2setting_nums.get(frozenset({i}))
-        if setting_num is not None and not invariance_tester.is_invariant(j, 0, setting_num):
+        if setting_num is not None and not invariance_tester.is_invariant(j, context=setting_num):
             return False
         # for iv_nodes in samples.keys():
         #     if j in iv_nodes and i not in iv_nodes:
