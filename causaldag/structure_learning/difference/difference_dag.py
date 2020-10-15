@@ -14,6 +14,7 @@ References
 """
 
 from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph
+from causaldag.structure_learning.difference.utils import bootstrap_generator, edges2adjacency
 from causaldag.utils.ci_tests import gauss_ci_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
@@ -23,25 +24,13 @@ import numpy as np
 import itertools
 from joblib import Parallel, delayed
 from sklearn.utils import safe_mask
-from sklearn.utils.random import sample_without_replacement
 import networkx as nx
 from typing import Optional, Set, List, Union, Dict
 from tqdm import tqdm
 import operator as op
 import random
 import ipdb
-
-
-def bootstrap_generator(n_bootstrap_iterations, sample_fraction, X, random_state=None):
-    """Generates bootstrap samples from dataset."""
-    if random_state is not None:
-        np.random.seed(random_state)
-        random.seed(random_state)
-    n_samples = len(X)
-    n_subsamples = np.floor(sample_fraction * n_samples).astype(int)
-    for _ in range(n_bootstrap_iterations):
-        subsample = sample_without_replacement(n_samples, n_subsamples)
-        yield subsample
+import matplotlib.pyplot as plt
 
 
 def dci(
@@ -105,6 +94,13 @@ def dci(
         The verbosity level of logging messages.
     lam: float, default = 0
         Amount of regularization for regression (becomes ridge regression if nonzero).
+    progress: bool, default = False
+        Whether to show DCI progress bar.
+    order_independent: bool = True
+        For orientation phase of DCI, whether to use DCI where all nodes are considered at each level of
+        the conditioning set size, making the output pf DCI independent of node order (recommended) or 
+        whether to use the original DCI algorithm that iterates over nodes and thus may depend 
+        on the order of the nodes (this may lead to incosistent or biased results).
 
     See Also
     --------
@@ -237,9 +233,10 @@ def dci_skeleton_multiple(
                         f"Removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.5f} with cond set {cond_set_i}")
                 for alpha in removed_alphas:
                     skeletons[alpha].discard((i, j))
-                if true_diff is not None and (i, j) in true_diff or (j, i) in true_diff:
-                    print(
-                        f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.6f} with cond set {cond_set_i}")
+                if true_diff is not None:
+                    if (i, j) in true_diff or (j, i) in true_diff:
+                        print(
+                            f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_i:.6f} with cond set {cond_set_i}")
                 if len(removed_alphas) == len(alpha_skeleton_grid):
                     break
             elif verbose > 1:
@@ -264,9 +261,10 @@ def dci_skeleton_multiple(
                         f"Removing edge {i}->{j} for alpha={removed_alphas} since p-value={pval_j:.5f} with cond set {cond_set_j}")
                 for alpha in removed_alphas:
                     skeletons[alpha].discard((i, j))
-                if true_diff is not None and (i, j) in true_diff or (j, i) in true_diff:
-                    print(
-                        f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_j:.6f} with cond set {cond_set_i}")
+                if true_diff is not None:
+                    if (i, j) in true_diff or (j, i) in true_diff:
+                        print(
+                            f"Incorrectly removing edge {j}->{i} for alpha={removed_alphas} since p-value={pval_j:.6f} with cond set {cond_set_i}")
                 if len(removed_alphas) == len(alpha_skeleton_grid):
                     break
             elif verbose > 1:
@@ -279,6 +277,7 @@ def dci_multiple(
         X1: np.ndarray,
         X2: np.ndarray,
         alpha_skeleton_grid: list = [0.1, 0.5],
+        alpha_orient_grid: list = [.1],
         max_set_size: int = 3,
         difference_ug: list = None,
         nodes_cond_set: set = None,
@@ -287,7 +286,6 @@ def dci_multiple(
         n_bootstrap_iterations: int = 50,
         alpha_ug: float = 1.,
         max_iter: int = 1000,
-        alpha_orient_grid: list = [.1],
         n_jobs: int = 1,
         random_state: int = None,
         verbose: int = 0,
@@ -315,7 +313,7 @@ def dci_multiple(
     bootstrap_samples1 = list(bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state))
     bootstrap_samples2 = list(bootstrap_generator(n_bootstrap_iterations, sample_fraction, X2, random_state=random_state))
 
-    skeleton_results = Parallel(n_jobs, verbose=verbose)(
+    skeleton_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
         delayed(dci_skeleton_multiple)(
             X1[safe_mask(X1, subsample1), :],
             X2[safe_mask(X2, subsample2), :],
@@ -338,7 +336,7 @@ def dci_multiple(
 
     alpha2adjacency_oriented = dict()
     for alpha_orient in alpha_orient_grid:
-        orientation_results = Parallel(n_jobs, verbose=verbose)(
+        orientation_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
             delayed(dci_orient_order_independent)(
                 X1[safe_mask(X1, subsample1), :],
                 X2[safe_mask(X1, subsample2), :],
@@ -783,10 +781,10 @@ def dci_orient_order_independent(
     return adjacency_matrix
 
 
-def dci_orient(
+def dci_orient_order_dependent(
         X1,
         X2,
-        skeleton: set,
+        skeletons: Union[Dict[float, set], set],
         nodes_cond_set: set,
         rh1: RegressionHelper = None,
         rh2: RegressionHelper = None,
@@ -795,7 +793,7 @@ def dci_orient(
         verbose: int = 0
 ):
     """
-    Orients edges in the skeleton of the difference DAG.
+    Orients edges in the skeleton of the difference DAG by iterating over nodes.
 
     Parameters
     ----------
@@ -803,7 +801,7 @@ def dci_orient(
         First dataset.    
     X2: array, shape = [n_samples, n_features]
         Second dataset.
-    skeleton: set
+    skeletons: set or dictionary of float-set pairs
         Set of edges in the skeleton of the difference-DAG.
     nodes_cond_set: set
         Nodes to be considered as conditioning sets.
@@ -911,34 +909,6 @@ def dci_orient(
     return adjacency_matrix
 
 
-def edges2adjacency(num_nodes, edge_set, undirected=False):
-    """
-    Returns adjacency_matrix given a set of edges. If the edges are considered undirected,
-    then the adjacency matrix will be symmetric.
-
-    Parameters
-    ----------
-    num_nodes: int
-        Number of nodes in the graph.
-    edge_set: set
-        Set of edges in the graph.    
-    undirected: bool, default = False
-        Whether to consider the edges in the edge set as directed or undirected.
-
-    Returns
-    -------
-    adjacency_matrix: array, shape  = [num_nodes, num_nodes]
-        Adjacency matrix.
-    """
-
-    adjacency_matrix = np.zeros((num_nodes, num_nodes))
-    for parent, child in edge_set:
-        adjacency_matrix[parent, child] = 1
-        if undirected:
-            adjacency_matrix[child, parent] = 1
-    return adjacency_matrix
-
-
 def get_directed_and_undirected_edges(adjacency_matrix):
     """
     Given an adjacency matrix, which contains both directed and undirected edges,
@@ -966,3 +936,30 @@ def get_directed_and_undirected_edges(adjacency_matrix):
     adjacency_matrix_directed = (adjacency_matrix_sym == 1).astype('float')
     adjacency_matrix_directed[adjacency_matrix_directed == 1] = adjacency_matrix[adjacency_matrix_directed == 1]
     return adjacency_matrix_directed, adjacency_matrix_undirected
+
+
+def plot_stability_sel_probailities(alpha2adjacency, log_scale=False):
+    """Plots hyperparamter versus stability selection probability."""
+    nnodes = alpha2adjacency[list(alpha2adjacency.keys())[0]].shape[0]
+    plt.figure()
+    if log_scale:
+        plt.xscale('log')
+    alphas = list(alpha2adjacency.keys())
+    for i, j in itertools.combinations(range(nnodes), 2):
+        probs = np.array([alpha2adjacency[alpha][i, j] for alpha in alpha2adjacency])
+        plt.plot(alphas, probs, color='k')
+
+    plt.xlabel('Significance level for hypothesis tests')
+    plt.ylabel('Probability of selection')
+    plt.show()
+
+
+def choose_stable_variables_from_dict(alpha2adjacency, bootstrap_threshold=0.5):
+    """Returns adjacency matrix corresponding to edges with stability scores above threshold given a dictionary."""
+    params = list(alpha2adjacency.keys())
+    n_variables = alpha2adjacency[params[0]].shape[1]
+    stability_scores = np.zeros((len(params), n_variables, n_variables))
+    for i, param in enumerate(params):
+        stability_scores[i] = alpha2adjacency[param]
+    adj = (stability_scores.max(axis=0) > bootstrap_threshold).astype('float')
+    return adj
