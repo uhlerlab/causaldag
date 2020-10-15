@@ -1,17 +1,38 @@
 from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester
+from causaldag.utils.ci_tests import CI_Tester, gauss_ci_test
 from causaldag.classes.custom_types import UndirectedEdge
 from causaldag.utils.invariance_tests import InvarianceTester
-from causaldag.utils.core_utils import powerset
+from causaldag.utils.core_utils import powerset, iszero
 import random
-from causaldag.structure_learning.undirected import threshold_ug
+from causaldag.structure_learning.undirected import threshold_ug, partial_correlation_threshold
 from causaldag import UndirectedGraph
 import numpy as np
 from tqdm import trange, tqdm
 from causaldag.utils.core_utils import powerset
 from math import factorial
+
+
+def perm2dag_precision(perm, precision, alpha=.01, num_samples=None):
+    perm = np.array(perm)
+    current_precision = precision.copy()
+    current_precision[:, :] = current_precision[perm, :]
+    current_precision[:, :] = current_precision[:, perm]
+    nnodes = precision.shape[0]
+    arcs = set()
+    for node in range(nnodes-1, -1, -1):
+        if num_samples is not None:
+            current_precision_thresholded = partial_correlation_threshold(current_precision, n=num_samples, alpha=alpha)
+            parents = np.nonzero(current_precision_thresholded[-1])[0]
+        else:
+            parents = np.nonzero(~iszero(current_precision[-1]))[0]
+        label = perm[node]
+        new_arcs = set(itr.product(perm[parents], [label])) - {(label, label)}
+        arcs.update(new_arcs)
+        current_precision = current_precision[:-1, :-1] - current_precision[-1, -1]**-1 * np.outer(current_precision[:-1, -1], current_precision[:-1, -1])
+
+    return cd.DAG(nodes=set(perm), arcs=arcs)
 
 
 def perm2dag(
@@ -53,6 +74,9 @@ def perm2dag(
     >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat)
     >>> perm2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
     """
+    if hasattr(ci_tester, "ci_test") and ci_tester.ci_test == gauss_ci_test and "P" in ci_tester.suffstat:
+        return perm2dag_precision(perm, ci_tester.suffstat["P"], ci_tester.kwargs.get('alpha'), ci_tester.suffstat['n'])
+
     if fixed_adjacencies:
         adj = next(iter(fixed_adjacencies))
         if not isinstance(adj, frozenset):
