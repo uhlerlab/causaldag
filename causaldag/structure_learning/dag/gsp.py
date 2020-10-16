@@ -32,7 +32,7 @@ def perm2dag_precision(perm, precision, alpha=.01, num_samples=None):
         arcs.update(new_arcs)
         current_precision = current_precision[:-1, :-1] - current_precision[-1, -1]**-1 * np.outer(current_precision[:-1, -1], current_precision[:-1, -1])
 
-    return cd.DAG(nodes=set(perm), arcs=arcs)
+    return DAG(nodes=set(perm), arcs=arcs)
 
 
 def perm2dag(
