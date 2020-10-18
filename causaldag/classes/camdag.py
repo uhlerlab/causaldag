@@ -56,6 +56,15 @@ class CamDAG(DAG):
 
         return conditional_means
 
+    def direct_effect(self, cond_values, cond_nodes: list):
+        direct_effects = np.zeros([cond_values.shape[0], self.nnodes - len(cond_nodes)])
+        for ix, node in enumerate(self._node_list):
+            if node not in cond_nodes:
+                parents = [p for p in self._parents[node] if p not in cond_nodes]
+                parent_ixs = [self._node2ix[p] for p in parents]
+                direct_effects[:, ix] = None
+        return direct_effects
+
 
 
 
