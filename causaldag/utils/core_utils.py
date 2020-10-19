@@ -68,5 +68,9 @@ def random_max(d, minimize=False):
         return random.choice(max_keys)
 
 
+def iszero(a, atol=1e-8):
+    return abs(a) < atol
+
+
 if __name__ == '__main__':
     res = list(powerset_predicate(set(range(10)), lambda ss: len(ss) < 4))

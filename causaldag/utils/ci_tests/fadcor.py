@@ -1,5 +1,8 @@
 import numpy as np
 import ipdb
+from typing import Union, List, Dict
+from causaldag.utils.ci_tests._utils import residuals
+from causaldag.utils.core_utils import to_list
 
 
 def order_vector(x) -> np.ndarray:
@@ -9,7 +12,45 @@ def order_vector(x) -> np.ndarray:
     return np.argsort(np.argsort(x))
 
 
-def fadcor_test_vector(x: np.ndarray, y: np.ndarray, verbose=True):
+def fadcor_test(
+        suffstat: np.ndarray,
+        i: int,
+        j: int,
+        cond_set: Union[List[int], int]=None,
+        thresh: float=1.,
+        verbose=False
+) -> Dict:
+    """
+    Test for (conditional) independence using Distance Covariance. If a conditioning set is
+    specified, first perform non-parametric regression, then test residuals.
+
+    Parameters
+    ----------
+    suffstat:
+        Matrix of samples.
+    i:
+        column position of first variable.
+    j:
+        column position of second variable.
+    cond_set:
+        column positions of conditioning set.
+    alpha:
+        Significance level of the test.
+
+    Returns
+    -------
+
+    """
+    cond_set = to_list(cond_set)
+    if len(cond_set) == 0:
+        return fadcor_test_vector(suffstat[:, i], suffstat[:, j], thresh=thresh, verbose=verbose)
+    else:
+        if verbose: print("Computing residuals")
+        residuals_i, residuals_j = residuals(suffstat, i, j, cond_set)
+        return fadcor_test_vector(residuals_i, residuals_j, thresh=thresh, verbose=verbose)
+
+
+def fadcor_test_vector(x: np.ndarray, y: np.ndarray, verbose=False, thresh=1.):
     """
     Test for independence of X and Y using Fast Computing for Distance Covariance (FaDCor).
 
@@ -27,39 +68,49 @@ def fadcor_test_vector(x: np.ndarray, y: np.ndarray, verbose=True):
     n = len(x)
 
     # STEP 1
+    if verbose: print("Ordering vectors")
     ranks_x, ranks_y = order_vector(x), order_vector(y)
 
     # STEP 2: COMPUTE PARTIAL SUMS OF ORDER STATISTICS
+    if verbose: print("computing cumulative sums")
     x_sort_ixs, y_sort_ixs = np.argsort(x), np.argsort(y)
     s_x = np.cumsum(x[x_sort_ixs]) - x[x_sort_ixs]
     s_y = np.cumsum(y[y_sort_ixs]) - y[y_sort_ixs]
 
     # STEP 3: COMPUTE BETA
+    if verbose: print("computing beta")
     beta_x = s_x[ranks_x]
     beta_y = s_y[ranks_y]
 
     # STEP 4/5: COMPUTE A AND B
+    if verbose: print("Computing a. and b.")
     a_dot = x.sum() + (2*ranks_x - n) * x - 2*beta_x
     b_dot = y.sum() + (2*ranks_y - n) * y - 2*beta_y
 
     # STEP 6: COMPUTE AVERAGE DISTANCES WITHIN X AND Y DATASETS
+    if verbose: print("Computing a.. and b..")
     a_dotdot = 2 * ranks_x.T @ x - 2 * beta_x.sum()
     b_dotdot = 2 * ranks_y.T @ y - 2 * beta_y.sum()
 
     # STEP 7
+    if verbose: print("Computing gammas")
     gamma1 = partial_sum2d(x, y, np.ones(n))
     gamma_xy = partial_sum2d(x, y, x*y)
     gamma_y = partial_sum2d(x, y, y)
     gamma_x = partial_sum2d(x, y, x)
 
     # STEP 8
+    if verbose: print("Computing LOO sums")
     loo_sums = x * y * gamma1 + gamma_xy - x * gamma_y - y * gamma_x
     loo_sum = loo_sums.sum()
 
     # STEP 9
     omega = 1/(n*(n-3)) * loo_sum - 2/(n*(n-2)*(n-3)) * a_dot.T @ b_dot + a_dotdot*b_dotdot/(n*(n-1)*(n-2)*(n-3))
 
-    return omega
+    return dict(
+        statistic=omega,
+        reject=omega > thresh,
+    )
 
 
 def partial_sum2d(x: np.ndarray, y: np.ndarray, c: np.ndarray) -> np.ndarray:
@@ -224,7 +275,7 @@ if __name__ == '__main__':
         profiler.runcall(run_dyad_update)
         profiler.print_stats()
 
-    PROFILE_FADCOR = False
+    PROFILE_FADCOR = True
     if PROFILE_FADCOR:
         from line_profiler import LineProfiler
         samples_list = [d.sample(nsamples) for _ in range(ntrials)]

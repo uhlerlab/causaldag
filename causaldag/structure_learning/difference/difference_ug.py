@@ -11,7 +11,7 @@ References
    [2] http://allmodelsarewrong.net/kliep_sparse/demo_sparse.html
 """
 
-from causaldag.structure_learning.difference.utils import bootstrap_generator, edges2adjacency
+from causaldag.structure_learning.difference._utils import bootstrap_generator, edges2adjacency
 import numpy as np 
 import scipy
 import networkx as nx
