@@ -41,3 +41,9 @@ def edges2adjacency(num_nodes, edge_set, undirected=False):
         if undirected:
             adjacency_matrix[child, parent] = 1
     return adjacency_matrix
+
+def adjacency2edges(adjacency_matrix):
+    """Returns a set of edges for a given adjacency matrix."""
+    g = nx.from_numpy_matrix(adjacency_matrix)
+    edges = {frozenset({i, j}) for i, j in g.edges()}
+    return edges

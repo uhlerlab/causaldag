@@ -409,6 +409,45 @@ def dci_skeletons_bootstrap_multiple(
 
     return bootstrap_results, alpha2adjacency
 
+def dci_orient_bootstrap_multiple(
+        X1,
+        X2,
+        skeletons: Union[Dict[float, set], set],
+        alpha_orient_grid: list = [0.001, 0.1],
+        max_set_size: int = 3,
+        nodes_cond_set: set = None,
+        sample_fraction: float = 0.7,
+        n_bootstrap_iterations: int = 50,
+        bootstrap_threshold: float = 0.5,
+        n_jobs: int = 1,
+        random_state: int = None,
+        verbose: int = 0
+):
+
+    bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state)
+    bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X2, random_state=random_state)
+
+    _, n_variables = X1.shape
+    n_params = len(alpha_orient_grid)    
+    stability_scores = np.zeros((n_params, n_variables, n_variables))
+
+    alpha2adjacency_oriented = dict()
+    for idx, alpha_orient in enumerate(alpha_orient_grid):
+        orientation_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
+            delayed(dci_orient_order_independent)(
+                X1[safe_mask(X1, subsample1), :],
+                X2[safe_mask(X1, subsample2), :],
+                skeletons=skeletons,
+                nodes_cond_set=nodes_cond_set,
+                alpha=alpha_orient,
+                max_set_size=max_set_size,
+                verbose=verbose)
+            for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2)
+        )
+        stability_scores[idx] = np.array(orientation_results).mean(axis=0)
+
+    adjacency_matrix = choose_stable_variables(stability_scores, bootstrap_threshold=bootstrap_threshold)
+    return adjacency_matrix, stability_scores
 
 def dci_stability_selection(
         X1,
