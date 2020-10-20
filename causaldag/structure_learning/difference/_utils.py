@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.utils.random import sample_without_replacement
 import random
+import networkx as nx
 
 
 def bootstrap_generator(n_bootstrap_iterations, sample_fraction, X, random_state=None):
