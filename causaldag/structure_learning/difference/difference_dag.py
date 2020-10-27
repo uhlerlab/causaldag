@@ -160,7 +160,7 @@ def dci(
     if verbose > 0: print(f"{len(skeleton)} edges in the difference skeleton")
 
     # orient edges of the skeleton of the difference-DAG
-    orient_algorithm = dci_orient if not order_independent else dci_orient_order_independent
+    orient_algorithm = dci_orient_order_dependent if not order_independent else dci_orient
     adjacency_matrix = orient_algorithm(
         X1,
         X2,
@@ -337,7 +337,7 @@ def dci_multiple(
     alpha2adjacency_oriented = dict()
     for alpha_orient in alpha_orient_grid:
         orientation_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
-            delayed(dci_orient_order_independent)(
+            delayed(dci_orient)(
                 X1[safe_mask(X1, subsample1), :],
                 X2[safe_mask(X1, subsample2), :],
                 skeleton,
@@ -434,7 +434,7 @@ def dci_orient_bootstrap_multiple(
     alpha2adjacency_oriented = dict()
     for idx, alpha_orient in enumerate(alpha_orient_grid):
         orientation_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
-            delayed(dci_orient_order_independent)(
+            delayed(dci_orient)(
                 X1[safe_mask(X1, subsample1), :],
                 X2[safe_mask(X1, subsample2), :],
                 skeletons=skeletons,
@@ -704,7 +704,7 @@ def dci_skeleton(
     return skeleton
 
 
-def dci_orient_order_independent(
+def dci_orient(
         X1,
         X2,
         skeletons: Union[Dict[float, set], set],
@@ -715,6 +715,45 @@ def dci_orient_order_independent(
         max_set_size: int = 3,
         verbose: int = 0
 ):
+    """
+    Orients edges in the skeleton of the difference DAG by simultaneously considering all nodes at each level of conditioning set size.
+
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    skeletons: set or dictionary of float-set pairs
+        Set of edges in the skeleton of the difference-DAG or a dictionary mapping hyperparamters (of the skeleton phase) to the set of edges corresponding to the skeleton.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    rh1: RegressionHelper, default = None
+        Sufficient statistics estimated based on samples in the first dataset, stored in RegressionHelper class.
+    rh2: RegressionHelper, default = None
+        Sufficient statistics estimated based on samples in the second dataset, stored in RegressionHelper class.
+    alpha: float, default = 0.1
+        Significance level parameter for determining orientation of an edge.
+        Lower alpha results in more directed edges in the difference-DAG.
+    max_set_size: int, default = 3
+        Maximum conditioning set size used to test regression invariance.
+        Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+
+    See Also
+    --------
+    dci, dci_undirected_graph, dci_skeleton
+
+    Returns
+    -------
+    adjacency_matrix: array, shape  = [n_features, n_features]
+        Estimated difference-DAG. Edges that were found to be different between two settings but the orientation
+        could not be determined, are represented by assigning 1 in both directions, i.e. adjacency_matrix[i,j] = 1
+        and adjacency_matrix[j,i] = 1. Otherwise for oriented edges, only adjacency_matrix[i,j] = 1 is assigned. 
+        Assignment of 0 in the adjacency matrix represents no edge.
+    """
+
     if verbose > 0:
         print("DCI edge orientation...")
 
@@ -729,7 +768,7 @@ def dci_orient_order_independent(
 
     if isinstance(skeletons, dict):
         return {
-            alpha: dci_orient_order_independent(
+            alpha: dci_orient(
                 X1,
                 X2,
                 skeleton,
@@ -863,10 +902,11 @@ def dci_orient_order_dependent(
 
     Returns
     -------
-    oriented_edges: set
-        Set of edges in the skeleton of the difference-DAG for which directionality could be determined.
-    unoriented_edges: set
-        Set of edges in the skeleton of the difference-DAG for which directionality could not be determined.
+    adjacency_matrix: array, shape  = [n_features, n_features]
+        Estimated difference-DAG. Edges that were found to be different between two settings but the orientation
+        could not be determined, are represented by assigning 1 in both directions, i.e. adjacency_matrix[i,j] = 1
+        and adjacency_matrix[j,i] = 1. Otherwise for oriented edges, only adjacency_matrix[i,j] = 1 is assigned. 
+        Assignment of 0 in the adjacency matrix represents no edge.
     """
 
     if verbose > 0:
