@@ -1,6 +1,8 @@
 **This package is still very young and hence maybe be subject to future revision.
 Use at your own risk.**
 
+[![codecov](https://codecov.io/gh/uhlerlab/causaldag/branch/master/graph/badge.svg?token=RSM00FKU9A)](https://codecov.io/gh/uhlerlab/causaldag)
+
 CausalDAG is a Python package for the creation, manipulation, and learning
 of Causal DAGs. CausalDAG requires Python 3.5+
 
