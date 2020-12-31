@@ -1,6 +1,6 @@
 import itertools as itr
 from causaldag.classes import UndirectedGraph
-from causaldag.utils.ci_tests import CI_Tester, gauss_ci_test
+from causaldag.utils.ci_tests import CI_Tester, partial_correlation_test
 from numpy import sqrt, log1p, ndenumerate, errstate, diagonal, fill_diagonal
 from scipy.special import erf
 
@@ -20,7 +20,7 @@ def threshold_ug(nodes: set, ci_tester: CI_Tester) -> UndirectedGraph:
     --------
     TODO
     """
-    if hasattr(ci_tester, 'ci_test') and ci_tester.ci_test == gauss_ci_test:
+    if hasattr(ci_tester, 'ci_test') and ci_tester.ci_test == partial_correlation_test:
         return threshold_ug_gauss(ci_tester)
     edges = {(i, j) for i, j in itr.combinations(nodes, 2) if not ci_tester.is_ci(i, j, nodes - {i, j})}
     return UndirectedGraph(nodes, edges)

@@ -11,7 +11,7 @@ def numba_inv(A):
     return inv(A)
 
 
-def gauss_ci_suffstat(samples, invert=True):
+def partial_correlation_suffstat(samples, invert=True):
     """
     Helper function to compute the sufficient statistics for the gauss_ci_test from data.
 
@@ -94,7 +94,7 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
     return r
 
 
-def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
+def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
     Test the null hypothesis that i and j are conditionally independent given cond_set via Fisher's z-transform.
 
@@ -138,6 +138,6 @@ def gauss_ci_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
 
 class MemoizedGaussCI_Tester(MemoizedCI_Tester):
     def __init__(self, suffstat: Dict, track_times=False, detailed=False, **kwargs):
-        MemoizedCI_Tester.__init__(self, gauss_ci_test, suffstat, track_times=track_times, detailed=detailed)
+        MemoizedCI_Tester.__init__(self, partial_correlation_test, suffstat, track_times=track_times, detailed=detailed)
 
 

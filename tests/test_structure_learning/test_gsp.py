@@ -3,8 +3,9 @@ import unittest
 import numpy as np
 import causaldag as cd
 import causaldag.classes.interventions
-from causaldag.inference.structural import gsp, perm2dag, is_icovered, unknown_target_igsp, igsp
-from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, gauss_ci_test, kci_invariance_test, hsic_invariance_test
+from causaldag.structure_learning import gsp, perm2dag, unknown_target_igsp, igsp
+from causaldag.utils.ci_tests import kci_test_vector, ki_test_vector, partial_correlation_test
+from causaldag.utils.invariance_tests import kci_invariance_test, hsic_invariance_test
 import random
 from tqdm import tqdm
 import random

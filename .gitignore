@@ -17,3 +17,4 @@ release.sh
 docs/_build/
 docs/classes/generated/
 
+venv/

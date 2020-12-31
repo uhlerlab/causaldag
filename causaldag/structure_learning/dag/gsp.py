@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester, gauss_ci_test
+from causaldag.utils.ci_tests import CI_Tester, partial_correlation_test
 from causaldag.classes.custom_types import UndirectedEdge
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset, iszero
@@ -62,13 +62,13 @@ def perm2dag(
 
     Examples
     --------
-    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, gauss_ci_test, gauss_ci_suffstat
+    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat
     >>> perm = [0,1,2]
-    >>> suffstat = gauss_ci_suffstat(samples)
-    >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat)
+    >>> suffstat = partial_correlation_suffstat(samples)
+    >>> ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat)
     >>> perm2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
     """
-    if hasattr(ci_tester, "ci_test") and ci_tester.ci_test == gauss_ci_test and "P" in ci_tester.suffstat:
+    if hasattr(ci_tester, "ci_test") and ci_tester.ci_test == partial_correlation_test and "P" in ci_tester.suffstat:
         return perm2dag_precision(perm, ci_tester.suffstat["P"], ci_tester.kwargs.get('alpha'), ci_tester.suffstat['n'])
 
     if fixed_adjacencies:
@@ -119,7 +119,7 @@ def sparsest_permutation(nodes, ci_tester, progress=False):
 
     Examples
     --------
-    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, gauss_ci_test, gauss_ci_suffstat
+    >>> from causaldag.utils.ci_tests import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat
     >>> import causaldag as cd
     >>> import random
     >>> import numpy as np
@@ -129,8 +129,8 @@ def sparsest_permutation(nodes, ci_tester, progress=False):
     >>> d = cd.rand.directed_erdos(nnodes, exp_nbrs=2)
     >>> g = cd.rand.rand_weights(d)
     >>> samples = g.sample(1000)
-    >>> suffstat = gauss_ci_suffstat(samples)
-    >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat, alpha=1e-3)
+    >>> suffstat = partial_correlation_suffstat(samples)
+    >>> ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat, alpha=1e-3)
     >>> est_dag = cd.sparsest_permutation(set(range(nnodes)), ci_tester, progress=True)
     >>> true_cpdag = d.cpdag()
     >>> est_cpdag = est_dag.cpdag()

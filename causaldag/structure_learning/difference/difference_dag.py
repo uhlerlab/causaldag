@@ -15,7 +15,7 @@ References
 
 from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph
 from causaldag.structure_learning.difference._utils import bootstrap_generator, edges2adjacency
-from causaldag.utils.ci_tests import gauss_ci_suffstat
+from causaldag.utils.ci_tests import partial_correlation_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
 from scipy.special import ncfdtr
@@ -125,8 +125,8 @@ def dci(
 
     num_nodes = X1.shape[1]
     # obtain sufficient statistics
-    suffstat1 = gauss_ci_suffstat(X1)
-    suffstat2 = gauss_ci_suffstat(X2)
+    suffstat1 = partial_correlation_suffstat(X1)
+    suffstat2 = partial_correlation_suffstat(X2)
     rh1 = RegressionHelper(suffstat1)
     rh2 = RegressionHelper(suffstat2)
 
@@ -195,8 +195,8 @@ def dci_skeleton_multiple(
 
     if rh1 is None or rh2 is None:
         # obtain sufficient statistics
-        suffstat1 = gauss_ci_suffstat(X1)
-        suffstat2 = gauss_ci_suffstat(X2)
+        suffstat1 = partial_correlation_suffstat(X1)
+        suffstat2 = partial_correlation_suffstat(X2)
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
@@ -642,8 +642,8 @@ def dci_skeleton(
 
     if rh1 is None or rh2 is None:
         # obtain sufficient statistics
-        suffstat1 = gauss_ci_suffstat(X1)
-        suffstat2 = gauss_ci_suffstat(X2)
+        suffstat1 = partial_correlation_suffstat(X1)
+        suffstat2 = partial_correlation_suffstat(X2)
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
@@ -761,8 +761,8 @@ def dci_orient(
 
     if rh1 is None or rh2 is None:
         # obtain sufficient statistics
-        suffstat1 = gauss_ci_suffstat(X1)
-        suffstat2 = gauss_ci_suffstat(X2)
+        suffstat1 = partial_correlation_suffstat(X1)
+        suffstat2 = partial_correlation_suffstat(X2)
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
@@ -916,8 +916,8 @@ def dci_orient_order_dependent(
 
     if rh1 is None or rh2 is None:
         # obtain sufficient statistics
-        suffstat1 = gauss_ci_suffstat(X1)
-        suffstat2 = gauss_ci_suffstat(X2)
+        suffstat1 = partial_correlation_suffstat(X1)
+        suffstat2 = partial_correlation_suffstat(X2)
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 

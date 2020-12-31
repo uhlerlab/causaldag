@@ -120,10 +120,10 @@ class TestAncestralGraph(TestCase):
         nodes = set(range(nnodes))
         g = cd.rand.directed_erdos(nnodes, 1/(nnodes-1))
         print(g.arcs)
-        amat_file = os.path.join(CURR_DIR, 'random_mag.txt')
+        amat_file = os.path.join(CURR_DIR, '../data/random_mag.txt')
         np.savetxt(amat_file, g.to_amat(list(nodes))[0])
 
-        rfile = os.path.join(CURR_DIR, 'test_msep.R')
+        rfile = os.path.join(CURR_DIR, '../R_scripts/test_msep.R')
 
         ntests = 50
         for _ in range(ntests):
