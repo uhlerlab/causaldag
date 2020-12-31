@@ -36,7 +36,6 @@ Graph properties
    :toctree: generated
 
    DAG.reversible_arcs
-   DAG.vstructs
 
 Comparison to other DAGs
 ------------------------

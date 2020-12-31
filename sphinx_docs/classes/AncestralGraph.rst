@@ -35,16 +35,8 @@ Graph modification
    AncestralGraph.remove_edge
    AncestralGraph.remove_edges
 
-Graph properties
-----------------
-.. autosummary::
-   :toctree: generated
-
-   AncestralGraph.reversible_arcs
-   AncestralGraph.vstructs
-
 Comparison to other AncestralGraphs
-------------------------
+-----------------------------------
 .. autosummary::
    :toctree: generated
 

@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,41 +11,44 @@
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
 
   
-  <script src="../../../_static/js/modernizr.min.js"></script>
+  
+  
+  
 
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
-            <a href="../../../index.html" class="icon icon-home"> causaldag
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -69,6 +71,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -84,6 +87,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -122,7 +126,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -146,20 +150,23 @@
 <span class="sd">&quot;&quot;&quot;Base class for causal DAGs</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="k">import</span> <span class="n">core_utils</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">operator</span> <span class="k">as</span> <span class="nn">op</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="k">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">List</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">UnionFind</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">UnionFind</span>
 <span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">ipdb</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
 
 
 <span class="k">class</span> <span class="nc">CycleError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cycle</span> <span class="o">=</span> <span class="n">cycle</span>
         <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Adding arc(s) causes the cycle &#39;</span> <span class="o">+</span> <span class="n">path2str</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
@@ -173,7 +180,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for causal DAGs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
@@ -192,14 +199,15 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+            <span class="c1"># print(&#39;before call to add arcs from&#39;)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_arcs_from</span><span class="p">(</span><span class="n">arcs</span><span class="p">,</span> <span class="n">unsafe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DAG</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
         <span class="n">substrings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
@@ -210,7 +218,7 @@
                 <span class="n">substrings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">substrings</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.from_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.from_amat.html#causaldag.classes.dag.DAG.from_amat">[docs]</a>    <span class="nd">@classmethod</span>
@@ -225,17 +233,14 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])</span>
 <span class="sd">        &gt;&gt;&gt; cd.DAG.from_amat(amat)</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">amat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">amat</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">d</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">d</span></div>
+        <span class="n">arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">arcs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DAG.copy"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.copy.html#causaldag.classes.dag.DAG.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -243,6 +248,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># return DAG(nodes=self._nodes, arcs=self._arcs)</span>
         <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">rename_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span>
+            <span class="n">nodes</span><span class="o">=</span><span class="p">{</span><span class="n">name_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">},</span>
+            <span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
+        <span class="p">)</span>
 
     <span class="c1"># === PROPERTIES</span>
     <span class="nd">@property</span>
@@ -298,7 +309,7 @@
         <span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
 
-<div class="viewcode-block" id="DAG.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return all nodes that are parents of `node`.</span>
 
@@ -314,9 +325,12 @@
 <span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DAG.children_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of">[docs]</a>    <span class="k">def</span> <span class="nf">children_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.children_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of">[docs]</a>    <span class="k">def</span> <span class="nf">children_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return all nodes that are children of `node`.</span>
 
@@ -332,9 +346,12 @@
 <span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DAG.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return all nodes that are adjacent to `node`.</span>
 
@@ -348,9 +365,17 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(0,1), (0,2)})</span>
+<span class="sd">        &gt;&gt;&gt; g.neighbors_of(0)</span>
+<span class="sd">        {1, 2}</span>
+<span class="sd">        &gt;&gt;&gt; g.neighbors_of(2)</span>
+<span class="sd">        {0}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">has_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -379,6 +404,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.is_upstream_of(1, 3)</span>
 <span class="sd">        True</span>
@@ -403,6 +429,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG()</span>
 <span class="sd">        &gt;&gt;&gt; g.add_node(1)</span>
 <span class="sd">        &gt;&gt;&gt; g.add_node(2)</span>
@@ -428,6 +455,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG({1, 2})</span>
 <span class="sd">        &gt;&gt;&gt; g.add_arc(1, 2)</span>
 <span class="sd">        &gt;&gt;&gt; g.arcs</span>
@@ -478,6 +506,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.topological_sort</span>
 <span class="sd">        [1, 2, 3]</span>
@@ -490,6 +519,14 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">any_visited</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_mark_children_visited</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">any_visited</span><span class="p">,</span> <span class="n">curr_path_visited</span><span class="p">,</span> <span class="n">curr_path</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">is_topological</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">permutation_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.add_nodes_from"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_nodes_from.html#causaldag.classes.dag.DAG.add_nodes_from">[docs]</a>    <span class="k">def</span> <span class="nf">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -506,6 +543,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG({1, 2})</span>
 <span class="sd">        &gt;&gt;&gt; g.add_nodes_from({&#39;a&#39;, &#39;b&#39;})</span>
 <span class="sd">        &gt;&gt;&gt; g.add_nodes_from(range(3, 6))</span>
@@ -530,12 +568,15 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.add_arcs_from({(1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.arcs</span>
 <span class="sd">        {(1, 2), (1, 3), (2, 3)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">arcs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arcs</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="n">arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arcs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="n">sources</span><span class="p">,</span> <span class="n">sinks</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">arcs</span><span class="p">)</span>
@@ -571,6 +612,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.reverse_arc(1, 2)</span>
 <span class="sd">        &gt;&gt;&gt; g.arcs</span>
@@ -594,6 +636,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.remove_arc(1, 2)</span>
 <span class="sd">        &gt;&gt;&gt; g.arcs</span>
@@ -639,6 +682,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.remove_node(2)</span>
 <span class="sd">        &gt;&gt;&gt; g.nodes</span>
@@ -652,9 +696,9 @@
             <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">node</span><span class="p">}</span>
 
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -675,6 +719,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.sources()</span>
 <span class="sd">        {1)</span>
@@ -692,6 +737,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.sinks()</span>
 <span class="sd">        {3)</span>
@@ -710,6 +756,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.reversible_arcs()</span>
 <span class="sd">        {(1, 2), (2, 3))</span>
@@ -735,6 +782,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.is_reversible(1, 2)</span>
 <span class="sd">        True</span>
@@ -756,17 +804,12 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.arcs_in_vstructures()</span>
 <span class="sd">        {(1, 3), (2, 3))</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">vstruct_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">p1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">p2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">p2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">p1</span><span class="p">]:</span>
-                    <span class="n">vstruct_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">p1</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
-                    <span class="n">vstruct_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">vstruct_arcs</span>
+        <span class="k">return</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">}}</span>
 
     <span class="k">def</span> <span class="nf">vstructures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -842,6 +885,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g1 = cd.DAG(arcs={(1, 2), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g2 = cd.DAG(arcs={(2, 1), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g1.shd(g2)</span>
@@ -855,6 +899,115 @@
             <span class="n">deletions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">other_arcs_reversed</span>
             <span class="n">reversals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arcs</span> <span class="o">&amp;</span> <span class="n">other_arcs_reversed</span>
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">additions</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">deletions</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversals</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">confusion_matrix_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">self_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span>
+        <span class="n">other_skeleton</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">skeleton</span>
+
+        <span class="n">true_positives</span> <span class="o">=</span> <span class="n">self_skeleton</span> <span class="o">&amp;</span> <span class="n">other_skeleton</span>
+        <span class="n">false_positives</span> <span class="o">=</span> <span class="n">other_skeleton</span> <span class="o">-</span> <span class="n">self_skeleton</span>
+        <span class="n">false_negatives</span> <span class="o">=</span> <span class="n">self_skeleton</span> <span class="o">-</span> <span class="n">other_skeleton</span>
+
+        <span class="n">num_true_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_positives</span><span class="p">)</span>
+        <span class="n">num_false_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_positives</span><span class="p">)</span>
+        <span class="n">num_false_negatives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negatives</span><span class="p">)</span>
+        <span class="n">num_true_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_true_positives</span> <span class="o">-</span> <span class="n">num_false_positives</span> <span class="o">-</span> <span class="n">num_false_negatives</span>
+
+        <span class="n">num_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">self_skeleton</span><span class="p">)</span>
+        <span class="n">num_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_positives</span>
+
+        <span class="n">tpr</span> <span class="o">=</span> <span class="n">num_true_positives</span> <span class="o">/</span> <span class="n">num_positives</span> <span class="k">if</span> <span class="n">num_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">fpr</span> <span class="o">=</span> <span class="n">num_false_positives</span> <span class="o">/</span> <span class="n">num_negatives</span> <span class="k">if</span> <span class="n">num_negatives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">true_positives</span><span class="o">=</span><span class="n">true_positives</span><span class="p">,</span>
+            <span class="n">false_positives</span><span class="o">=</span><span class="n">false_positives</span><span class="p">,</span>
+            <span class="n">false_negatives</span><span class="o">=</span><span class="n">false_negatives</span><span class="p">,</span>
+            <span class="n">num_true_positives</span><span class="o">=</span><span class="n">num_true_positives</span><span class="p">,</span>
+            <span class="n">num_false_positives</span><span class="o">=</span><span class="n">num_false_positives</span><span class="p">,</span>
+            <span class="n">num_true_negatives</span><span class="o">=</span><span class="n">num_true_negatives</span><span class="p">,</span>
+            <span class="n">num_false_negatives</span><span class="o">=</span><span class="n">num_false_negatives</span><span class="p">,</span>
+            <span class="n">tpr</span><span class="o">=</span><span class="n">tpr</span><span class="p">,</span>
+            <span class="n">fpr</span><span class="o">=</span><span class="n">fpr</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">rates_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">self_cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
+
+        <span class="kn">from</span> <span class="nn">causaldag.classes.pdag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PDAG</span><span class="p">):</span>
+            <span class="n">other_cpdag</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">other_cpdag</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
+
+        <span class="c1"># HELPER SETS SELF</span>
+        <span class="n">self_arcs_as_edges</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">arc</span><span class="p">)</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
+        <span class="n">self_edges_as_arcs1</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_edges</span><span class="p">}</span>
+        <span class="n">self_edges_as_arcs2</span> <span class="o">=</span> <span class="p">{(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">self_edges_as_arcs1</span><span class="p">}</span>
+
+        <span class="c1"># HELPER SETS OTHER</span>
+        <span class="n">other_arcs_reversed</span> <span class="o">=</span> <span class="p">{(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
+        <span class="n">other_arcs_as_edges</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">arc</span><span class="p">)</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
+        <span class="n">other_edges_as_arcs1</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_edges</span><span class="p">}</span>
+        <span class="n">other_edges_as_arcs2</span> <span class="o">=</span> <span class="p">{(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">other_edges_as_arcs1</span><span class="p">}</span>
+
+        <span class="c1"># MISSING IN TRUE GRAPH</span>
+        <span class="n">false_positive_arcs</span> <span class="o">=</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">self_edges_as_arcs1</span> <span class="o">-</span> <span class="n">self_edges_as_arcs2</span>
+        <span class="n">false_positive_edges</span> <span class="o">=</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">-</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">-</span> <span class="n">self_arcs_as_edges</span>
+
+        <span class="c1"># ARC IN TRUE GRAPH</span>
+        <span class="n">false_negative_arcs</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">other_edges_as_arcs1</span> <span class="o">-</span> <span class="n">other_edges_as_arcs2</span>
+        <span class="n">true_positive_arcs</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">&amp;</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_arcs</span>
+        <span class="n">reversed_arcs</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">&amp;</span> <span class="n">other_arcs_reversed</span>
+        <span class="n">mistaken_arcs_for_edges</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">other_edges_as_arcs1</span> <span class="o">|</span> <span class="n">other_edges_as_arcs2</span><span class="p">)</span>
+
+        <span class="c1"># EDGE IN TRUE GRAPH</span>
+        <span class="n">false_negative_edges</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">-</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">-</span> <span class="n">other_arcs_as_edges</span>
+        <span class="n">true_positive_edges</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">&amp;</span> <span class="n">other_cpdag</span><span class="o">.</span><span class="n">_edges</span>
+        <span class="n">mistaken_edges_for_arcs</span> <span class="o">=</span> <span class="n">self_cpdag</span><span class="o">.</span><span class="n">_edges</span> <span class="o">&amp;</span> <span class="n">other_arcs_as_edges</span>
+
+        <span class="c1"># COMBINED_RESULTS</span>
+        <span class="n">num_false_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_positive_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_arcs</span><span class="p">)</span>
+        <span class="n">num_false_negatives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_arcs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mistaken_arcs_for_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversed_arcs</span><span class="p">)</span>
+        <span class="n">num_true_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_positive_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_positive_arcs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mistaken_edges_for_arcs</span><span class="p">)</span>
+        <span class="n">num_true_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_false_positives</span> <span class="o">-</span> <span class="n">num_false_negatives</span> <span class="o">-</span> <span class="n">num_true_positives</span>
+
+        <span class="c1"># RATES</span>
+        <span class="n">num_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span>
+        <span class="n">num_positives</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span>
+        <span class="n">num_returned_positives</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_true_positives</span> <span class="o">+</span> <span class="n">num_false_positives</span><span class="p">)</span>
+        <span class="n">fpr</span> <span class="o">=</span> <span class="n">num_false_positives</span><span class="o">/</span><span class="n">num_negatives</span> <span class="k">if</span> <span class="n">num_negatives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">tpr</span> <span class="o">=</span> <span class="n">num_true_positives</span><span class="o">/</span><span class="n">num_positives</span> <span class="k">if</span> <span class="n">num_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">num_true_positives</span><span class="o">/</span><span class="n">num_returned_positives</span> <span class="k">if</span> <span class="n">num_returned_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">rates_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">fpr</span><span class="o">=</span><span class="n">fpr</span><span class="p">,</span>
+                <span class="n">tpr</span><span class="o">=</span><span class="n">tpr</span><span class="p">,</span>
+                <span class="n">precision</span><span class="o">=</span><span class="n">precision</span>
+            <span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">false_positive_arcs</span><span class="o">=</span><span class="n">false_positive_arcs</span><span class="p">,</span>
+            <span class="n">false_positive_edges</span><span class="o">=</span><span class="n">false_positive_edges</span><span class="p">,</span>
+            <span class="n">false_negative_arcs</span><span class="o">=</span><span class="n">false_negative_arcs</span><span class="p">,</span>
+            <span class="n">true_positive_arcs</span><span class="o">=</span><span class="n">true_positive_arcs</span><span class="p">,</span>
+            <span class="n">reversed_arcs</span><span class="o">=</span><span class="n">reversed_arcs</span><span class="p">,</span>
+            <span class="n">mistaken_arcs_for_edges</span><span class="o">=</span><span class="n">mistaken_arcs_for_edges</span><span class="p">,</span>
+            <span class="n">false_negative_edges</span><span class="o">=</span><span class="n">false_negative_edges</span><span class="p">,</span>
+            <span class="n">true_positive_edges</span><span class="o">=</span><span class="n">true_positive_edges</span><span class="p">,</span>
+            <span class="n">mistaken_edges_for_arcs</span><span class="o">=</span><span class="n">mistaken_edges_for_arcs</span><span class="p">,</span>
+            <span class="n">num_false_positives</span><span class="o">=</span><span class="n">num_false_positives</span><span class="p">,</span>
+            <span class="n">num_false_negatives</span><span class="o">=</span><span class="n">num_false_negatives</span><span class="p">,</span>
+            <span class="n">num_true_positives</span><span class="o">=</span><span class="n">num_true_positives</span><span class="p">,</span>
+            <span class="n">num_true_negatives</span><span class="o">=</span><span class="n">num_true_negatives</span><span class="p">,</span>
+            <span class="n">fpr</span><span class="o">=</span><span class="n">fpr</span><span class="p">,</span>
+            <span class="n">tpr</span><span class="o">=</span><span class="n">tpr</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span>
 
 <div class="viewcode-block" id="DAG.shd_skeleton"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.shd_skeleton.html#causaldag.classes.dag.DAG.shd_skeleton">[docs]</a>    <span class="k">def</span> <span class="nf">shd_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -873,6 +1026,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g1 = cd.DAG(arcs={(1, 2), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g2 = cd.DAG(arcs={(2, 1), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g1.shd_skeleton(g2)</span>
@@ -912,6 +1066,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.local_markov_statements()</span>
 <span class="sd">        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}</span>
@@ -939,6 +1094,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; other = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.is_imap(other)</span>
@@ -972,6 +1128,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; other = cd.DAG(arcs={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.is_minimal_imap(other)</span>
@@ -1012,6 +1169,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.downstream(1)</span>
 <span class="sd">        {2, 3}</span>
@@ -1046,6 +1204,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.upstream(3)</span>
 <span class="sd">        {1, 2, 3g}</span>
@@ -1074,6 +1233,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.incident_arcs(2)</span>
 <span class="sd">        {(1, 2), (2, 3)}</span>
@@ -1105,6 +1265,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.incoming_arcs(2)</span>
 <span class="sd">        {(1, 2)}</span>
@@ -1134,6 +1295,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.outgoing_arcs(2)</span>
 <span class="sd">        {(2, 3)}</span>
@@ -1163,6 +1325,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.outdegree(1)</span>
 <span class="sd">        2</span>
@@ -1191,6 +1354,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.indegree(1)</span>
 <span class="sd">        0</span>
@@ -1253,42 +1417,42 @@
         <span class="c1"># STEP 3: PICK A SINK IN THE IMAP</span>
         <span class="n">imap_sinks</span> <span class="o">=</span> <span class="n">imap_subgraph</span><span class="o">.</span><span class="n">sinks</span><span class="p">()</span>
         <span class="n">sink</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">imap_sinks</span><span class="p">))</span> <span class="k">if</span> <span class="n">seed_sink</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">seed_sink</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">imap_sinks</span> <span class="k">else</span> <span class="n">seed_sink</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 3: Picked </span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 3: Picked </span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># STEP 4: ADD A PARENT IF Y IS A SINK IN G</span>
         <span class="k">if</span> <span class="n">sink</span> <span class="ow">in</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">sinks</span><span class="p">():</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">imap_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]))</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 4: Added </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 4: Added </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">4</span>
 
         <span class="c1"># STEP 5: PICK A SPECIFIC CHILD OF Y IN G</span>
         <span class="n">d</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">imap_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">downstream</span><span class="p">(</span><span class="n">sink</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">valid_children</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">sink</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">d</span><span class="p">})</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">valid_children</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 5: Picked z=</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 5: Picked z=</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># STEP 6</span>
         <span class="k">if</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">is_reversible</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">reverse_arc</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 6: Reversing </span><span class="si">{sink}</span><span class="s2">-&gt;</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 6: Reversing </span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">6</span>
 
         <span class="c1"># STEP 7</span>
         <span class="n">par_z</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">sink</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">par_z</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">par_z</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 7: Picked x=</span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 7: Picked x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 7: Adding </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 7: Adding </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">7</span>
 
         <span class="c1"># STEP 8</span>
         <span class="n">par_sink</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">par_sink</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 8: Picked x=</span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 8: Picked x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 8: Adding </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 8: Adding </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">8</span>
 
     <span class="k">def</span> <span class="nf">marginal_mag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_nodes</span><span class="p">,</span> <span class="n">relabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1306,7 +1470,7 @@
 <span class="sd">        m:</span>
 <span class="sd">            cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.ancestral_graph</span> <span class="k">import</span> <span class="n">AncestralGraph</span>
+        <span class="kn">from</span> <span class="nn">.ancestral_graph</span> <span class="kn">import</span> <span class="n">AncestralGraph</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">new</span><span class="p">:</span>
             <span class="n">latent_nodes</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">latent_nodes</span><span class="p">)</span>
@@ -1429,7 +1593,7 @@
         <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
             <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+        <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
         <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">node_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_list</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
@@ -1492,6 +1656,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.to_amat()[0]</span>
 <span class="sd">        array([[0, 1, 1],</span>
@@ -1512,6 +1677,15 @@
 
         <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span></div>
 
+    <span class="k">def</span> <span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
     <span class="k">def</span> <span class="nf">induced_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the induced subgraph over only `nodes`</span>
@@ -1528,6 +1702,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})</span>
 <span class="sd">        &gt;&gt;&gt; d.induced_subgraph({1, 2, 3})</span>
 <span class="sd">        TODO</span>
@@ -1564,7 +1739,7 @@
         <span class="n">subtrees</span> <span class="o">=</span> <span class="n">UnionFind</span><span class="p">()</span>
         <span class="n">bidirected_components</span> <span class="o">=</span> <span class="n">UnionFind</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="n">e</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Considering edge </span><span class="si">{c1}</span><span class="s2">-</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Considering edge </span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">subtrees</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">subtrees</span><span class="p">[</span><span class="n">c2</span><span class="p">]:</span>
                 <span class="n">shared</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">&amp;</span> <span class="n">c2</span>
                 <span class="n">all_into_c1</span> <span class="o">=</span> <span class="nb">all</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">c1</span> <span class="o">-</span> <span class="n">shared</span><span class="p">))</span>
@@ -1577,7 +1752,7 @@
                     <span class="n">b1_source</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">b1</span><span class="p">)</span>
                     <span class="n">b2_source</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">b2</span><span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">b1_source</span> <span class="ow">and</span> <span class="n">b2_source</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Adding edge </span><span class="si">{c1}</span><span class="s2">&lt;-&gt;</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding edge </span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">&lt;-&gt;</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">subtrees</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">bidirected_components</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">ct</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
@@ -1594,7 +1769,7 @@
                         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bidirected_component</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">has_source</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{c1}</span><span class="s2">-&gt;</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">ct</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">subtrees</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
 
@@ -1615,13 +1790,24 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})</span>
 <span class="sd">        &gt;&gt;&gt; g.cpdag()</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
         <span class="n">pdag</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">,</span> <span class="n">known_arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arcs_in_vstructures</span><span class="p">())</span>
         <span class="n">pdag</span><span class="o">.</span><span class="n">remove_unprotected_orientations</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">pdag</span>
+
+    <span class="k">def</span> <span class="nf">cpdag_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="n">vstruct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arcs_in_vstructures</span><span class="p">()</span>
+        <span class="n">pdag</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">vstruct</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">vstruct</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+            <span class="n">pdag</span><span class="o">.</span><span class="n">to_complete_pdag_new</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pdag</span><span class="o">.</span><span class="n">to_complete_pdag</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">pdag</span>
 
     <span class="k">def</span> <span class="nf">moral_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1635,17 +1821,18 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.moral_graph()</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">UndirectedGraph</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">UndirectedGraph</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span> <span class="o">|</span> <span class="p">{(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span> <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vstructures</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">UndirectedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">interventional_cpdag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interventions</span><span class="p">,</span> <span class="n">cpdag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the interventional essential graph (aka CPDAG) associated with this DAG.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
 
         <span class="k">if</span> <span class="n">cpdag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Need the CPDAG&#39;</span><span class="p">)</span>
@@ -1742,7 +1929,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;component is clique&#39;</span><span class="p">)</span>
             <span class="n">residual</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">parent_component</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;residual: </span><span class="si">{residual}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;residual: </span><span class="si">{</span><span class="n">residual</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">sorted_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
             <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">sorted_nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1752,10 +1939,10 @@
             <span class="n">intersections</span> <span class="o">=</span> <span class="p">[</span><span class="n">c1</span> <span class="o">&amp;</span> <span class="n">c2</span> <span class="k">for</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
             <span class="n">common_head</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">intersections</span><span class="p">)</span> <span class="o">-</span> <span class="n">parent_component</span>
             <span class="n">max_intersection</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">intersections</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">max_intersection</span> <span class="o">!=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">intersections</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span>
+            <span class="c1"># if max_intersection != frozenset.union(*intersections):</span>
+            <span class="c1">#     raise RuntimeError</span>
             <span class="n">sorted_common_head</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sorted_nodes</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">common_head</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;component contains multiple cliques, common head = </span><span class="si">{sorted_common_head}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;component contains multiple cliques, common head = </span><span class="si">{</span><span class="n">sorted_common_head</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
             <span class="c1"># determine heads and tails</span>
             <span class="n">heads</span> <span class="o">=</span> <span class="p">[</span><span class="n">clique</span> <span class="o">&amp;</span> <span class="n">common_head</span> <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">component</span><span class="p">]</span>
@@ -1766,7 +1953,7 @@
             <span class="c1"># add nodes from tails</span>
             <span class="n">intervened_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_heads</span><span class="p">,</span> <span class="n">sorted_tails</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;tail=</span><span class="si">{tail}</span><span class="s2">, head=</span><span class="si">{head}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tail=</span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">, head=</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">head</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -1794,7 +1981,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">component</span> <span class="o">-</span> <span class="n">parent</span> <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sdct_components</span><span class="p">,</span> <span class="n">sdct_parents</span><span class="p">)]</span>
 
     <span class="k">def</span> <span class="nf">residual_essential_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
 
         <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
         <span class="n">sdct_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
@@ -1832,9 +2019,9 @@
             <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">top_sort</span><span class="p">:</span>
                 <span class="n">parent</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">component</span><span class="p">))</span>
                 <span class="n">parent_nodes</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;orienting component </span><span class="si">{component}</span><span class="s2">, parent=</span><span class="si">{parent}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orienting component </span><span class="si">{</span><span class="n">component</span><span class="si">}</span><span class="s2">, parent=</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">component_intervened_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verification_optimal_helper</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">parent_nodes</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;intervened: </span><span class="si">{component_intervened_nodes}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;intervened: </span><span class="si">{</span><span class="n">component_intervened_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">component_intervened_nodes</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">intervened_nodes</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1872,7 +2059,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="c1"># === SEPARATIONS</span>
-    <span class="k">def</span> <span class="nf">dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">]</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if A and B are d-separated given C, using the Bayes ball algorithm.</span>
 
@@ -1897,6 +2084,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.dsep(1, 3)</span>
 <span class="sd">        True</span>
@@ -2090,11 +2278,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Chandler Squires
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -2106,27 +2302,16 @@
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

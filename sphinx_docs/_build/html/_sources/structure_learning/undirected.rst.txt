@@ -6,11 +6,12 @@ Undirected Structure Learning
 
 Overview
 ********
-.. currentmodule:: causaldag.structure_learning.undirected
+.. currentmodule:: causaldag
 
 Methods
 *******
+.. automodule:: causaldag.structure_learning.undirected
 .. autosummary::
-   :toctree: generated
+   :toctree: generated/
 
-    threshold_ug
+   threshold_ug

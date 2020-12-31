@@ -35,7 +35,7 @@ Graph properties
    PDAG.has_edge_or_arc
 
 Comparison to other PDAGs
-------------------------
+-------------------------
 .. autosummary::
    :toctree: generated
 

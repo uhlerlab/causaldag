@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,41 +11,44 @@
   
 
   
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
 
   
-  <script src="../../../_static/js/modernizr.min.js"></script>
+  
+  
+  
 
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
-            <a href="../../../index.html" class="icon icon-home"> causaldag
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -69,6 +71,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -84,6 +87,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -122,7 +126,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -147,26 +151,28 @@
 <span class="sd">Base class for partially directed acyclic graphs</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="k">import</span> <span class="n">core_utils</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">factorial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">factorial</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">FrozenSet</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span> <span class="nn">csv</span>
 
 <span class="n">SmallDag</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;SmallDag&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;arcs&#39;</span><span class="p">,</span> <span class="s1">&#39;reversible_arcs&#39;</span><span class="p">,</span> <span class="s1">&#39;parents_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;children_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="PDAG"><a class="viewcode-back" href="../../../classes/PDAG.html#causaldag.classes.pdag.PDAG">[docs]</a><span class="k">class</span> <span class="nc">PDAG</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
-            <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span>
-            <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span>
-            <span class="n">edges</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span>
-            <span class="n">known_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+            <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
+            <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
+            <span class="n">edges</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
+            <span class="n">known_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span>
+            <span class="n">new</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -175,29 +181,70 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new</span><span class="p">:</span>  <span class="c1"># for some reason this is slower than the old way. memory?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_arcs_from</span><span class="p">(</span><span class="n">arcs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_arc</span><span class="p">(</span><span class="o">*</span><span class="n">arc</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span> <span class="o">=</span> <span class="n">known_arcs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_df</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="n">amat</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">name_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices_from</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">amat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">amat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+        <span class="n">arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">}</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_sparse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">sparse_amat</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_csv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
 <div class="viewcode-block" id="PDAG.from_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.pdag.PDAG.from_amat.html#causaldag.classes.pdag.PDAG.from_amat">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_amat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">amat</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_amat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">amat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a PDAG with arcs/edges given by amat</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">amat</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">amat</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
-                    <span class="n">arcs</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
-                    <span class="n">edges</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices_from</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">amat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">amat</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
         <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">)),</span> <span class="n">arcs</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span></div>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_nx</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">nx_graph</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="c1"># CONVERTERS</span>
     <span class="k">def</span> <span class="nf">to_nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -205,18 +252,85 @@
         <span class="n">g</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_nx</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">nx_graph</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">nx_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">])</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">node2</span><span class="p">,</span> <span class="n">node1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">to_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
+        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_list</span><span class="p">)}</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
+        <span class="n">amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">:</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">node_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">lil_matrix</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
+
+        <span class="n">amat</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
+        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_list</span><span class="p">)}</span>
+
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">:</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span>
+
+<div class="viewcode-block" id="PDAG.to_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.pdag.PDAG.to_amat.html#causaldag.classes.pdag.PDAG.to_amat">[docs]</a>    <span class="k">def</span> <span class="nf">to_amat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an adjacency matrix for the graph</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
+        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_list</span><span class="p">)}</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
+        <span class="n">amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">source_axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">:</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">same_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_nodes</span>
         <span class="n">same_arcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span>
         <span class="n">same_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_edges</span>
 
         <span class="k">return</span> <span class="n">same_nodes</span> <span class="ow">and</span> <span class="n">same_arcs</span> <span class="ow">and</span> <span class="n">same_edges</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">substrings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
@@ -234,6 +348,13 @@
         <span class="sd">&quot;&quot;&quot;Return a copy of the graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">,</span> <span class="n">known_arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">rename_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PDAG</span><span class="p">(</span>
+            <span class="n">nodes</span><span class="o">=</span><span class="p">{</span><span class="n">name_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">},</span>
+            <span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">},</span>
+            <span class="n">edges</span><span class="o">=</span><span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">}</span>
+        <span class="p">)</span>
 
     <span class="c1"># === PROPERTIES</span>
     <span class="nd">@property</span>
@@ -419,6 +540,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_add_arcs_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arcs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">arcs</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">sources</span><span class="p">,</span> <span class="n">sinks</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">arcs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sinks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">arcs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">edges</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
@@ -443,6 +590,27 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span>
 
+    <span class="k">def</span> <span class="nf">remove_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ignore_error</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="k">def</span> <span class="nf">remove_arcs_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arcs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
 <div class="viewcode-block" id="PDAG.remove_node"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.pdag.PDAG.remove_node.html#causaldag.classes.pdag.PDAG.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Remove a node from the graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -462,6 +630,13 @@
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">remove_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_all_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_arcs_from</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">replace_edge_with_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arc</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -497,6 +672,45 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_replace_edge_with_arc</span><span class="p">((</span><span class="n">node</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">to_complete_pdag</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">to_complete_pdag_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">protected_parents</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+        <span class="n">protected_children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+        <span class="n">undecided_edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">}</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">chain_arcs1</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span> <span class="k">if</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="n">chain_arcs1</span>
+            <span class="n">chain_arcs2</span> <span class="o">=</span> <span class="p">{(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span> <span class="k">if</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">reversed</span><span class="p">,</span> <span class="n">chain_arcs2</span><span class="p">))</span>
+
+            <span class="n">cycle_arcs1</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span> <span class="k">if</span> <span class="n">protected_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="n">cycle_arcs1</span>
+            <span class="n">cycle_arcs2</span> <span class="o">=</span> <span class="p">{(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span> <span class="k">if</span> <span class="n">protected_children</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">reversed</span><span class="p">,</span> <span class="n">cycle_arcs2</span><span class="p">))</span>
+
+            <span class="n">a1</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">))</span> <span class="k">for</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span> <span class="ow">in</span>
+                       <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="p">}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="n">a1</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undecided_edges</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">))</span> <span class="k">for</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span> <span class="ow">in</span>
+                       <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">protected_parents</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="p">}</span>
+            <span class="n">undecided_edges</span> <span class="o">-=</span> <span class="n">a1</span>
+
+            <span class="n">new_arcs</span> <span class="o">=</span> <span class="n">chain_arcs1</span> <span class="o">|</span> <span class="n">chain_arcs2</span> <span class="o">|</span> <span class="n">cycle_arcs1</span> <span class="o">|</span> <span class="n">cycle_arcs2</span> <span class="o">|</span> <span class="n">a1</span> <span class="o">|</span> <span class="n">a2</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_arcs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">new_arcs</span><span class="p">:</span>
+                <span class="n">protected_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">protected_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">neighbors</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">to_complete_pdag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">solve_conflict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Replace with arcs those edges whose orientations can be determined by Meek rules:</span>
@@ -527,11 +741,11 @@
                     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                             <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                            <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{k}</span><span class="s1">-&gt;</span><span class="si">{i}</span><span class="s1">-</span><span class="si">{j}</span><span class="s1">&#39;</span>
+                            <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&#39;</span>
                             <span class="k">break</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (a)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (a)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="c1"># check configuration (b) -- acyclicity</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -540,11 +754,11 @@
                         <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
                             <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span> <span class="ow">and</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                                <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{k}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1">-</span><span class="si">{i}</span><span class="s1">-&gt;</span><span class="si">{k}</span><span class="s1">&#39;</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span>
                                 <span class="k">break</span>
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (b)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (b)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="c1"># check configuration (d)</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -553,11 +767,11 @@
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k1</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k2</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
                             <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k1</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span> <span class="ow">and</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k2</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                                <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{i}</span><span class="s1">-</span><span class="si">{k1}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1">&lt;-</span><span class="si">{k2}</span><span class="s1">-</span><span class="si">{i}</span><span class="s1">&#39;</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">k1</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&lt;-</span><span class="si">{</span><span class="n">k2</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span>
                                 <span class="k">break</span>
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (c)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (c)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="n">arc_flags</span><span class="p">[</span><span class="n">arc</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag</span>
 
@@ -645,31 +859,6 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="c1"># === MUTATORS</span>
-<div class="viewcode-block" id="PDAG.to_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.pdag.PDAG.to_amat.html#causaldag.classes.pdag.PDAG.to_amat">[docs]</a>    <span class="k">def</span> <span class="nf">to_amat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;dataframe&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return an adjacency matrix for the graph</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">node_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
-        <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_list</span><span class="p">)}</span>
-
-        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;dataframe&#39;</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;numpy&#39;</span><span class="p">:</span>
-            <span class="n">amat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">lil_matrix</span>
-            <span class="n">amat</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
-            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span><span class="p">:</span>
-            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;dataframe&#39;</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
-            <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">node_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_list</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span></div>
 
     <span class="k">def</span> <span class="nf">_possible_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
@@ -689,7 +878,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">DAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">DAG</span>
 
         <span class="n">pdag2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -711,16 +900,17 @@
     <span class="k">def</span> <span class="nf">mec_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the number of DAGs in the MEC represented by this PDAG</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_dags</span><span class="p">())</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_edges</span> <span class="o">==</span> <span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">nnodes</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_edges</span> <span class="o">==</span> <span class="n">nnodes</span><span class="o">*</span><span class="p">(</span><span class="n">nnodes</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_edges</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_edges</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_edges</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">pass</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_dags</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">exact_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_sampler</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nsamples</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DAG sampled uniformly at random from the MEC represented by this PDAG</span>
@@ -734,7 +924,7 @@
         <span class="n">arcs</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span>
         <span class="n">all_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="n">orig_reversible_arcs</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">reversible_arcs</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span>
+        <span class="n">orig_reversible_arcs</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">reversible_arcs</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span>
         <span class="n">orig_parents_dict</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">parents</span>
         <span class="n">orig_children_dict</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">children</span>
 
@@ -763,33 +953,45 @@
 
                     <span class="n">new_reversible_arcs</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">reversible_arcs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">k</span><span class="p">})</span> <span class="o">==</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">k</span><span class="p">})</span> <span class="o">==</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">discard</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">children_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">j</span><span class="p">})</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">j</span><span class="p">})</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">discard</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">parents_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">k</span><span class="p">})</span> <span class="o">==</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">k</span><span class="p">})</span> <span class="o">==</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">discard</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">children_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">})</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_known_arcs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">new_parents_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">new_parents_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">})</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">new_reversible_arcs</span><span class="o">.</span><span class="n">discard</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
 
-                    <span class="n">q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SmallDag</span><span class="p">(</span><span class="n">new_arcs</span><span class="p">,</span> <span class="n">new_reversible_arcs</span><span class="p">,</span> <span class="n">new_parents_dict</span><span class="p">,</span> <span class="n">new_children_dict</span><span class="p">,</span> <span class="n">dag</span><span class="o">.</span><span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">SmallDag</span><span class="p">(</span><span class="n">new_arcs</span><span class="p">,</span> <span class="n">new_reversible_arcs</span><span class="p">,</span> <span class="n">new_parents_dict</span><span class="p">,</span> <span class="n">new_children_dict</span><span class="p">,</span> <span class="n">dag</span><span class="o">.</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">all_arcs</span></div>
 
+    <span class="k">def</span> <span class="nf">is_edge_clique</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if every pair of nodes in s is adjacent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">possible_parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">powerset_predicate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_undirected_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_edge_clique</span><span class="p">)</span>
+
     <span class="c1"># === COMPARISON</span>
 <div class="viewcode-block" id="PDAG.shd"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.pdag.PDAG.shd.html#causaldag.classes.pdag.PDAG.shd">[docs]</a>    <span class="k">def</span> <span class="nf">shd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the structural Hamming distance between this PDAG and another</span>
+        <span class="sd">&quot;&quot;&quot;Return the structural Hamming distance between this PDAG and another.</span>
+
+<span class="sd">        For each pair of nodes, the SHD is incremented by 1 if the edge type/presence between the two nodes is different</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_undirected</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">({</span><span class="o">*</span><span class="n">arc</span><span class="p">})</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span>
         <span class="n">other_undirected</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">({</span><span class="o">*</span><span class="n">arc</span><span class="p">})</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span> <span class="o">|</span> <span class="n">other</span><span class="o">.</span><span class="n">_edges</span>
@@ -798,8 +1000,8 @@
         <span class="n">diff_type</span> <span class="o">=</span> <span class="p">{</span>
             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">self_undirected</span> <span class="o">&amp;</span> <span class="n">other_undirected</span>
             <span class="k">if</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="ow">or</span>
-               <span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="ow">or</span>
-               <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_edges</span><span class="p">)</span>
+                               <span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="ow">or</span>
+                               <span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">})</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span> <span class="ow">and</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">})</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_edges</span><span class="p">)</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">num_additions</span> <span class="o">+</span> <span class="n">num_deletions</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff_type</span><span class="p">)</span></div>
 
@@ -808,7 +1010,7 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="k">import</span> <span class="n">directed_erdos</span>
+    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="kn">import</span> <span class="n">directed_erdos</span>
 
     <span class="n">g</span> <span class="o">=</span> <span class="n">directed_erdos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
@@ -827,11 +1029,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Chandler Squires
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -843,27 +1053,16 @@
   </div>
   
 
-
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
