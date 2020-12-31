@@ -41,8 +41,6 @@ def perm2dag(
         verbose=False,
         fixed_adjacencies: Set[UndirectedEdge]=set(),
         fixed_gaps: Set[UndirectedEdge]=set(),
-        node2nbrs=None,
-        older=False,
         progress=False
 ):
     """
@@ -61,10 +59,6 @@ def perm2dag(
         set of nodes known to be adjacent.
     fixed_gaps:
         set of nodes known not to be adjacent.
-    node2nbrs:
-        TODO
-    older:
-        TODO
 
     Examples
     --------
@@ -100,9 +94,7 @@ def perm2dag(
             continue
 
         # === TEST MARKOV BLANKET
-        mb = d.markov_blanket(pi_i) if node2nbrs is None else (set(perm[:j]) - {pi_i}) & (
-                    node2nbrs[pi_i] | node2nbrs[pi_j])
-        mb = mb if not older else set(perm[:j]) - {pi_i}
+        mb = d.markov_blanket(pi_i)
 
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
