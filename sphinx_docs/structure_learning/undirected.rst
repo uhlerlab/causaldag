@@ -1,17 +1,10 @@
-.. _undirected:
-
 *****************************
 Undirected Structure Learning
 *****************************
 
-Overview
-********
-.. currentmodule:: causaldag
-
-Methods
-*******
-.. automodule:: causaldag.structure_learning.undirected
+.. currentmodule:: causaldag.structure_learning.undirected
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated
 
+   partial_correlation_threshold
    threshold_ug

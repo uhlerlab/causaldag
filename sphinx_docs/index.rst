@@ -7,9 +7,10 @@ Welcome to causaldag's documentation!
 =====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    classes/index
+   utils/index
    structure_learning/index
 
 

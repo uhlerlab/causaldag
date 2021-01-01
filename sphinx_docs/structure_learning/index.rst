@@ -9,5 +9,5 @@ Structure Learning
    :maxdepth: 2
 
    undirected
-
+   covariance
 

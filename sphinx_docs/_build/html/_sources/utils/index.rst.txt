@@ -1,0 +1,13 @@
+.. _utils:
+
+*******
+Utils
+*******
+
+
+.. toctree::
+   :maxdepth: 2
+
+   core_utils
+   ci_tests/index
+

@@ -3,7 +3,14 @@ from math import erf
 import numba
 from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate, cov
 from numpy.linalg import inv, pinv
-from . import MemoizedCI_Tester
+# from . import MemoizedCI_Tester
+
+
+__all__ = [
+    "partial_correlation_suffstat",
+    "partial_correlation_test",
+    "compute_partial_correlation"
+]
 
 
 @numba.jit
@@ -11,9 +18,9 @@ def numba_inv(A):
     return inv(A)
 
 
-def partial_correlation_suffstat(samples, invert=True):
+def partial_correlation_suffstat(samples, invert=True) -> Dict:
     """
-    Helper function to compute the sufficient statistics for the gauss_ci_test from data.
+    Return the sufficient statistics for partial correlation testing.
 
     Parameters
     ----------
@@ -23,9 +30,10 @@ def partial_correlation_suffstat(samples, invert=True):
         if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This
         will generally speed up the gauss_ci_test if large conditioning sets are used.
 
-    Return
-    ------
-    dictionary of sufficient statistics
+    Returns
+    -------
+    dict
+        dictionary of sufficient statistics
     """
     n, p = samples.shape
     S = cov(samples, rowvar=False)  # sample covariance matrix\
@@ -41,7 +49,7 @@ def partial_correlation_suffstat(samples, invert=True):
 
 def compute_partial_correlation(suffstat, i, j, cond_set=None):
     """
-    Compute the partial correlation between i and j given C
+    Compute the partial correlation between i and j given `cond_set`.
 
     Parameters
     ----------
@@ -58,9 +66,10 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
     cond_set:
         positions of conditioning set in correlation matrix.
 
-    Return
-    ------
-    partial correlation
+    Returns
+    -------
+    float
+        partial correlation
     """
     C = suffstat.get('C')
     p = C.shape[0]
@@ -96,7 +105,7 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
 
 def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
-    Test the null hypothesis that i and j are conditionally independent given cond_set via Fisher's z-transform.
+    Test the null hypothesis that i and j are conditionally independent given `cond_set` via Fisher's z-transform.
 
     Parameters
     ----------
@@ -115,9 +124,10 @@ def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     alpha:
         Significance level.
 
-    Return
-    ------
-    dictionary containing statistic, p_value, and reject.
+    Returns
+    -------
+    dict
+        dictionary containing statistic, p_value, and reject.
     """
     n = suffstat['n']
     n_cond = 0 if cond_set is None else len(cond_set)
@@ -136,8 +146,17 @@ def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     return dict(statistic=statistic, p_value=p_value, reject=p_value < alpha)
 
 
-class MemoizedGaussCI_Tester(MemoizedCI_Tester):
-    def __init__(self, suffstat: Dict, track_times=False, detailed=False, **kwargs):
-        MemoizedCI_Tester.__init__(self, partial_correlation_test, suffstat, track_times=track_times, detailed=detailed)
+# class MemoizedGaussCI_Tester(MemoizedCI_Tester):
+#     def __init__(self, suffstat: Dict, track_times=False, detailed=False, **kwargs):
+#         MemoizedCI_Tester.__init__(self, partial_correlation_test, suffstat, track_times=track_times, detailed=detailed)
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    x = np.random.normal(size=(100, 3))
+    s = partial_correlation_suffstat(x)
+    res = partial_correlation_test(s, 0, 1)
+    print(res)
 
 

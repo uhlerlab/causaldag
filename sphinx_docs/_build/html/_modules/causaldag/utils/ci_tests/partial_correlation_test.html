@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>causaldag.utils.ci_tests.partial_correlation_test &mdash; causaldag  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../classes/index.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utils/index.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../structure_learning/index.html">Structure Learning</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">causaldag</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>causaldag.utils.ci_tests.partial_correlation_test</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for causaldag.utils.ci_tests.partial_correlation_test</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">erf</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">log1p</span><span class="p">,</span> <span class="nb">abs</span><span class="p">,</span> <span class="n">ix_</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">corrcoef</span><span class="p">,</span> <span class="n">errstate</span><span class="p">,</span> <span class="n">cov</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">inv</span><span class="p">,</span> <span class="n">pinv</span>
+<span class="c1"># from . import MemoizedCI_Tester</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;partial_correlation_suffstat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;partial_correlation_test&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_partial_correlation&quot;</span>
+<span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">numba_inv</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="partial_correlation_suffstat"><a class="viewcode-back" href="../../../../utils/ci_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.html#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat">[docs]</a><span class="k">def</span> <span class="nf">partial_correlation_suffstat</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the sufficient statistics for partial correlation testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    samples:</span>
+<span class="sd">        (n x p) matrix, where n is the number of samples and p is the number of variables.</span>
+<span class="sd">    invert:</span>
+<span class="sd">        if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This</span>
+<span class="sd">        will generally speed up the gauss_ci_test if large conditioning sets are used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        dictionary of sufficient statistics</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">cov</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># sample covariance matrix\</span>
+    <span class="c1"># TODO: NaN when variable is deterministic. Replace w/ 1 and 0?</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">corrcoef</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># sample correlation matrix</span>
+    <span class="k">if</span> <span class="n">invert</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">pinv</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">pinv</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>  <span class="c1"># sample precision (inverse covariance) matrix</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">K</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diag</span><span class="p">(</span><span class="n">K</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diag</span><span class="p">(</span><span class="n">K</span><span class="p">))[:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># sample partial correlation matrix</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_partial_correlation"><a class="viewcode-back" href="../../../../utils/ci_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation.html#causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation">[docs]</a><span class="k">def</span> <span class="nf">compute_partial_correlation</span><span class="p">(</span><span class="n">suffstat</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the partial correlation between i and j given `cond_set`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    suffstat:</span>
+<span class="sd">        dictionary containing:</span>
+<span class="sd">        &#39;n&#39; -- number of samples</span>
+<span class="sd">        &#39;C&#39; -- correlation matrix</span>
+<span class="sd">        &#39;K&#39; (optional) -- inverse correlation matrix</span>
+<span class="sd">        &#39;rho&#39; (optional) -- partial correlation matrix (K, normalized so diagonals are 1).</span>
+<span class="sd">    i:</span>
+<span class="sd">        position of first variable in correlation matrix.</span>
+<span class="sd">    j:</span>
+<span class="sd">        position of second variable in correlation matrix.</span>
+<span class="sd">    cond_set:</span>
+<span class="sd">        positions of conditioning set in correlation matrix.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        partial correlation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">suffstat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">suffstat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rho&#39;</span><span class="p">)</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">suffstat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;K&#39;</span><span class="p">)</span>
+
+    <span class="c1"># === COMPUTE PARTIAL CORRELATION</span>
+    <span class="c1"># partial correlation is correlation if there is no conditioning</span>
+    <span class="k">if</span> <span class="n">cond_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="c1"># used closed-form</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">C</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">])</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">C</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="c1"># when conditioning on everything, partial correlation comes from normalized precision matrix</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span> <span class="o">==</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">rho</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">rho</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="c1"># faster to use Schur complement if conditioning set is large and precision matrix is pre-computed</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">p</span><span class="o">/</span><span class="mi">2</span> <span class="ow">and</span> <span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">*</span><span class="n">cond_set</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">theta_ij</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])]</span> <span class="o">-</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">rest</span><span class="p">)]</span> <span class="o">@</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])]</span> <span class="o">/</span> <span class="n">K</span><span class="p">[</span><span class="n">rest</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rest</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">theta_ij</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])]</span> <span class="o">-</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">rest</span><span class="p">)]</span> <span class="o">@</span> <span class="n">pinv</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="n">rest</span><span class="p">)])</span> <span class="o">@</span> <span class="n">K</span><span class="p">[</span><span class="n">ix_</span><span class="p">(</span><span class="n">rest</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])]</span>  <span class="c1"># TODO: what to do if not invertible?</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">theta_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">theta_ij</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">theta_ij</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">pinv</span><span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">ix_</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">*</span><span class="n">cond_set</span><span class="p">],</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">*</span><span class="n">cond_set</span><span class="p">])])</span>  <span class="c1"># TODO: what to do if not invertible?</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="partial_correlation_test"><a class="viewcode-back" href="../../../../utils/ci_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test.html#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test">[docs]</a><span class="k">def</span> <span class="nf">partial_correlation_test</span><span class="p">(</span><span class="n">suffstat</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test the null hypothesis that i and j are conditionally independent given `cond_set` via Fisher&#39;s z-transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    suffstat:</span>
+<span class="sd">        dictionary containing:</span>
+<span class="sd">        &#39;n&#39; -- number of samples</span>
+<span class="sd">        &#39;C&#39; -- correlation matrix</span>
+<span class="sd">        &#39;K&#39; (optional) -- inverse correlation matrix</span>
+<span class="sd">        &#39;rho&#39; (optional) -- partial correlation matrix (K, normalized so diagonals are 1).</span>
+<span class="sd">    i:</span>
+<span class="sd">        position of first variable in correlation matrix.</span>
+<span class="sd">    j:</span>
+<span class="sd">        position of second variable in correlation matrix.</span>
+<span class="sd">    cond_set:</span>
+<span class="sd">        positions of conditioning set in correlation matrix.</span>
+<span class="sd">    alpha:</span>
+<span class="sd">        Significance level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        dictionary containing statistic, p_value, and reject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
+    <span class="n">n_cond</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">cond_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">n</span> <span class="k">if</span> <span class="n">alpha</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">alpha</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">compute_partial_correlation</span><span class="p">(</span><span class="n">suffstat</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="n">cond_set</span><span class="p">)</span>
+
+    <span class="c1"># === COMPUTE STATISTIC AND P-VALUE</span>
+    <span class="c1"># note: log1p(2r/(1-r)) = log((1+r)/(1-r)) but is more numerically stable for r near 0</span>
+    <span class="c1"># r = 1 causes warnings but gives the correct answer</span>
+    <span class="k">with</span> <span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="n">statistic</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">n_cond</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">log1p</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)))</span>
+    <span class="c1"># note: erf is much faster than norm.cdf</span>
+    <span class="n">p_value</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">erf</span><span class="p">(</span><span class="n">statistic</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))))</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">statistic</span><span class="o">=</span><span class="n">statistic</span><span class="p">,</span> <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">,</span> <span class="n">reject</span><span class="o">=</span><span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+
+<span class="c1"># class MemoizedGaussCI_Tester(MemoizedCI_Tester):</span>
+<span class="c1">#     def __init__(self, suffstat: Dict, track_times=False, detailed=False, **kwargs):</span>
+<span class="c1">#         MemoizedCI_Tester.__init__(self, partial_correlation_test, suffstat, track_times=track_times, detailed=detailed)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">partial_correlation_suffstat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">partial_correlation_test</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Chandler Squires
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

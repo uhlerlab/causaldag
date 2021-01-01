@@ -974,6 +974,6 @@ if __name__ == '__main__':
     p = 10
     d = cd.rand.directed_erdos(p, .2)
     ci_tester = MemoizedCI_Tester(dsep_test, d)
-    est_dag, _ = gsp(set(range(p)), ci_tester, nruns=1, depth=float('inf'))
+    est_dag = gsp(set(range(p)), ci_tester, nruns=1, depth=float('inf'))
 
     print(est_dag.shd_skeleton(d))
