@@ -176,7 +176,7 @@
     <span class="k">return</span> <span class="n">UndirectedGraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="partial_correlation_threshold"><a class="viewcode-back" href="../../../structure_learning/generated/causaldag.structure_learning.undirected.partial_correlation_threshold.html#causaldag.structure_learning.partial_correlation_threshold">[docs]</a><span class="k">def</span> <span class="nf">partial_correlation_threshold</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">partial_correlation_threshold</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">precision</span>
 
@@ -196,7 +196,7 @@
     <span class="n">fill_diagonal</span><span class="p">(</span><span class="n">zero_ixs</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     <span class="n">r</span><span class="p">[</span><span class="n">zero_ixs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">return</span> <span class="n">r</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">diagonal</span><span class="p">(</span><span class="n">precision</span><span class="p">))</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diagonal</span><span class="p">(</span><span class="n">precision</span><span class="p">))[:,</span> <span class="kc">None</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">r</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">diagonal</span><span class="p">(</span><span class="n">precision</span><span class="p">))</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diagonal</span><span class="p">(</span><span class="n">precision</span><span class="p">))[:,</span> <span class="kc">None</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">threshold_ug_gauss</span><span class="p">(</span><span class="n">ci_tester</span><span class="p">):</span>

@@ -86,12 +86,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Utils</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../core_utils.html">Core Utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../ci_tests/index.html">Conditional Independence Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../scores/index.html">Scores</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html">Conditional Invariance Tests</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">causaldag.utils.invariance_tests.gauss_invariance.gauss_invariance_suffstat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="causaldag.utils.invariance_tests.gauss_invariance.gauss_invariance_test.html">causaldag.utils.invariance_tests.gauss_invariance.gauss_invariance_test</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../scores/index.html">Scores</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../structure_learning/index.html">Structure Learning</a></li>
@@ -176,18 +176,13 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obs_samples</strong> – (n x p) matrix, where n is the number of samples and p is the number of variables.</p></li>
 <li><p><strong>context_samples_list</strong> – list of (n x p) matrices, one for each context besides observational</p></li>
-<li><p><strong>invert</strong> (<em>#</em>) – </p></li>
-<li><p><strong>if True</strong> (<em>#</em>) – </p></li>
-<li><p><strong>the inverse correlation matrix</strong> (<em>compute</em>) – </p></li>
-<li><p><strong>normalize it into the partial correlation matrix. This</strong> (<em>and</em>) – </p></li>
-<li><p><strong>will generally speed up the gauss_ci_test if large conditioning sets are used.</strong> (<em>#</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>dictionary of sufficient statistics</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary of sufficient statistics</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>

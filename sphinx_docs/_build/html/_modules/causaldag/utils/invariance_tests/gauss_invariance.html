@@ -171,13 +171,11 @@
 <span class="sd">        (n x p) matrix, where n is the number of samples and p is the number of variables.</span>
 <span class="sd">    context_samples_list:</span>
 <span class="sd">        list of (n x p) matrices, one for each context besides observational</span>
-<span class="sd">    # invert:</span>
-<span class="sd">    #     if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This</span>
-<span class="sd">    #     will generally speed up the gauss_ci_test if large conditioning sets are used.</span>
 
 <span class="sd">    Return</span>
 <span class="sd">    ------</span>
-<span class="sd">    dictionary of sufficient statistics</span>
+<span class="sd">    dict</span>
+<span class="sd">        dictionary of sufficient statistics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">obs_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">obs_samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">obs_samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">])))</span>
     <span class="n">obs_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">obs_samples</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -207,9 +205,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    suffstat:</span>
 <span class="sd">        dictionary containing:</span>
-<span class="sd">        &#39;obs&#39; -- number of samples</span>
-<span class="sd">            &#39;G&#39; -- Gram matrix</span>
-<span class="sd">        &#39;contexts&#39;</span>
+
+<span class="sd">        * ``obs`` -- number of samples</span>
+<span class="sd">        * ``G`` -- Gram matrix</span>
+<span class="sd">        * ``contexts``</span>
 <span class="sd">    context:</span>
 <span class="sd">        which context to test.</span>
 <span class="sd">    i:</span>
@@ -225,7 +224,8 @@
 
 <span class="sd">    Return</span>
 <span class="sd">    ------</span>
-<span class="sd">    dictionary containing ttest_stat, ftest_stat, f_pvalue, t_pvalue, and reject.</span>
+<span class="sd">    dict</span>
+<span class="sd">        dictionary containing ttest_stat, ftest_stat, f_pvalue, t_pvalue, and reject.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cond_set</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span>
     <span class="n">obs_samples</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;obs&#39;</span><span class="p">][</span><span class="s1">&#39;samples&#39;</span><span class="p">]</span>

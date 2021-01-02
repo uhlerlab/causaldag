@@ -21,13 +21,11 @@ def gauss_invariance_suffstat(
         (n x p) matrix, where n is the number of samples and p is the number of variables.
     context_samples_list:
         list of (n x p) matrices, one for each context besides observational
-    # invert:
-    #     if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This
-    #     will generally speed up the gauss_ci_test if large conditioning sets are used.
 
     Return
     ------
-    dictionary of sufficient statistics
+    dict
+        dictionary of sufficient statistics
     """
     obs_samples = np.hstack((obs_samples, np.ones([obs_samples.shape[0], 1])))
     obs_cov = np.cov(obs_samples, rowvar=False)
@@ -57,9 +55,10 @@ def gauss_invariance_test(
     ----------
     suffstat:
         dictionary containing:
-        'obs' -- number of samples
-            'G' -- Gram matrix
-        'contexts'
+
+        * ``obs`` -- number of samples
+        * ``G`` -- Gram matrix
+        * ``contexts``
     context:
         which context to test.
     i:
@@ -75,7 +74,8 @@ def gauss_invariance_test(
 
     Return
     ------
-    dictionary containing ttest_stat, ftest_stat, f_pvalue, t_pvalue, and reject.
+    dict
+        dictionary containing ttest_stat, ftest_stat, f_pvalue, t_pvalue, and reject.
     """
     cond_set = to_list(cond_set)
     obs_samples = suffstat['obs']['samples']

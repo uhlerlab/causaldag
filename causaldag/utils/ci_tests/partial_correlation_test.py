@@ -49,7 +49,7 @@ def partial_correlation_suffstat(samples, invert=True) -> Dict:
 
 def compute_partial_correlation(suffstat, i, j, cond_set=None):
     """
-    Compute the partial correlation between i and j given `cond_set`.
+    Compute the partial correlation between i and j given ``cond_set``.
 
     Parameters
     ----------
@@ -105,16 +105,19 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
 
 def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
-    Test the null hypothesis that i and j are conditionally independent given `cond_set` via Fisher's z-transform.
+    Test the null hypothesis that i and j are conditionally independent given ``cond_set``.
+
+    Uses Fisher's z-transform.
 
     Parameters
     ----------
     suffstat:
         dictionary containing:
-        'n' -- number of samples
-        'C' -- correlation matrix
-        'K' (optional) -- inverse correlation matrix
-        'rho' (optional) -- partial correlation matrix (K, normalized so diagonals are 1).
+
+        * ``n`` -- number of samples
+        * ``C`` -- correlation matrix
+        * ``K`` (optional) -- inverse correlation matrix
+        * ``rho`` (optional) -- partial correlation matrix (K, normalized so diagonals are 1).
     i:
         position of first variable in correlation matrix.
     j:
@@ -127,7 +130,11 @@ def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     Returns
     -------
     dict
-        dictionary containing statistic, p_value, and reject.
+        dictionary containing:
+
+        * ``statistic``
+        * ``p_value``
+        * ``reject``
     """
     n = suffstat['n']
     n_cond = 0 if cond_set is None else len(cond_set)

@@ -199,7 +199,7 @@
 
 <div class="viewcode-block" id="compute_partial_correlation"><a class="viewcode-back" href="../../../../utils/ci_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation.html#causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation">[docs]</a><span class="k">def</span> <span class="nf">compute_partial_correlation</span><span class="p">(</span><span class="n">suffstat</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the partial correlation between i and j given `cond_set`.</span>
+<span class="sd">    Compute the partial correlation between i and j given ``cond_set``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -255,16 +255,19 @@
 
 <div class="viewcode-block" id="partial_correlation_test"><a class="viewcode-back" href="../../../../utils/ci_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test.html#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test">[docs]</a><span class="k">def</span> <span class="nf">partial_correlation_test</span><span class="p">(</span><span class="n">suffstat</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Test the null hypothesis that i and j are conditionally independent given `cond_set` via Fisher&#39;s z-transform.</span>
+<span class="sd">    Test the null hypothesis that i and j are conditionally independent given ``cond_set``.</span>
+
+<span class="sd">    Uses Fisher&#39;s z-transform.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    suffstat:</span>
 <span class="sd">        dictionary containing:</span>
-<span class="sd">        &#39;n&#39; -- number of samples</span>
-<span class="sd">        &#39;C&#39; -- correlation matrix</span>
-<span class="sd">        &#39;K&#39; (optional) -- inverse correlation matrix</span>
-<span class="sd">        &#39;rho&#39; (optional) -- partial correlation matrix (K, normalized so diagonals are 1).</span>
+
+<span class="sd">        * ``n`` -- number of samples</span>
+<span class="sd">        * ``C`` -- correlation matrix</span>
+<span class="sd">        * ``K`` (optional) -- inverse correlation matrix</span>
+<span class="sd">        * ``rho`` (optional) -- partial correlation matrix (K, normalized so diagonals are 1).</span>
 <span class="sd">    i:</span>
 <span class="sd">        position of first variable in correlation matrix.</span>
 <span class="sd">    j:</span>
@@ -277,7 +280,11 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
-<span class="sd">        dictionary containing statistic, p_value, and reject.</span>
+<span class="sd">        dictionary containing:</span>
+
+<span class="sd">        * ``statistic``</span>
+<span class="sd">        * ``p_value``</span>
+<span class="sd">        * ``reject``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
     <span class="n">n_cond</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">cond_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">cond_set</span><span class="p">)</span>
