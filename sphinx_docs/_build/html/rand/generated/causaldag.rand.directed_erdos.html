@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>causaldag.rand.directed_erdos &mdash; causaldag  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="causaldag.rand.rand_weights" href="causaldag.rand.rand_weights.html" />
+    <link rel="prev" title="Random Graphs" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../classes/index.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/index.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../structure_learning/index.html">Structure Learning</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Random Graphs</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">causaldag.rand.directed_erdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="causaldag.rand.rand_weights.html">causaldag.rand.rand_weights</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">causaldag</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Random Graphs</a> &raquo;</li>
+        
+      <li>causaldag.rand.directed_erdos</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/rand/generated/causaldag.rand.directed_erdos.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="causaldag-rand-directed-erdos">
+<h1>causaldag.rand.directed_erdos<a class="headerlink" href="#causaldag-rand-directed-erdos" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="causaldag.rand.directed_erdos">
+<code class="sig-prename descclassname">causaldag.rand.</code><code class="sig-name descname">directed_erdos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nnodes</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exp_nbrs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">as_list</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_order</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span><a class="reference internal" href="../../classes/DAG.html#causaldag.classes.dag.DAG" title="causaldag.classes.dag.DAG">causaldag.classes.dag.DAG</a><span class="p">, </span>List<span class="p">[</span><a class="reference internal" href="../../classes/DAG.html#causaldag.classes.dag.DAG" title="causaldag.classes.dag.DAG">causaldag.classes.dag.DAG</a><span class="p">]</span><span class="p">]</span><a class="reference internal" href="../../_modules/causaldag/rand/graphs.html#directed_erdos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.rand.directed_erdos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate random Erdos-Renyi DAG(s) on <cite>nnodes</cite> nodes with density <cite>density</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nnodes</strong> – Number of nodes in each graph.</p></li>
+<li><p><strong>density</strong> – Probability of any edge.</p></li>
+<li><p><strong>size</strong> – Number of graphs.</p></li>
+<li><p><strong>as_list</strong> – If True, always return as a list, even if only one DAG is generated.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">rand</span><span class="o">.</span><span class="n">directed_erdos</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="causaldag.rand.rand_weights.html" class="btn btn-neutral float-right" title="causaldag.rand.rand_weights" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Random Graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Chandler Squires
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

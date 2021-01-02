@@ -49,8 +49,14 @@ def unif_away_original(original, dist_original=.25, low=.25, high=1):
     return np.random.uniform(a, b)
 
 
-def directed_erdos(nnodes, density=None, exp_nbrs=None, size=1, as_list=False, random_order=True) -> Union[
-    DAG, List[DAG]]:
+def directed_erdos(
+        nnodes,
+        density=None,
+        exp_nbrs=None,
+        size=1,
+        as_list=False,
+        random_order=True
+) -> Union[DAG, List[DAG]]:
     """
     Generate random Erdos-Renyi DAG(s) on `nnodes` nodes with density `density`.
 

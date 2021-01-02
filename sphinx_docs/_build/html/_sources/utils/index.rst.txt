@@ -10,4 +10,5 @@ Utils
 
    core_utils
    ci_tests/index
+   scores/index
 

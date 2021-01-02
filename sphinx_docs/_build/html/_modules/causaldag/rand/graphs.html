@@ -1,0 +1,633 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>causaldag.rand.graphs &mdash; causaldag  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../classes/index.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utils/index.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../structure_learning/index.html">Structure Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rand/index.html">Random Graphs</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">causaldag</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>causaldag.rand.graphs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for causaldag.rand.graphs</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">GaussDAG</span><span class="p">,</span> <span class="n">SampleDAG</span><span class="p">,</span> <span class="n">CamDAG</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">barabasi_albert_graph</span><span class="p">,</span> <span class="n">fast_gnp_random_graph</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">ipdb</span>
+
+<span class="c1"># class RandWeightFn(Protocol):</span>
+<span class="c1">#     def __call__(self, size: int) -&gt; Union[float, List[float]]: ...</span>
+
+
+<span class="n">RandWeightFn</span> <span class="o">=</span> <span class="n">Any</span>
+
+
+<span class="k">def</span> <span class="nf">_coin</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">unif_away_zero</span><span class="p">(</span><span class="n">low</span><span class="o">=.</span><span class="mi">25</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">all_positive</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">all_positive</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">signs</span> <span class="o">=</span> <span class="p">(</span><span class="n">_coin</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="o">-</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">signs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">unif_away_original</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">dist_original</span><span class="o">=.</span><span class="mi">25</span><span class="p">,</span> <span class="n">low</span><span class="o">=.</span><span class="mi">25</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">dist_original</span> <span class="o">&lt;</span> <span class="n">low</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;the lowest absolute value of weights must be larger than the distance between old weights and new weights&quot;</span><span class="p">)</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">original</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">original</span> <span class="o">-</span> <span class="n">dist_original</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">high</span><span class="p">:</span>
+            <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="n">high</span><span class="p">,</span> <span class="n">original</span> <span class="o">-</span> <span class="n">dist_original</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">original</span> <span class="o">+</span> <span class="n">dist_original</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">low</span><span class="p">:</span>
+            <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">original</span> <span class="o">+</span> <span class="n">dist_original</span><span class="p">,</span> <span class="o">-</span><span class="n">low</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="n">high</span><span class="p">,</span> <span class="o">-</span><span class="n">low</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">original</span> <span class="o">+</span> <span class="n">dist_original</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">:</span>
+            <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">original</span> <span class="o">+</span> <span class="n">dist_original</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">original</span> <span class="o">-</span> <span class="n">dist_original</span> <span class="o">&gt;=</span> <span class="n">low</span><span class="p">:</span>
+            <span class="n">regions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">original</span> <span class="o">-</span> <span class="n">dist_original</span><span class="p">))</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="directed_erdos"><a class="viewcode-back" href="../../../rand/generated/causaldag.rand.directed_erdos.html#causaldag.rand.directed_erdos">[docs]</a><span class="k">def</span> <span class="nf">directed_erdos</span><span class="p">(</span>
+        <span class="n">nnodes</span><span class="p">,</span>
+        <span class="n">density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exp_nbrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">as_list</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">random_order</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAG</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">DAG</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate random Erdos-Renyi DAG(s) on `nnodes` nodes with density `density`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nnodes:</span>
+<span class="sd">        Number of nodes in each graph.</span>
+<span class="sd">    density:</span>
+<span class="sd">        Probability of any edge.</span>
+<span class="sd">    size:</span>
+<span class="sd">        Number of graphs.</span>
+<span class="sd">    as_list:</span>
+<span class="sd">        If True, always return as a list, even if only one DAG is generated.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">    &gt;&gt;&gt; d = cd.rand.directed_erdos(5, .5)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">exp_nbrs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">density</span> <span class="k">if</span> <span class="n">density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">exp_nbrs</span> <span class="o">/</span> <span class="p">(</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># if density &lt; .01:</span>
+        <span class="c1">#     print(&#39;here&#39;)</span>
+        <span class="c1">#     random_nx = fast_gnp_random_graph(nnodes, density, directed=True)</span>
+        <span class="c1">#     d = DAG(nodes=set(range(nnodes)), arcs=random_nx.edges)</span>
+        <span class="c1">#     return [d] if as_list else d</span>
+        <span class="n">bools</span> <span class="o">=</span> <span class="n">_coin</span><span class="p">(</span><span class="n">density</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">nnodes</span> <span class="o">*</span> <span class="p">(</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="n">bools</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="p">}</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)),</span> <span class="n">arcs</span><span class="o">=</span><span class="n">arcs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">random_order</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">))</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">rename_nodes</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">nodes</span><span class="p">))))</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">if</span> <span class="n">as_list</span> <span class="k">else</span> <span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">directed_erdos</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">density</span><span class="p">,</span> <span class="n">random_order</span><span class="o">=</span><span class="n">random_order</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)]</span></div>
+
+
+<span class="k">def</span> <span class="nf">directed_erdos_with_confounders</span><span class="p">(</span>
+        <span class="n">nnodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">density</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exp_nbrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_confounders</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">confounder_pervasiveness</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">as_list</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">random_order</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAG</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">DAG</span><span class="p">]]:</span>
+    <span class="k">assert</span> <span class="n">density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">exp_nbrs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">density</span> <span class="k">if</span> <span class="n">density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">exp_nbrs</span> <span class="o">/</span> <span class="p">(</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">confounders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_confounders</span><span class="p">))</span>
+        <span class="n">nonconfounders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_confounders</span><span class="p">,</span> <span class="n">nnodes</span><span class="o">+</span><span class="n">num_confounders</span><span class="p">))</span>
+        <span class="n">bools</span> <span class="o">=</span> <span class="n">_coin</span><span class="p">(</span><span class="n">confounder_pervasiveness</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">num_confounders</span><span class="o">*</span><span class="n">nnodes</span><span class="p">))</span>
+        <span class="n">confounder_arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">confounders</span><span class="p">,</span> <span class="n">nonconfounders</span><span class="p">),</span> <span class="n">bools</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="p">}</span>
+        <span class="n">bools</span> <span class="o">=</span> <span class="n">_coin</span><span class="p">(</span><span class="n">density</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">nnodes</span> <span class="o">*</span> <span class="p">(</span><span class="n">nnodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">local_arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">nonconfounders</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">bools</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="p">}</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)),</span> <span class="n">arcs</span><span class="o">=</span><span class="n">confounder_arcs</span><span class="o">|</span><span class="n">local_arcs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">random_order</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="o">+</span><span class="n">num_confounders</span><span class="p">))</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">rename_nodes</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">nodes</span><span class="p">))))</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">if</span> <span class="n">as_list</span> <span class="k">else</span> <span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">directed_erdos_with_confounders</span><span class="p">(</span>
+                <span class="n">nnodes</span><span class="p">,</span>
+                <span class="n">density</span><span class="p">,</span>
+                <span class="n">num_confounders</span><span class="o">=</span><span class="n">num_confounders</span><span class="p">,</span>
+                <span class="n">confounder_pervasiveness</span><span class="o">=</span><span class="n">confounder_pervasiveness</span><span class="p">,</span>
+                <span class="n">random_order</span><span class="o">=</span><span class="n">random_order</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="p">]</span>
+
+
+<div class="viewcode-block" id="rand_weights"><a class="viewcode-back" href="../../../rand/generated/causaldag.rand.rand_weights.html#causaldag.rand.rand_weights">[docs]</a><span class="k">def</span> <span class="nf">rand_weights</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">rand_weight_fn</span><span class="p">:</span> <span class="n">RandWeightFn</span> <span class="o">=</span> <span class="n">unif_away_zero</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GaussDAG</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a GaussDAG from a DAG, with random edge weights independently drawn from `rand_weight_fn`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dag:</span>
+<span class="sd">        DAG</span>
+<span class="sd">    rand_weight_fn:</span>
+<span class="sd">        Function to generate random weights.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">    &gt;&gt;&gt; d = cd.DAG(arcs={(1, 2), (2, 3)})</span>
+<span class="sd">    &gt;&gt;&gt; g = cd.rand.rand_weights(d)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">rand_weight_fn</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">arcs</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">GaussDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">nodes</span><span class="p">))),</span> <span class="n">arcs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">arcs</span><span class="p">,</span> <span class="n">weights</span><span class="p">)))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_leaky_relu</span><span class="p">(</span><span class="n">vals</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">vals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">vals</span> <span class="o">*</span> <span class="o">.</span><span class="mi">01</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">rand_nn_functions</span><span class="p">(</span>
+        <span class="n">dag</span><span class="p">:</span> <span class="n">DAG</span><span class="p">,</span>
+        <span class="n">num_layers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">nonlinearity</span><span class="o">=</span><span class="n">_leaky_relu</span><span class="p">,</span>
+        <span class="n">noise</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">laplace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SampleDAG</span><span class="p">:</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">SampleDAG</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
+
+    <span class="c1"># for each node, create the conditional</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
+        <span class="n">nparents</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">indegree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">layer_mats</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nparents</span><span class="p">,</span> <span class="n">nparents</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)]</span>
+
+        <span class="k">def</span> <span class="nf">conditional</span><span class="p">(</span><span class="n">parent_vals</span><span class="p">):</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">parent_vals</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">layer_mats</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">a</span> <span class="o">@</span> <span class="n">vals</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">nonlinearity</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">vals</span> <span class="o">+</span> <span class="n">noise</span><span class="p">()</span>
+
+        <span class="n">s</span><span class="o">.</span><span class="n">set_conditional</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">conditional</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">_cam_conditional</span><span class="p">(</span><span class="n">parent_vals</span><span class="p">,</span> <span class="n">c_node</span><span class="p">,</span> <span class="n">parent_weights</span><span class="p">,</span> <span class="n">parent_bases</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span>
+        <span class="n">c_node</span> <span class="o">*</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">base</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parent_weights</span><span class="p">,</span> <span class="n">parent_bases</span><span class="p">,</span> <span class="n">parent_vals</span><span class="p">)</span>
+    <span class="p">])</span> <span class="o">+</span> <span class="n">noise</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_cam_mean_function</span><span class="p">(</span>
+        <span class="n">parent_vals</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">parents</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="n">c_node</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">parent_weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">parent2base</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">):</span>
+    <span class="k">assert</span> <span class="n">parent_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_weights</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">parent</span> <span class="ow">in</span> <span class="n">parent2base</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">parent_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">parent_contribs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parent2base</span><span class="p">[</span><span class="n">parent</span><span class="p">](</span><span class="n">parent_vals</span><span class="p">[:,</span> <span class="n">ix</span><span class="p">])</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parents</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">parent_contribs</span> <span class="o">=</span> <span class="n">parent_contribs</span> <span class="o">*</span> <span class="n">parent_weights</span>
+    <span class="n">parent_contrib</span> <span class="o">=</span> <span class="n">parent_contribs</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c_node</span> <span class="o">*</span> <span class="n">parent_contrib</span>
+
+
+<span class="k">def</span> <span class="nf">rand_additive_basis</span><span class="p">(</span>
+        <span class="n">dag</span><span class="p">:</span> <span class="n">DAG</span><span class="p">,</span>
+        <span class="n">basis</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="n">r2_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rand_weight_fn</span><span class="p">:</span> <span class="n">RandWeightFn</span> <span class="o">=</span> <span class="n">unif_away_zero</span><span class="p">,</span>
+        <span class="n">noise</span><span class="o">=</span><span class="k">lambda</span> <span class="n">size</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">),</span>
+        <span class="n">internal_variance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">num_monte_carlo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="n">progress</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a random structural causal model (SCM), using `dag` as the structure, and with each variable</span>
+<span class="sd">    being a general additive model (GAM) of its parents.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dag:</span>
+<span class="sd">        A DAG to use as the structure for the model.</span>
+<span class="sd">    basis:</span>
+<span class="sd">        Basis functions for the GAM.</span>
+<span class="sd">    r2_dict:</span>
+<span class="sd">        A dictionary mapping each number of parents to the desired signal-to-noise ratio (SNR) for nodes</span>
+<span class="sd">        with that many parents. By default, 1/2 for any number of parents.</span>
+<span class="sd">    rand_weight_fn:</span>
+<span class="sd">        A function to generate random weights for each parent.</span>
+<span class="sd">    noise:</span>
+<span class="sd">        A function to generate random internal noise for each node.</span>
+<span class="sd">    internal_variance:</span>
+<span class="sd">        The variance of the above noise function.</span>
+<span class="sd">    num_monte_carlo:</span>
+<span class="sd">        The number of Monte Carlo samples used when computing coefficients to achieve the desired SNR.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; d = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})</span>
+<span class="sd">    &gt;&gt;&gt; basis = [np.sin, np.cos, np.exp]</span>
+<span class="sd">    &gt;&gt;&gt; r2_dict = {1: 1/2, 2: 2/3}</span>
+<span class="sd">    &gt;&gt;&gt; g = cd.rand.rand_additive_basis(d, basis, r2_dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">r2_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">r2_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">nparents</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">nparents</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">nnodes</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r2_dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">r2_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">nparents</span><span class="p">:</span> <span class="n">r2_dict</span> <span class="k">for</span> <span class="n">nparents</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">nnodes</span><span class="p">)}</span>
+
+    <span class="n">cam_dag</span> <span class="o">=</span> <span class="n">CamDAG</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
+    <span class="n">top_order</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
+    <span class="n">sample_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="c1"># for each node, create the conditional</span>
+    <span class="n">node_iterator</span> <span class="o">=</span> <span class="n">top_order</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">progress</span> <span class="k">else</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">top_order</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_iterator</span><span class="p">:</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">parents_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">nparents</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">indegree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">parent2base</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">parents</span><span class="p">,</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">nparents</span><span class="p">)))</span>
+        <span class="n">parent_weights</span> <span class="o">=</span> <span class="n">rand_weight_fn</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">nparents</span><span class="p">)</span>
+        <span class="n">parent_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sample_dict</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> <span class="k">if</span> <span class="n">nparents</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_monte_carlo</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">c_node</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">nparents</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mean_function_no_c</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_cam_mean_function</span><span class="p">,</span> <span class="n">c_node</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">parent_weights</span><span class="o">=</span><span class="n">parent_weights</span><span class="p">,</span> <span class="n">parent2base</span><span class="o">=</span><span class="n">parent2base</span><span class="p">)</span>
+            <span class="n">values_from_parents</span> <span class="o">=</span> <span class="n">mean_function_no_c</span><span class="p">(</span><span class="n">parent_vals</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+            <span class="n">variance_from_parents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">values_from_parents</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">desired_r2</span> <span class="o">=</span> <span class="n">r2_dict</span><span class="p">[</span><span class="n">nparents</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`snr_dict` does not specify a desired R^2 for nodes with </span><span class="si">{</span><span class="n">nparents</span><span class="si">}</span><span class="s2"> parents&quot;</span><span class="p">)</span>
+            <span class="n">c_node</span> <span class="o">=</span> <span class="n">internal_variance</span> <span class="o">/</span> <span class="n">variance_from_parents</span> <span class="o">*</span> <span class="n">desired_r2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">desired_r2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">c_node</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">variance_from_parents</span><span class="p">,</span> <span class="n">parent_weights</span><span class="p">,</span> <span class="n">c_node</span><span class="p">)</span>
+
+        <span class="n">mean_function</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_cam_mean_function</span><span class="p">,</span> <span class="n">c_node</span><span class="o">=</span><span class="n">c_node</span><span class="p">,</span> <span class="n">parent_weights</span><span class="o">=</span><span class="n">parent_weights</span><span class="p">,</span> <span class="n">parent2base</span><span class="o">=</span><span class="n">parent2base</span><span class="p">)</span>
+
+        <span class="n">mean_vals</span> <span class="o">=</span> <span class="n">mean_function</span><span class="p">(</span><span class="n">parent_vals</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+        <span class="n">sample_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_vals</span> <span class="o">+</span> <span class="n">noise</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">num_monte_carlo</span><span class="p">)</span>
+
+        <span class="n">cam_dag</span><span class="o">.</span><span class="n">set_mean_function</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">mean_function</span><span class="p">)</span>
+        <span class="n">cam_dag</span><span class="o">.</span><span class="n">set_noise</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">noise</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cam_dag</span>
+
+
+<span class="c1"># OPTION 1</span>
+<span class="c1"># - equally predictable given parents (signal to noise ratio): internal variance \propto variance from the parents</span>
+<span class="c1"># - compute variance of each parent. add up. set my internal noise variance \propto variance from parents</span>
+<span class="c1"># - always keep noise variance same, scale signal coefficients</span>
+
+<span class="c1"># OPTION 2</span>
+<span class="c1"># - bound each variable</span>
+
+<span class="c1"># OPTION 3</span>
+
+
+<span class="k">def</span> <span class="nf">directed_random_graph</span><span class="p">(</span><span class="n">nnodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">random_graph_model</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">as_list</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAG</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">DAG</span><span class="p">]]:</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># generate a random undirected graph</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">random_graph_model</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span><span class="o">.</span><span class="n">edges</span>
+
+        <span class="c1"># generate a random permutation</span>
+        <span class="n">random_permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">random_permutation</span><span class="p">)</span>
+
+        <span class="n">arcs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span> <span class="o">=</span> <span class="n">edge</span>
+            <span class="n">node1_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">random_permutation</span> <span class="o">==</span> <span class="n">node1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">node2_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">random_permutation</span> <span class="o">==</span> <span class="n">node2</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node1_position</span> <span class="o">&lt;</span> <span class="n">node2_position</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">node1</span>
+                <span class="n">endpoint</span> <span class="o">=</span> <span class="n">node2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">node2</span>
+                <span class="n">endpoint</span> <span class="o">=</span> <span class="n">node1</span>
+            <span class="n">arcs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">source</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">))</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)),</span> <span class="n">arcs</span><span class="o">=</span><span class="n">arcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">if</span> <span class="n">as_list</span> <span class="k">else</span> <span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">directed_random_graph</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">random_graph_model</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">directed_barabasi</span><span class="p">(</span><span class="n">nnodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nattach</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">as_list</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAG</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">DAG</span><span class="p">]]:</span>
+    <span class="n">random_graph_model</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nnodes</span><span class="p">:</span> <span class="n">barabasi_albert_graph</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">nattach</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">directed_random_graph</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">random_graph_model</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">as_list</span><span class="o">=</span><span class="n">as_list</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">alter_weights</span><span class="p">(</span>
+        <span class="n">gdag</span><span class="p">:</span> <span class="n">GaussDAG</span><span class="p">,</span>
+        <span class="n">prob_altered</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_altered</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prob_added</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_added</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prob_removed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_removed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rand_weight_fn</span><span class="o">=</span><span class="n">unif_away_zero</span><span class="p">,</span>
+        <span class="n">rand_change_fn</span><span class="o">=</span><span class="n">unif_away_original</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a copy of a GaussDAG with some of its arc weights randomly altered by `rand_weight_fn`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gdag:</span>
+<span class="sd">        GaussDAG</span>
+<span class="sd">    prob_altered:</span>
+<span class="sd">        Probability each arc has its weight altered.</span>
+<span class="sd">    num_altered:</span>
+<span class="sd">        Number of arcs whose weights are altered.</span>
+<span class="sd">    prob_added:</span>
+<span class="sd">        Probability that each missing arc is added.</span>
+<span class="sd">    num_added:</span>
+<span class="sd">        Number of missing arcs added.</span>
+<span class="sd">    prob_removed:</span>
+<span class="sd">        Probability that each arc is removed.</span>
+<span class="sd">    num_removed:</span>
+<span class="sd">        Number of arcs removed.</span>
+<span class="sd">    rand_weight_fn:</span>
+<span class="sd">        Function that returns a random weight for each new edge.</span>
+<span class="sd">    rand_change_fn:</span>
+<span class="sd">        Function that takes the current weight of an edge and returns the new weight.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_altered</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">prob_altered</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify at least one of `prob_altered` or `num_altered`.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_added</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">prob_added</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify at least one of `prob_added` or `num_added`.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_removed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">prob_removed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify at least one of `prob_removed` or `num_removed`.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_altered</span> <span class="o">+</span> <span class="n">num_removed</span> <span class="o">&gt;</span> <span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Tried altering </span><span class="si">{</span><span class="n">num_altered</span><span class="si">}</span><span class="s2"> arcs and removing </span><span class="si">{</span><span class="n">num_removed</span><span class="si">}</span><span class="s2"> arcs, but there are only </span><span class="si">{</span><span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="si">}</span><span class="s2"> arcs in this DAG.&quot;</span><span class="p">)</span>
+    <span class="n">num_missing_arcs</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span>
+    <span class="k">if</span> <span class="n">num_added</span> <span class="o">&gt;</span> <span class="n">num_missing_arcs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Tried adding </span><span class="si">{</span><span class="n">num_added</span><span class="si">}</span><span class="s2"> arcs but there are only </span><span class="si">{</span><span class="n">num_missing_arcs</span><span class="si">}</span><span class="s2"> arcs missing from the DAG.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># GET NUMBER ADDED/CHANGED/REMOVED</span>
+    <span class="n">num_altered</span> <span class="o">=</span> <span class="n">num_altered</span> <span class="k">if</span> <span class="n">num_altered</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="p">,</span> <span class="n">prob_altered</span><span class="p">)</span>
+    <span class="n">num_removed</span> <span class="o">=</span> <span class="n">num_removed</span> <span class="k">if</span> <span class="n">num_removed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="p">,</span> <span class="n">prob_removed</span><span class="p">)</span>
+    <span class="n">num_removed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_removed</span><span class="p">,</span> <span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span> <span class="o">-</span> <span class="n">num_altered</span><span class="p">)</span>
+    <span class="n">num_added</span> <span class="o">=</span> <span class="n">num_added</span> <span class="k">if</span> <span class="n">num_added</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">num_missing_arcs</span><span class="p">,</span> <span class="n">prob_added</span><span class="p">)</span>
+
+    <span class="c1"># GET ACTUAL ARCS THAT ARE ADDED/CHANGED/REMOVED</span>
+    <span class="n">altered_arcs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">arcs</span><span class="p">),</span> <span class="n">num_altered</span><span class="p">)</span>
+    <span class="n">removed_arcs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">arcs</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">altered_arcs</span><span class="p">)),</span> <span class="n">num_removed</span><span class="p">)</span>
+    <span class="n">valid_arcs_to_add</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">gdag</span><span class="o">.</span><span class="n">arcs</span>
+    <span class="n">added_arcs</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">valid_arcs_to_add</span><span class="p">),</span> <span class="n">num_added</span><span class="p">)</span>
+
+    <span class="c1"># CREATE NEW DAG</span>
+    <span class="n">new_gdag</span> <span class="o">=</span> <span class="n">gdag</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">gdag</span><span class="o">.</span><span class="n">arc_weights</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">altered_arcs</span><span class="p">:</span>
+        <span class="n">new_gdag</span><span class="o">.</span><span class="n">set_arc_weight</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">rand_change_fn</span><span class="p">(</span><span class="n">weights</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)]))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">removed_arcs</span><span class="p">:</span>
+        <span class="n">new_gdag</span><span class="o">.</span><span class="n">remove_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+    <span class="n">new_weights</span> <span class="o">=</span> <span class="n">rand_weight_fn</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">num_added</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">added_arcs</span><span class="p">,</span> <span class="n">new_weights</span><span class="p">):</span>
+        <span class="n">new_gdag</span><span class="o">.</span><span class="n">set_arc_weight</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_gdag</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;directed_erdos&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;directed_erdos_with_confounders&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rand_weights&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;unif_away_zero&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;directed_barabasi&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;directed_random_graph&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rand_nn_functions&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;unif_away_original&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;alter_weights&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rand_additive_basis&#39;</span>
+<span class="p">]</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">directed_erdos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_order</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">cam_dag</span> <span class="o">=</span> <span class="n">rand_additive_basis</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">])</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">cam_dag</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">cond_means</span> <span class="o">=</span> <span class="n">cam_dag</span><span class="o">.</span><span class="n">conditional_mean</span><span class="p">(</span><span class="n">cond_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">cond_nodes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Chandler Squires
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

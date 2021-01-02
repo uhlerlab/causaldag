@@ -12,6 +12,7 @@ Welcome to causaldag's documentation!
    classes/index
    utils/index
    structure_learning/index
+   rand/index
 
 
 Indices and tables
