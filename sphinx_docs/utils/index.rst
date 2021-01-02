@@ -10,5 +10,6 @@ Utils
 
    core_utils
    ci_tests/index
+   invariance_tests/index
    scores/index
 

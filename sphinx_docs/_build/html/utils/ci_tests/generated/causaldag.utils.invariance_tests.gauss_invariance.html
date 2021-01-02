@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score &mdash; causaldag  documentation</title>
+  <title>causaldag.utils.invariance_tests.gauss_invariance &mdash; causaldag  documentation</title>
   
 
   
@@ -34,7 +34,9 @@
 
     
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Scores" href="../../scores/index.html" />
+    <link rel="prev" title="Conditional Invariance Tests" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -79,9 +81,17 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../../classes/index.html">Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../index.html">Utils</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Utils</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../core_utils.html">Core Utils</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Conditional Invariance Tests</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">causaldag.utils.invariance_tests.gauss_invariance</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../scores/index.html">Scores</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../structure_learning/index.html">Structure Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../rand/index.html">Random Graphs</a></li>
 </ul>
@@ -130,13 +140,17 @@
     
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score</li>
+          <li><a href="../../index.html">Utils</a> &raquo;</li>
+        
+          <li><a href="../index.html">Conditional Invariance Tests</a> &raquo;</li>
+        
+      <li>causaldag.utils.invariance_tests.gauss_invariance</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../../_sources/utils/scores/generated/causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/utils/ci_tests/generated/causaldag.utils.invariance_tests.gauss_invariance.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -149,13 +163,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="causaldag-utils-scores-gaussian-bge-score-local-gaussian-bge-score">
-<h1>causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score<a class="headerlink" href="#causaldag-utils-scores-gaussian-bge-score-local-gaussian-bge-score" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score">
-<code class="sig-prename descclassname">causaldag.utils.scores.gaussian_bge_score.</code><code class="sig-name descname">local_gaussian_bge_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">parents</span></em>, <em class="sig-param"><span class="n">suffstat</span></em>, <em class="sig-param"><span class="n">alpha_mu</span></em>, <em class="sig-param"><span class="n">inverse_scale_matrix</span></em>, <em class="sig-param"><span class="n">alpha_w</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bge_score.html#local_gaussian_bge_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.gaussian_bge_score.local_gaussian_bge_score" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+  <div class="section" id="module-causaldag.utils.invariance_tests.gauss_invariance">
+<span id="causaldag-utils-invariance-tests-gauss-invariance"></span><h1>causaldag.utils.invariance_tests.gauss_invariance<a class="headerlink" href="#module-causaldag.utils.invariance_tests.gauss_invariance" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gauss_invariance_suffstat</span></code>(obs_samples, …)</p></td>
+<td><p>Helper function to compute the sufficient statistics for the gauss_invariance_test from data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gauss_invariance_test</span></code>(suffstat, context, i)</p></td>
+<td><p>Test the null hypothesis that two Gaussian distributions are equal.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
@@ -163,6 +187,15 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../scores/index.html" class="btn btn-neutral float-right" title="Scores" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Conditional Invariance Tests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

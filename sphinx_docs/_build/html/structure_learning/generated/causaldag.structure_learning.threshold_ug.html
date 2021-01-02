@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>causaldag.structure_learning.threshold_ug &mdash; causaldag  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="causaldag.structure_learning.covariance_graph_gauss" href="causaldag.structure_learning.covariance_graph_gauss.html" />
+    <link rel="prev" title="Structure Learning" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../classes/index.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/index.html">Utils</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Structure Learning</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#undirected-structure-learning">Undirected Structure Learning</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">causaldag.structure_learning.threshold_ug</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#covariance-structure-learning">Covariance Structure Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#dag-structure-learning">DAG Structure Learning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rand/index.html">Random Graphs</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">causaldag</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Structure Learning</a> &raquo;</li>
+        
+      <li>causaldag.structure_learning.threshold_ug</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/structure_learning/generated/causaldag.structure_learning.threshold_ug.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="causaldag-structure-learning-threshold-ug">
+<h1>causaldag.structure_learning.threshold_ug<a class="headerlink" href="#causaldag-structure-learning-threshold-ug" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="causaldag.structure_learning.threshold_ug">
+<code class="sig-prename descclassname">causaldag.structure_learning.</code><code class="sig-name descname">threshold_ug</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">set</span></em>, <em class="sig-param"><span class="n">ci_tester</span><span class="p">:</span> <span class="n">causaldag.utils.ci_tests.ci_tester.CI_Tester</span></em><span class="sig-paren">)</span> &#x2192; causaldag.classes.undirected_graph.UndirectedGraph<a class="reference internal" href="../../_modules/causaldag/structure_learning/undirected.html#threshold_ug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.structure_learning.threshold_ug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate an undirected graph by testing whether each pair of nodes is independent given all others.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nodes</strong> – Nodes in the graph.</p></li>
+<li><p><strong>ci_tester</strong> – Conditional independence tester.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>TODO</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="causaldag.structure_learning.covariance_graph_gauss.html" class="btn btn-neutral float-right" title="causaldag.structure_learning.covariance_graph_gauss" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Structure Learning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Chandler Squires
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

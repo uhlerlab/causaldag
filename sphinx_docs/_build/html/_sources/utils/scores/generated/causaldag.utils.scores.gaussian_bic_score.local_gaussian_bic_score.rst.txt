@@ -1,6 +1,0 @@
-﻿causaldag.utils.scores.gaussian\_bic\_score.local\_gaussian\_bic\_score
-=======================================================================
-
-.. currentmodule:: causaldag.utils.scores.gaussian_bic_score
-
-.. autofunction:: local_gaussian_bic_score

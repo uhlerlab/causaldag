@@ -1,6 +1,0 @@
-﻿causaldag.utils.scores.gaussian\_bge\_score.local\_gaussian\_bge\_score
-=======================================================================
-
-.. currentmodule:: causaldag.utils.scores.gaussian_bge_score
-
-.. autofunction:: local_gaussian_bge_score

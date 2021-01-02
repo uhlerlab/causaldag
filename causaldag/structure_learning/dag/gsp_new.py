@@ -15,7 +15,7 @@ from math import factorial
 from causaldag.utils.ci_tests import MemoizedCI_Tester, get_ci_tester
 
 
-from causaldag.structure_learning.dag import perm2dag, sparsest_permutation, gsp
+from causaldag.structure_learning.dag import permutation2dag, sparsest_permutation, gsp
 
 
 def perm2dag_new(
@@ -50,11 +50,11 @@ def perm2dag_new(
     >>> perm = [0,1,2]
     >>> suffstat = gauss_ci_suffstat(samples)
     >>> ci_tester = MemoizedCI_Tester(gauss_ci_test, suffstat)
-    >>> perm2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
+    >>> permutation2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
     """
     ci_tester = get_ci_tester(samples, ci_test, memoize, **kwargs)
 
-    return perm2dag(
+    return permutation2dag(
         perm,
         ci_tester,
         verbose=verbose,

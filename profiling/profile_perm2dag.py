@@ -18,7 +18,7 @@ suffstats = [gauss_ci_suffstat(samples) for samples in samples]
 ci_testers1 = [MemoizedCI_Tester(gauss_ci_test, suffstat) for suffstat in suffstats]
 
 perms = [random.sample(list(range(nnodes)), nnodes) for _ in range(ngraphs)]
-imaps1 = list(tqdm((cd.perm2dag(perm, ci_tester, verbose=False) for perm, ci_tester in zip(perms, ci_testers1)), total=ngraphs))
+imaps1 = list(tqdm((cd.permutation2dag(perm, ci_tester, verbose=False) for perm, ci_tester in zip(perms, ci_testers1)), total=ngraphs))
 true_max_degrees = [dag.max_in_degree for dag in dags]
 ci_tests_per_dag = [list(zip(*ci_tester.ci_dict.keys()))[-1] for ci_tester in ci_testers1]
 ci_tests_sizes = [np.array([len(ci_test) for ci_test in ci_tests]) for ci_tests in ci_tests_per_dag]

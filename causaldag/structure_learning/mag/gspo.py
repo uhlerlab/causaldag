@@ -1,5 +1,5 @@
 import causaldag as cd
-from causaldag.structure_learning.dag import perm2dag, min_degree_alg_amat, gsp
+from causaldag.structure_learning.dag import permutation2dag, min_degree_alg_amat, gsp
 from causaldag.structure_learning.undirected import threshold_ug
 import random
 import itertools as itr
@@ -83,7 +83,7 @@ def gspo(
         ug = threshold_ug(nodes, ci_tester)
         amat = ug.to_amat()
         perms = [min_degree_alg_amat(amat) for _ in range(nruns)]
-        dags = [perm2dag(perm, ci_tester) for perm in perms]
+        dags = [permutation2dag(perm, ci_tester) for perm in perms]
         starting_imaps = [cd.AncestralGraph(dag.nodes, directed=dag.arcs) for dag in dags]
     elif initial_imap == 'empty':
         edges = {(i, j) for i, j in itr.combinations(nodes, 2) if not ci_tester.is_ci(i, j)}

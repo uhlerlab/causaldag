@@ -35,7 +35,7 @@ def perm2dag_precision(perm, precision, alpha=.01, num_samples=None):
     return DAG(nodes=set(perm), arcs=arcs)
 
 
-def perm2dag(
+def permutation2dag(
         perm: list,
         ci_tester: CI_Tester,
         verbose=False,
@@ -44,8 +44,7 @@ def perm2dag(
         progress=False
 ):
     """
-    Given a permutation, find the minimal IMAP consistent with that permutation and the results of conditional independence
-    tests from ci_tester.
+    Estimate the minimal IMAP of a DAG which is consistent with the given permutation.
 
     Parameters
     ----------
@@ -66,7 +65,7 @@ def perm2dag(
     >>> perm = [0,1,2]
     >>> suffstat = partial_correlation_suffstat(samples)
     >>> ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat)
-    >>> perm2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
+    >>> permutation2dag(perm, ci_tester, fixed_gaps={frozenset({1, 2})})
     """
     if hasattr(ci_tester, "ci_test") and ci_tester.ci_test == partial_correlation_test and "P" in ci_tester.suffstat:
         return perm2dag_precision(perm, ci_tester.suffstat["P"], ci_tester.kwargs.get('alpha'), ci_tester.suffstat['n'])
@@ -106,7 +105,7 @@ def perm2dag(
 
 def sparsest_permutation(nodes, ci_tester, progress=False):
     """
-    Run the Sparsest Permutation algorithm, finding the sparsest minimal IMAP associated with any permutation.
+    Estimate the Markov equivalence class of a DAG using the Sparsest Permutations (SP) algorithm.
 
     Parameters
     ----------
@@ -141,7 +140,7 @@ def sparsest_permutation(nodes, ci_tester, progress=False):
     permutations = tqdm(permutations, total=factorial(len(nodes))) if progress else permutations
     min_dag, min_num_arcs = None, float('inf')
     for perm in permutations:
-        dag = perm2dag(list(perm), ci_tester)
+        dag = permutation2dag(list(perm), ci_tester)
         if dag.num_arcs < min_num_arcs:
             min_dag, min_num_arcs = dag, dag.num_arcs
     return min_dag
@@ -373,8 +372,7 @@ def gsp(
         summarize=False
 ) -> (DAG, List[List[Dict]]):
     """
-    Use the Greedy Sparsest Permutation (GSP) algorithm to estimate the Markov equivalence class of the data-generating
-    DAG.
+    Estimate the Markov equivalence class of a DAG using the Greedy Sparsest Permutations (GSP) algorithm.
 
     Parameters
     ----------
@@ -432,7 +430,7 @@ def gsp(
     # === FIND CANDIDATE STARTING DAGS
     starting_dags = []
     for perm in initial_permutations:
-        d = perm2dag(perm, ci_tester, fixed_adjacencies=fixed_adjacencies, fixed_gaps=fixed_gaps)
+        d = permutation2dag(perm, ci_tester, fixed_adjacencies=fixed_adjacencies, fixed_gaps=fixed_gaps)
         starting_dags.append(d)
     starting_dags = sorted(starting_dags, key=lambda d: d.num_arcs)
 
@@ -666,7 +664,7 @@ def igsp(
         else:
             starting_perm = random.sample(nodes, len(nodes))
 
-        current_dag = perm2dag(starting_perm, ci_tester)
+        current_dag = permutation2dag(starting_perm, ci_tester)
         if verbose: print("=== STARTING RUN %s/%s" % (r + 1, nruns))
         current_covered_arcs = current_dag.reversible_arcs()
         current_icovered_arcs = [(i, j) for i, j in current_covered_arcs if _is_icovered(i, j)]
@@ -891,7 +889,7 @@ def unknown_target_igsp(
             starting_perm = min_degree_alg_amat(initial_undirected.to_amat())
         else:
             starting_perm = random.sample(nodes, len(nodes))
-        current_dag = perm2dag(starting_perm, ci_tester)
+        current_dag = permutation2dag(starting_perm, ci_tester)
         variants = _get_variants(current_dag)
         current_intervention_targets = [set() for _ in range(len(setting_list))]
         for setting_num, i, parents_i in variants:

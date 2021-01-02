@@ -1,0 +1,6 @@
+﻿causaldag.structure\_learning.perm2dag
+======================================
+
+.. currentmodule:: causaldag.structure_learning
+
+.. autofunction:: perm2dag

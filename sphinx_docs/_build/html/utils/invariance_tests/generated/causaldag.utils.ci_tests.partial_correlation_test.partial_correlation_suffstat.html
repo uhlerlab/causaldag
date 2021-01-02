@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score &mdash; causaldag  documentation</title>
+  <title>causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat &mdash; causaldag  documentation</title>
   
 
   
@@ -130,13 +130,13 @@
     
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score</li>
+      <li>causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../../_sources/utils/scores/generated/causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/utils/invariance_tests/generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -149,12 +149,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="causaldag-utils-scores-gaussian-bic-score-local-gaussian-bic-score">
-<h1>causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score<a class="headerlink" href="#causaldag-utils-scores-gaussian-bic-score-local-gaussian-bic-score" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="causaldag-utils-ci-tests-partial-correlation-test-partial-correlation-suffstat">
+<h1>causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat<a class="headerlink" href="#causaldag-utils-ci-tests-partial-correlation-test-partial-correlation-suffstat" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score">
-<code class="sig-prename descclassname">causaldag.utils.scores.gaussian_bic_score.</code><code class="sig-name descname">local_gaussian_bic_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">parents</span></em>, <em class="sig-param"><span class="n">suffstat</span></em>, <em class="sig-param"><span class="n">lambda_</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bic_score.html#local_gaussian_bic_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.gaussian_bic_score.local_gaussian_bic_score" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat">
+<code class="sig-prename descclassname">causaldag.utils.ci_tests.partial_correlation_test.</code><code class="sig-name descname">partial_correlation_suffstat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">invert</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="../../../_modules/causaldag/utils/ci_tests/partial_correlation_test.html#partial_correlation_suffstat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sufficient statistics for partial correlation testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> – (n x p) matrix, where n is the number of samples and p is the number of variables.</p></li>
+<li><p><strong>invert</strong> – if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This
+will generally speed up the gauss_ci_test if large conditioning sets are used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary of sufficient statistics</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 
