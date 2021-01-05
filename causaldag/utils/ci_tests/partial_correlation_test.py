@@ -1,7 +1,7 @@
 from typing import Dict
 from math import erf
 import numba
-from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate, cov
+from numpy import sqrt, log1p, abs, ix_, diag, corrcoef, errstate, cov, mean
 from numpy.linalg import inv, pinv
 # from . import MemoizedCI_Tester
 
@@ -36,15 +36,16 @@ def partial_correlation_suffstat(samples, invert=True) -> Dict:
         dictionary of sufficient statistics
     """
     n, p = samples.shape
-    S = cov(samples, rowvar=False)  # sample covariance matrix\
+    S = cov(samples, rowvar=False)  # sample covariance matrix
+    mu = mean(samples, axis=0)
     # TODO: NaN when variable is deterministic. Replace w/ 1 and 0?
     C = corrcoef(samples, rowvar=False)  # sample correlation matrix
     if invert:
         K = pinv(C)
         P = pinv(S)  # sample precision (inverse covariance) matrix
         rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]  # sample partial correlation matrix
-        return dict(P=P, S=S, C=C, n=n, K=K, rho=rho)
-    return dict(S=S, C=C, n=n)
+        return dict(P=P, S=S, C=C, n=n, K=K, rho=rho, mu=mu)
+    return dict(S=S, C=C, n=n, mu=mu)
 
 
 def compute_partial_correlation(suffstat, i, j, cond_set=None):
