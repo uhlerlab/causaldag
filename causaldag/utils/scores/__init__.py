@@ -1,2 +1,3 @@
 from .gaussian_bic_score import local_gaussian_bic_score
 from .gaussian_bge_score import local_gaussian_bge_score
+from .score import MemoizedDecomposableScore
