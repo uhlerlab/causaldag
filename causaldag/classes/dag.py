@@ -7,7 +7,7 @@ import numpy as np
 import itertools as itr
 from causaldag.utils import core_utils
 import operator as op
-from causaldag.classes.custom_types import Node, DirectedEdge, NodeSet
+from causaldag.classes.custom_types import Node, DirectedEdge, NodeSet, warn_untested
 from typing import Set, Union, Tuple, Any, Iterable, Dict, FrozenSet, List
 import networkx as nx
 from networkx.utils import UnionFind
@@ -1266,6 +1266,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         res_sinks = set()
         while True:
             new_resolved = {
@@ -1284,6 +1286,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         curr_graph = self
 
         ch_seq = []
@@ -1301,6 +1305,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         new_graph = self.copy()
 
         # STEP 2: REMOVE RESOLVED SINKS
@@ -1364,6 +1370,8 @@ class DAG:
         m:
             cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.
         """
+        warn_untested()  # TODO: ADD TEST
+
         from .ancestral_graph import AncestralGraph
 
         if not new:
@@ -1446,6 +1454,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         tab = '  '
         indent = 0
         newline = lambda indent: '\n' + (tab * indent)
@@ -1484,6 +1494,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         if not node_list:
             node_list = sorted(self._nodes)
         node2ix = {node: i for i, node in enumerate(node_list)}
@@ -1501,6 +1513,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         g = DAG(nodes=set(df.index)|set(df.columns))
         for (i, j), val in np.ndenumerate(df.values):
             if val != 0:
@@ -1584,6 +1598,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         with open(filename, 'w', newline='\n') as file:
             writer = csv.writer(file)
             for source, target in self._arcs:
@@ -1620,6 +1636,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         dct = self.directed_clique_tree()
 
         # find bidirected connected components
@@ -1644,6 +1662,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         cliques = nx.chordal_graph_cliques(self.to_nx().to_undirected())
         ct = nx.MultiDiGraph()
         ct.add_nodes_from(cliques)
@@ -1738,6 +1758,8 @@ class DAG:
         >>> g.moral_graph()
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         from causaldag import UndirectedGraph
         edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
         return UndirectedGraph(self._nodes, edges)
@@ -1748,6 +1770,8 @@ class DAG:
 
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         from causaldag import PDAG
 
         if cpdag is None:
@@ -1788,6 +1812,8 @@ class DAG:
         (interventions, cpdags)
             The selected interventions and the associated cpdags that they induce.
         """
+        warn_untested()  # TODO: ADD TEST
+
         if cpdag is None:
             cpdag = self.cpdag()
         if len(cpdag.edges) == 0:
@@ -1827,6 +1853,8 @@ class DAG:
         (interventions, cpdags)
             The selected interventions and the associated cpdags that they induce.
         """
+        warn_untested()  # TODO: ADD TEST
+
         if cpdag is None: cpdag = self.cpdag()
         curr_cpdag = cpdag
         ivs = []
@@ -1892,6 +1920,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         sdct = self.simplified_directed_clique_tree()
         sdct_nodes = list(sdct.nodes)
         sdct_components = [frozenset.union(*component) for component in sdct_nodes]
@@ -1903,6 +1933,8 @@ class DAG:
         """
         TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         from causaldag import PDAG
 
         sdct = self.simplified_directed_clique_tree()
@@ -2015,6 +2047,8 @@ class DAG:
         >>> g.dsep(1, 3, 2)
         False
         """
+        warn_untested()  # TODO: ADD TEST
+
         # type coercion
         A = core_utils.to_set(A)
         B = core_utils.to_set(B)
@@ -2083,6 +2117,8 @@ class DAG:
         verbose:
             If True, print moves of the algorithm.
         """
+        warn_untested()  # TODO: ADD TEST
+
         # type coercion
         A = core_utils.to_set(A)
         I = core_utils.to_set(intervened_nodes)
@@ -2134,7 +2170,11 @@ class DAG:
 
         Uses algorithm in Geiger, D., Verma, T., & Pearl, J. (1990).
         Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
+
+        TODO
         """
+        warn_untested()  # TODO: ADD TEST
+
         A = core_utils.to_set(A)
         C = core_utils.to_set(C)
 

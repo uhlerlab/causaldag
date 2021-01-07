@@ -4,7 +4,7 @@ import itertools as itr
 import numpy as np
 import random
 from typing import List, Iterable, Set, Dict, Hashable, Tuple, FrozenSet, Union
-from causaldag.classes.custom_types import Node, DirectedEdge, BidirectedEdge, UndirectedEdge, NodeSet
+from causaldag.classes.custom_types import Node, DirectedEdge, BidirectedEdge, UndirectedEdge, NodeSet, warn_untested
 
 
 class CycleError(Exception):
@@ -1875,6 +1875,8 @@ class AncestralGraph:
         --------
         TODO
         """
+        warn_untested()
+
         A = core_utils.to_set(A)
         C = core_utils.to_set(C)
 
