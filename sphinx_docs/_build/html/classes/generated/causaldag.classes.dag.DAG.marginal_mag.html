@@ -198,9 +198,9 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>latent_nodes</strong> (<em>nodes to marginalize over.</em>) – </li>
-<li><strong>relabel</strong> (<em>if relabel='default'</em><em>, </em><em>relabel the nodes to have labels 1</em><em>,</em><em>2</em><em>,</em><em>..</em><em>,</em><em>(</em><em>#nodes</em><em>)</em><em></em>) – </li>
-<li><strong>new</strong> – </li>
+<li><strong>latent_nodes</strong> – nodes to marginalize over.</li>
+<li><strong>relabel</strong> – if relabel=’default’, relabel the nodes to have labels 1,2,…,(#nodes).</li>
+<li><strong>new</strong> – TODO - pick whether to use new or old implementation.</li>
 </ul>
 </td>
 </tr>
@@ -212,6 +212,16 @@
 </tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">marginal_mag</span><span class="p">(</span><span class="n">latent_nodes</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span>
+<span class="go">Directed edges: set(), Bidirected edges: {frozenset({2, 3})}, Undirected edges: set()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">marginal_mag</span><span class="p">(</span><span class="n">latent_nodes</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span> <span class="n">relabel</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+<span class="go">Directed edges: set(), Bidirected edges: {frozenset({0, 1})}, Undirected edges: set()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

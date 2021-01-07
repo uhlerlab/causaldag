@@ -2302,6 +2302,10 @@ class DAG:
         -------
         interventions
             A minimum-size set of interventions which fully orients the DAG.
+
+        Examples
+        --------
+        TODO
         """
         if new:
             sdct = self.simplified_directed_clique_tree()
@@ -2344,6 +2348,10 @@ class DAG:
         ------
         (interventions, cpdags)
             The selected interventions and the associated cpdags that they induce.
+
+        Examples
+        --------
+        TODO
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -2386,6 +2394,10 @@ class DAG:
         -------
         (interventions, cpdags)
             The selected interventions and the associated cpdags that they induce.
+
+        Examples
+        --------
+        TODO
         """
         warn_untested()  # TODO: ADD TEST
 
