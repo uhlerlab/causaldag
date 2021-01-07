@@ -1,4 +1,4 @@
-causaldag.classes.dag.DAG.add\_arc
+﻿causaldag.classes.dag.DAG.add\_arc
 ==================================
 
 .. currentmodule:: causaldag.classes.dag

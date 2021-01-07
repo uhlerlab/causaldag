@@ -14,7 +14,14 @@ Methods
 .. autosummary::
    :toctree: generated
 
+Copying
+-------
+.. autosummary::
+   :toctree: generated
+
    DAG.copy
+   DAG.rename_nodes
+   DAG.induced_subgraph
 
 Information about nodes
 -----------------------
@@ -69,6 +76,8 @@ Comparison to other DAGs
    DAG.shd
    DAG.shd_skeleton
    DAG.markov_equivalent
+   DAG.is_imap
+   DAG.is_minimal_imap
 
 Separation statements
 ---------------------
@@ -77,9 +86,10 @@ Separation statements
 
    DAG.dsep
    DAG.dsep_from_given
+   DAG.is_invariant
 
 Conversion
-**********
+----------
 .. autosummary::
    :toctree: generated
 
@@ -89,3 +99,31 @@ Conversion
    DAG.to_nx
    DAG.from_dataframe
    DAG.to_dataframe
+
+Other
+-----
+.. autosummary::
+   :toctree: generated
+
+   DAG.confusion_matrix
+   DAG.confusion_matrix_skeleton
+
+   DAG.local_markov_statements
+
+   DAG.resolved_sinks
+   DAG.chickering_sequence
+   DAG.apply_edge_operation
+
+   DAG.marginal_mag
+
+   DAG.cpdag
+   DAG.interventional_cpdag
+   DAG.moral_graph
+
+   DAG.directed_clique_tree
+   DAG.simplified_directed_clique_tree
+   DAG.residuals
+   DAG.residual_essential_graph
+
+   DAG.optimal_fully_orienting_interventions
+   DAG.greedy_optimal_single_node_intervention

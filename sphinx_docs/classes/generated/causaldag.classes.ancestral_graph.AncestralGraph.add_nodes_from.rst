@@ -1,4 +1,4 @@
-causaldag.classes.ancestral\_graph.AncestralGraph.add\_nodes\_from
+﻿causaldag.classes.ancestral\_graph.AncestralGraph.add\_nodes\_from
 ==================================================================
 
 .. currentmodule:: causaldag.classes.ancestral_graph

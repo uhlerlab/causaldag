@@ -709,7 +709,7 @@ class DAG:
 
     def add_arc(self, i: Node, j: Node, check_acyclic=True):
         """
-        Add the arc ``i``->``j`` to the DAG
+        Add the arc ``i`` -> ``j`` to the DAG
 
         Parameters
         ----------
@@ -797,7 +797,7 @@ class DAG:
 
     def remove_arc(self, i: Node, j: Node, ignore_error=False):
         """
-        Remove the arc ``i``->``j``.
+        Remove the arc ``i`` -> ``j``.
 
         Parameters
         ----------
@@ -852,7 +852,7 @@ class DAG:
 
     def reverse_arc(self, i: Node, j: Node, ignore_error=False, check_acyclic=False):
         """
-        Reverse the arc ``i``->``j`` to ``i``<-``j``.
+        Reverse the arc ``i`` -> ``j`` to ``i`` <- ``j``.
 
         Parameters
         ----------
@@ -896,7 +896,7 @@ class DAG:
     # === GRAPH PROPERTIES
     def has_arc(self, source: Node, target: Node) -> bool:
         """
-        Check if this DAG has an arc ``source``->``target``.
+        Check if this DAG has an arc ``source`` -> ``target``.
 
         Parameters
         ----------
@@ -977,7 +977,7 @@ class DAG:
 
     def is_reversible(self, i: Node, j: Node) -> bool:
         """
-        Check if the arc ``i``->``j`` is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`
+        Check if the arc ``i`` -> ``j`` is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`
 
         Parameters
         ----------
@@ -1049,18 +1049,32 @@ class DAG:
 
     def triples(self) -> Set[Tuple]:
         """
-        TODO
+        Return all triples of the form (``i``, ``j``, ``k``) such that ``i`` and ``k`` are both adjacent to ``j``.
+
+        Returns
+        -------
+        Set[Tuple]
+            Triples in the graph.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 3), (2, 3), (1, 2)})
+        >>> g.triples()
+        {frozenset({1, 3, 2})}
         """
         t = set()
         for node in self._nodes:
-            t |= {(n1, node, n2) for n1, n2 in itr.combinations(self._neighbors[node], 2)}
+            t |= {frozenset({n1, node, n2}) for n1, n2 in itr.combinations(self._neighbors[node], 2)}
         return t
 
     def upstream_most(self, s: Set[Node]) -> Set[Node]:
         """
+        Return the set of nodes which in ``s`` which have no ancestors in ``s``.
+
         Parameters
         ----------
-        ``s``:
+        s:
             Set of nodes
 
         Returns

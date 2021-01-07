@@ -14,9 +14,31 @@ Methods
 .. autosummary::
    :toctree: generated
 
+Copying
+-------
+.. autosummary::
+   :toctree: generated
+
    DAG.copy
-   DAG.to_amat
-   DAG.from_amat
+   DAG.rename_nodes
+   DAG.induced_subgraph
+
+Information about nodes
+-----------------------
+.. autosummary::
+   :toctree: generated
+
+   DAG.parents_of
+   DAG.children_of
+   DAG.neighbors_of
+   DAG.markov_blanket_of
+   DAG.ancestors_of
+   DAG.descendants_of
+   DAG.indegree_of
+   DAG.outdegree_of
+   DAG.incoming_arcs
+   DAG.outgoing_arcs
+   DAG.incident_arcs
 
 Graph modification
 ------------------
@@ -24,18 +46,27 @@ Graph modification
    :toctree: generated
 
    DAG.add_node
+   DAG.add_nodes_from
    DAG.remove_node
    DAG.add_arc
-   DAG.remove_arc
-   DAG.add_nodes_from
    DAG.add_arcs_from
+   DAG.remove_arc
+   DAG.reverse_arc
 
 Graph properties
 ----------------
 .. autosummary::
    :toctree: generated
 
+   DAG.has_arc
+   DAG.sources
+   DAG.sinks
    DAG.reversible_arcs
+   DAG.is_reversible
+   DAG.arcs_in_vstructures
+   DAG.vstructures
+   DAG.triples
+   DAG.upstream_most
 
 Comparison to other DAGs
 ------------------------
@@ -45,20 +76,54 @@ Comparison to other DAGs
    DAG.shd
    DAG.shd_skeleton
    DAG.markov_equivalent
+   DAG.is_imap
+   DAG.is_minimal_imap
 
-Functions for nodes
--------------------
+Separation statements
+---------------------
 .. autosummary::
    :toctree: generated
 
-   DAG.downstream
-   DAG.upstream
-   DAG.incident_arcs
-   DAG.incoming_arcs
-   DAG.outgoing_arcs
-   DAG.indegree
-   DAG.outdegree
-   DAG.parents_of
-   DAG.children_of
-   DAG.neighbors_of
-   DAG.markov_blanket
+   DAG.dsep
+   DAG.dsep_from_given
+   DAG.is_invariant
+
+Conversion
+----------
+.. autosummary::
+   :toctree: generated
+
+   DAG.from_amat
+   DAG.to_amat
+   DAG.from_nx
+   DAG.to_nx
+   DAG.from_dataframe
+   DAG.to_dataframe
+
+Other
+-----
+.. autosummary::
+   :toctree: generated
+
+   DAG.confusion_matrix
+   DAG.confusion_matrix_skeleton
+
+   DAG.local_markov_statements
+
+   DAG.resolved_sinks
+   DAG.chickering_sequence
+   DAG.apply_edge_operation
+
+   DAG.marginal_mag
+
+   DAG.cpdag
+   DAG.interventional_cpdag
+   DAG.moral_graph
+
+   DAG.directed_clique_tree
+   DAG.simplified_directed_clique_tree
+   DAG.residuals
+   DAG.residual_essential_graph
+
+   DAG.optimal_fully_orienting_interventions
+   DAG.greedy_optimal_single_node_intervention

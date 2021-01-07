@@ -1,4 +1,4 @@
-causaldag.classes.dag.DAG.markov\_equivalent
+﻿causaldag.classes.dag.DAG.markov\_equivalent
 ============================================
 
 .. currentmodule:: causaldag.classes.dag

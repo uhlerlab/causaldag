@@ -1,4 +1,4 @@
-causaldag.classes.ancestral\_graph.AncestralGraph.markov\_equivalent
+﻿causaldag.classes.ancestral\_graph.AncestralGraph.markov\_equivalent
 ====================================================================
 
 .. currentmodule:: causaldag.classes.ancestral_graph

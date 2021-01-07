@@ -1,4 +1,4 @@
-causaldag.classes.pdag.PDAG.copy
+﻿causaldag.classes.pdag.PDAG.copy
 ================================
 
 .. currentmodule:: causaldag.classes.pdag

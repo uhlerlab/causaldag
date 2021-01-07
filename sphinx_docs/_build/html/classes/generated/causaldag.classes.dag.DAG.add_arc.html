@@ -35,7 +35,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.classes.dag.DAG.remove_arc" href="causaldag.classes.dag.DAG.remove_arc.html" />
+    <link rel="next" title="causaldag.classes.dag.DAG.add_arcs_from" href="causaldag.classes.dag.DAG.add_arcs_from.html" />
     <link rel="prev" title="causaldag.classes.dag.DAG.remove_node" href="causaldag.classes.dag.DAG.remove_node.html" /> 
 </head>
 
@@ -88,14 +88,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#overview">Overview</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#methods">Methods</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.copy.html">causaldag.classes.dag.DAG.copy</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.to_amat.html">causaldag.classes.dag.DAG.to_amat</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.from_amat.html">causaldag.classes.dag.DAG.from_amat</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../DAG.html#information-about-nodes">Information about nodes</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../DAG.html#functions-for-nodes">Functions for nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion">Conversion</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../PDAG.html">PDAG</a></li>
@@ -179,7 +179,7 @@
 <dl class="py method">
 <dt id="causaldag.classes.dag.DAG.add_arc">
 <code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_arc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">j</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">check_acyclic</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_arc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_arc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add the arc <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` to the DAG</p>
+<dd><p>Add the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> to the DAG</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -213,7 +213,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="causaldag.classes.dag.DAG.remove_arc.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.remove_arc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="causaldag.classes.dag.DAG.add_arcs_from.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.add_arcs_from" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="causaldag.classes.dag.DAG.remove_node.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.remove_node" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

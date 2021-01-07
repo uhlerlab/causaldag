@@ -1,4 +1,4 @@
-causaldag.classes.pdag.PDAG.from\_amat
+﻿causaldag.classes.pdag.PDAG.from\_amat
 ======================================
 
 .. currentmodule:: causaldag.classes.pdag

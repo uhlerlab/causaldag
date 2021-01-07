@@ -243,7 +243,7 @@
             <span class="k">continue</span>
 
         <span class="c1"># === TEST MARKOV BLANKET</span>
-        <span class="n">mb</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">markov_blanket</span><span class="p">(</span><span class="n">pi_i</span><span class="p">)</span>
+        <span class="n">mb</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">markov_blanket_of</span><span class="p">(</span><span class="n">pi_i</span><span class="p">)</span>
 
         <span class="n">is_ci</span> <span class="o">=</span> <span class="n">ci_tester</span><span class="o">.</span><span class="n">is_ci</span><span class="p">(</span><span class="n">pi_i</span><span class="p">,</span> <span class="n">pi_j</span><span class="p">,</span> <span class="n">mb</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ci</span><span class="p">:</span>
@@ -640,7 +640,7 @@
                     <span class="c1"># === FIND THE DAG CORRESPONDING TO THE SPARSER IMAP</span>
                     <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">rem_arcs</span> <span class="o">=</span> <span class="n">covered_arcs2removed_arcs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">selected_ix</span><span class="p">)</span>
                     <span class="n">current_dag</span><span class="o">.</span><span class="n">reverse_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="n">current_dag</span><span class="o">.</span><span class="n">remove_arcs</span><span class="p">(</span><span class="n">rem_arcs</span><span class="p">)</span>
+                    <span class="n">current_dag</span><span class="o">.</span><span class="n">remove_arcs_from</span><span class="p">(</span><span class="n">rem_arcs</span><span class="p">)</span>
                     <span class="n">current_covered_arcs</span> <span class="o">=</span> <span class="n">current_dag</span><span class="o">.</span><span class="n">reversible_arcs</span><span class="p">()</span> <span class="o">-</span> <span class="n">fixed_orders</span>
 
                     <span class="c1"># if frozenset(current_dag.arcs) in all_kept_dags:  # CHECK IF THIS MAKES SENSE</span>

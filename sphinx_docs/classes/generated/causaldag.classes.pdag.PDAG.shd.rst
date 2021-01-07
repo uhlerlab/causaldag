@@ -1,4 +1,4 @@
-causaldag.classes.pdag.PDAG.shd
+﻿causaldag.classes.pdag.PDAG.shd
 ===============================
 
 .. currentmodule:: causaldag.classes.pdag
