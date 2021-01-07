@@ -157,7 +157,7 @@
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
 <span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">operator</span> <span class="k">as</span> <span class="nn">op</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">List</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">UnionFind</span>
@@ -182,7 +182,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for causal DAGs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
@@ -202,7 +202,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
             <span class="c1"># print(&#39;before call to add arcs from&#39;)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_arcs_from</span><span class="p">(</span><span class="n">arcs</span><span class="p">,</span> <span class="n">unsafe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_arcs_from</span><span class="p">(</span><span class="n">arcs</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DAG</span><span class="p">):</span>
@@ -226,7 +226,7 @@
 <div class="viewcode-block" id="DAG.from_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.from_amat.html#causaldag.classes.dag.DAG.from_amat">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_amat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">amat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a DAG with arcs given by amat, i.e. i-&gt;j if amat[i,j] != 0</span>
+<span class="sd">        Return a DAG with arcs given by ``amat``, i.e. i-&gt;j if ``amat[i,j] != 0``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -236,9 +236,11 @@
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
-<span class="sd">        &gt;&gt;&gt; amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])</span>
-<span class="sd">        &gt;&gt;&gt; cd.DAG.from_amat(amat)</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; amat = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG.from_amat(amat)</span>
+<span class="sd">        &gt;&gt;&gt; d.arcs</span>
+<span class="sd">        {(0, 2), (1, 2)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">amat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
         <span class="n">arcs</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">amat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
@@ -246,12 +248,28 @@
 
 <div class="viewcode-block" id="DAG.copy"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.copy.html#causaldag.classes.dag.DAG.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a copy of the current DAG</span>
+<span class="sd">        Return a copy of the current DAG.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># return DAG(nodes=self._nodes, arcs=self._arcs)</span>
         <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">rename_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rename the nodes in this graph according to ``name_map``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name_map:</span>
+<span class="sd">            A dictionary from the current name of each node to the desired name of each node.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(&#39;a&#39;, &#39;b&#39;), (&#39;b&#39;, &#39;c&#39;)})</span>
+<span class="sd">        &gt;&gt;&gt; g2 = g.rename_nodes({&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3})</span>
+<span class="sd">        &gt;&gt;&gt; g2.arcs</span>
+<span class="sd">        {(1, 2), (2, 3)}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span>
             <span class="n">nodes</span><span class="o">=</span><span class="p">{</span><span class="n">name_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">},</span>
             <span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="n">name_map</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name_map</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
@@ -276,14 +294,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: change name to dict?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: change name to dict?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: change name to dict?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -309,15 +336,16 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
 
-<div class="viewcode-block" id="DAG.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all nodes that are parents of `node`.</span>
+<span class="sd">        Return all nodes that are parents of the node or set of nodes ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node</span>
+<span class="sd">        nodes</span>
+<span class="sd">            A node or set of nodes.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -325,20 +353,26 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.parents_of(2)</span>
+<span class="sd">        {1}</span>
+<span class="sd">        &gt;&gt;&gt; g.parents_of({2, 3})</span>
+<span class="sd">        {1, 2}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DAG.children_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of">[docs]</a>    <span class="k">def</span> <span class="nf">children_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.children_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of">[docs]</a>    <span class="k">def</span> <span class="nf">children_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all nodes that are children of `node`.</span>
+<span class="sd">        Return all nodes that are children of the node or set of nodes ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node</span>
+<span class="sd">        nodes</span>
+<span class="sd">            A node or set of nodes.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -346,20 +380,26 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.children_of(1)</span>
+<span class="sd">        {2}</span>
+<span class="sd">        &gt;&gt;&gt; g.children_of({1, 2})</span>
+<span class="sd">        {2, 3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DAG.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all nodes that are adjacent to `node`.</span>
+<span class="sd">        Return all nodes that are adjacent to the node or set of nodes ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node</span>
+<span class="sd">        nodes</span>
+<span class="sd">            A node or set of nodes.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -374,14 +414,14 @@
 <span class="sd">        &gt;&gt;&gt; g.neighbors_of(2)</span>
 <span class="sd">        {0}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">has_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this DAG has an arc.</span>
+<span class="sd">        Check if this DAG has an arc ``source``-&gt;``target``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -392,33 +432,39 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(0,1), (0,2)})</span>
+<span class="sd">        &gt;&gt;&gt; g.has_arc(0, 1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; g.has_arc(1, 2)</span>
+<span class="sd">        False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span>
 
-    <span class="k">def</span> <span class="nf">is_upstream_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anc</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Check if `anc` is upstream from `desc`</span>
+    <span class="k">def</span> <span class="nf">is_ancestor_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anc</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">desc</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if ``anc`` is an ancestor of ``desc``</span>
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        bool</span>
-<span class="sd">            True if `anc` is upstream of `desc`</span>
+<span class="sd">            True if ``anc`` is an ancestor  of ``desc``</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
-<span class="sd">        &gt;&gt;&gt; g.is_upstream_of(1, 3)</span>
+<span class="sd">        &gt;&gt;&gt; g.is_ancestor_of(1, 3)</span>
 <span class="sd">        True</span>
-<span class="sd">        &gt;&gt;&gt; g.is_upstream_of(3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; g.is_ancestor_of(3, 1)</span>
 <span class="sd">        False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">anc</span><span class="p">]</span> <span class="ow">or</span> <span class="n">desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downstream</span><span class="p">(</span><span class="n">anc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">anc</span><span class="p">]</span> <span class="ow">or</span> <span class="n">desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">descendants_of</span><span class="p">(</span><span class="n">anc</span><span class="p">)</span>
 
     <span class="c1"># === MUTATORS</span>
 <div class="viewcode-block" id="DAG.add_node"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a node to the DAG</span>
+<span class="sd">        Add ``node`` to the DAG.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -440,9 +486,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DAG.add_arc"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_arc.html#causaldag.classes.dag.DAG.add_arc">[docs]</a>    <span class="k">def</span> <span class="nf">add_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">unsafe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="DAG.add_arc"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_arc.html#causaldag.classes.dag.DAG.add_arc">[docs]</a>    <span class="k">def</span> <span class="nf">add_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add an arc to the DAG</span>
+<span class="sd">        Add the arc ``i``-&gt;``j`` to the DAG</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -450,6 +496,8 @@
 <span class="sd">            source node of the arc</span>
 <span class="sd">        j:</span>
 <span class="sd">            target node of the arc</span>
+<span class="sd">        check_acyclic:</span>
+<span class="sd">            if True, check that the DAG remains acyclic after adding the edge.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -473,7 +521,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">unsafe</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">check_acyclic</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_check_acyclic</span><span class="p">()</span>
             <span class="k">except</span> <span class="n">CycleError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -499,12 +547,12 @@
 
     <span class="k">def</span> <span class="nf">topological_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a topological sort of the nodes in the graph</span>
+<span class="sd">        Return a topological sort of the nodes in the graph.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        List[Node]</span>
-<span class="sd">            Return a topological sort of the nodes in a graph.</span>
+<span class="sd">            A topological sort of the nodes in a graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -523,21 +571,61 @@
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">is_topological</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that ``order`` is a topological order consistent with this DAG, i.e., if ``i``-&gt;``j`` in the DAG,</span>
+<span class="sd">        then ``i`` comes before ``j`` in the order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order:</span>
+<span class="sd">            the order to check.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.is_topological([1, 2, 3])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; g.is_topological([1, 3, 2])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; g.is_topological([2, 1, 3])</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">permutation_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of &quot;errors&quot; in ``order`` with respect to the DAG, i.e., the number of times that ``i``-&gt;``j``</span>
+<span class="sd">        in the DAG but ``i`` comes *after* ``j`` in ``order``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order:</span>
+<span class="sd">            the order to check.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.permutation_score([1, 2, 3])</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; g.permutation_score([2, 1, 3])</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; g.permutation_score([2, 3, 1])</span>
+<span class="sd">        2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.add_nodes_from"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_nodes_from.html#causaldag.classes.dag.DAG.add_nodes_from">[docs]</a>    <span class="k">def</span> <span class="nf">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add nodes to the graph from a collection</span>
+<span class="sd">        Add nodes to the graph from the collection ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        nodes:</span>
-<span class="sd">            collection of nodes to be added</span>
+<span class="sd">            collection of nodes to be added.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -555,14 +643,16 @@
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DAG.add_arcs_from"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_arcs_from.html#causaldag.classes.dag.DAG.add_arcs_from">[docs]</a>    <span class="k">def</span> <span class="nf">add_arcs_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">unsafe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="DAG.add_arcs_from"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_arcs_from.html#causaldag.classes.dag.DAG.add_arcs_from">[docs]</a>    <span class="k">def</span> <span class="nf">add_arcs_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add arcs to the graph from a collection</span>
+<span class="sd">        Add arcs to the graph from the collection ``arcs``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        arcs:</span>
-<span class="sd">            collection of arcs to be added</span>
+<span class="sd">            collection of arcs to be added.</span>
+<span class="sd">        check_acyclic:</span>
+<span class="sd">            if True, check that the DAG remains acyclic after adding the edge.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -591,7 +681,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">unsafe</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">check_acyclic</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_check_acyclic</span><span class="p">()</span>
             <span class="k">except</span> <span class="n">CycleError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -599,18 +689,20 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">remove_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="n">e</span></div>
 
-    <span class="k">def</span> <span class="nf">reverse_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unsafe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reverse_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Reverse the arc i-&gt;j to i&lt;-j</span>
+<span class="sd">        Reverse the arc ``i``-&gt;``j`` to ``i``&lt;-``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        i:</span>
-<span class="sd">            source of arc to be reversed</span>
+<span class="sd">            source of arc to be reversed.</span>
 <span class="sd">        j:</span>
-<span class="sd">            target of arc to be reversed</span>
+<span class="sd">            target of arc to be reversed.</span>
 <span class="sd">        ignore_error:</span>
-<span class="sd">            if True, ignore the KeyError raised when arc is not in the DAG</span>
+<span class="sd">            if True, ignore the KeyError raised when arc is not in the DAG.</span>
+<span class="sd">        check_acyclic:</span>
+<span class="sd">            if True, check that the DAG remains acyclic after adding the edge.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -621,20 +713,20 @@
 <span class="sd">        {(2, 1)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">remove_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="n">ignore_error</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">unsafe</span><span class="o">=</span><span class="n">unsafe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="n">check_acyclic</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.remove_arc"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.remove_arc.html#causaldag.classes.dag.DAG.remove_arc">[docs]</a>    <span class="k">def</span> <span class="nf">remove_arc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove the arc i-&gt;j</span>
+<span class="sd">        Remove the arc ``i``-&gt;``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        i:</span>
-<span class="sd">            source of arc to be removed</span>
+<span class="sd">            source of arc to be removed.</span>
 <span class="sd">        j:</span>
-<span class="sd">            target of arc to be removed</span>
+<span class="sd">            target of arc to be removed.</span>
 <span class="sd">        ignore_error:</span>
-<span class="sd">            if True, ignore the KeyError raised when arc is not in the DAG</span>
+<span class="sd">            if True, ignore the KeyError raised when arc is not in the DAG.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -658,29 +750,36 @@
 
     <span class="k">def</span> <span class="nf">remove_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Remove each arc in ``arcs`` from the DAG.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        arcs</span>
+<span class="sd">            The arcs to be removed from the DAG.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            if True, ignore the KeyError raised when an arc is not in the DAG.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3), (3, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_arcs({(1, 2), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.arcs</span>
+<span class="sd">        {(3, 4)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">arcs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_arc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="n">ignore_error</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.remove_node"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.remove_node.html#causaldag.classes.dag.DAG.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove a node from the graph</span>
+<span class="sd">        Remove the node ``node`` from the graph.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        node:</span>
-<span class="sd">            node to be removed</span>
+<span class="sd">            node to be removed.</span>
 <span class="sd">        ignore_error:</span>
-<span class="sd">            if True, ignore the KeyError raised when node is not in the DAG</span>
+<span class="sd">            if True, ignore the KeyError raised when node is not in the DAG.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -712,37 +811,37 @@
     <span class="c1"># === GRAPH PROPERTIES</span>
     <span class="k">def</span> <span class="nf">sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get all nodes in the graph that have no parents</span>
+<span class="sd">        Get all nodes in the graph that have no parents.</span>
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        List[node]</span>
-<span class="sd">            Nodes in the graph that have no parents</span>
+<span class="sd">            Nodes in the graph that have no parents.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.sources()</span>
-<span class="sd">        {1)</span>
+<span class="sd">        {1}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get all nodes in the graph that have no children</span>
+<span class="sd">        Get all nodes in the graph that have no children.</span>
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        List[node]</span>
-<span class="sd">            Nodes in the graph that have no children</span>
+<span class="sd">            Nodes in the graph that have no children.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.sinks()</span>
-<span class="sd">        {3)</span>
+<span class="sd">        {3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
 
@@ -761,7 +860,7 @@
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})</span>
 <span class="sd">        &gt;&gt;&gt; g.reversible_arcs()</span>
-<span class="sd">        {(1, 2), (2, 3))</span>
+<span class="sd">        {(1, 2), (2, 3)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">reversible_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
@@ -771,12 +870,14 @@
 
     <span class="k">def</span> <span class="nf">is_reversible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if the arc i-&gt;j is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`</span>
+<span class="sd">        Check if the arc ``i``-&gt;``j`` is reversible (aka covered), i.e., if :math:`pa(i) = pa(j) \setminus \{i\}`</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        i: source of the arc</span>
-<span class="sd">        j: target of the arc</span>
+<span class="sd">        i:</span>
+<span class="sd">            source of the arc</span>
+<span class="sd">        j:</span>
+<span class="sd">            target of the arc</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -815,15 +916,22 @@
 
     <span class="k">def</span> <span class="nf">vstructures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Get all v-structures in the graph, i.e., triples of the form (i, k, j) such that ``i``-&gt;k&lt;-``j`` and ``i``</span>
+<span class="sd">        is not adjacent to ``j``.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        Set[Tuple]</span>
+<span class="sd">            Return all triples in the graph in a v-structure (aka an immorality). A v-structure is formed when i-&gt;j&lt;-k but</span>
+<span class="sd">            there is no arc between i and k. Arcs that participate in a v-structure are identifiable from observational</span>
+<span class="sd">            data.</span>
 
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 3), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.vstructures()</span>
+<span class="sd">        {(1, 3, 2)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vstructs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
@@ -833,6 +941,9 @@
         <span class="k">return</span> <span class="n">vstructs</span>
 
     <span class="k">def</span> <span class="nf">triples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">t</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="n">t</span> <span class="o">|=</span> <span class="p">{(</span><span class="n">n1</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span> <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="mi">2</span><span class="p">)}</span>
@@ -840,7 +951,7 @@
 
 <div class="viewcode-block" id="DAG.markov_blanket"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.markov_blanket.html#causaldag.classes.dag.DAG.markov_blanket">[docs]</a>    <span class="k">def</span> <span class="nf">markov_blanket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the Markov blanket of `node`, i.e., the parents of the node, its children, and the parents of its children.</span>
+<span class="sd">        Return the Markov blanket of ``node``, i.e., the parents of the node, its children, and the parents of its children.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -853,26 +964,31 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        mb:</span>
-<span class="sd">            the Markov blanket of `node`.</span>
+<span class="sd">        set:</span>
+<span class="sd">            the Markov blanket of ``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(0, 1), (1, 3), (2, 3), (3, 4})</span>
 <span class="sd">        &gt;&gt;&gt; g.markov_blanket(1)</span>
 <span class="sd">        {0, 2, 3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parents_of_children</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">parents_of_children</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span>
+            <span class="n">node</span><span class="p">]</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">|</span> <span class="n">parents_of_children</span> <span class="o">-</span> <span class="p">{</span><span class="n">node</span><span class="p">}</span></div>
 
     <span class="c1"># === COMPARISON</span>
     <span class="k">def</span> <span class="nf">chickering_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">reversals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">&amp;</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">arc</span><span class="p">))</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shd_skeleton</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shd_skeleton</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.shd"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.shd.html#causaldag.classes.dag.DAG.shd">[docs]</a>    <span class="k">def</span> <span class="nf">shd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the structural Hamming distance between this DAG and another graph</span>
+<span class="sd">        Compute the structural Hamming distance between this DAG and the DAG ``other``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -903,6 +1019,9 @@
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">additions</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">deletions</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversals</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">confusion_matrix_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span>
         <span class="n">other_skeleton</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">skeleton</span>
 
@@ -936,6 +1055,9 @@
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">def</span> <span class="nf">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">rates_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
 
         <span class="kn">from</span> <span class="nn">causaldag.classes.pdag</span> <span class="kn">import</span> <span class="n">PDAG</span>
@@ -972,7 +1094,8 @@
 
         <span class="c1"># COMBINED_RESULTS</span>
         <span class="n">num_false_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_positive_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_arcs</span><span class="p">)</span>
-        <span class="n">num_false_negatives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_arcs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mistaken_arcs_for_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversed_arcs</span><span class="p">)</span>
+        <span class="n">num_false_negatives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_arcs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">false_negative_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mistaken_arcs_for_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">reversed_arcs</span><span class="p">)</span>
         <span class="n">num_true_positives</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_positive_edges</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_positive_arcs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">mistaken_edges_for_arcs</span><span class="p">)</span>
         <span class="n">num_true_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_false_positives</span> <span class="o">-</span> <span class="n">num_false_negatives</span> <span class="o">-</span> <span class="n">num_true_positives</span>
 
@@ -980,9 +1103,9 @@
         <span class="n">num_negatives</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span>
         <span class="n">num_positives</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_arcs</span>
         <span class="n">num_returned_positives</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_true_positives</span> <span class="o">+</span> <span class="n">num_false_positives</span><span class="p">)</span>
-        <span class="n">fpr</span> <span class="o">=</span> <span class="n">num_false_positives</span><span class="o">/</span><span class="n">num_negatives</span> <span class="k">if</span> <span class="n">num_negatives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="n">tpr</span> <span class="o">=</span> <span class="n">num_true_positives</span><span class="o">/</span><span class="n">num_positives</span> <span class="k">if</span> <span class="n">num_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
-        <span class="n">precision</span> <span class="o">=</span> <span class="n">num_true_positives</span><span class="o">/</span><span class="n">num_returned_positives</span> <span class="k">if</span> <span class="n">num_returned_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">fpr</span> <span class="o">=</span> <span class="n">num_false_positives</span> <span class="o">/</span> <span class="n">num_negatives</span> <span class="k">if</span> <span class="n">num_negatives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">tpr</span> <span class="o">=</span> <span class="n">num_true_positives</span> <span class="o">/</span> <span class="n">num_positives</span> <span class="k">if</span> <span class="n">num_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">num_true_positives</span> <span class="o">/</span> <span class="n">num_returned_positives</span> <span class="k">if</span> <span class="n">num_returned_positives</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">rates_only</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
@@ -1013,7 +1136,7 @@
 
 <div class="viewcode-block" id="DAG.shd_skeleton"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.shd_skeleton.html#causaldag.classes.dag.DAG.shd_skeleton">[docs]</a>    <span class="k">def</span> <span class="nf">shd_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of another graph</span>
+<span class="sd">        Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of the graph ``other``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1043,7 +1166,7 @@
 
 <div class="viewcode-block" id="DAG.markov_equivalent"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.markov_equivalent.html#causaldag.classes.dag.DAG.markov_equivalent">[docs]</a>    <span class="k">def</span> <span class="nf">markov_equivalent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">interventions</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this DAG is (interventionally) Markov equivalent to some other DAG.</span>
+<span class="sd">        Check if this DAG is (interventionally) Markov equivalent to the DAG ``other``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1059,12 +1182,17 @@
         <span class="k">if</span> <span class="n">interventions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interventional_cpdag</span><span class="p">(</span><span class="n">interventions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">())</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">interventional_cpdag</span><span class="p">(</span><span class="n">interventions</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">cpdag</span><span class="p">())</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interventional_cpdag</span><span class="p">(</span><span class="n">interventions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">())</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">interventional_cpdag</span><span class="p">(</span><span class="n">interventions</span><span class="p">,</span>
+                                                                                                        <span class="n">other</span><span class="o">.</span><span class="n">cpdag</span><span class="p">())</span></div>
 
-    <span class="k">def</span> <span class="nf">local_markov_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Set</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">local_markov_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the local Markov statements of this DAG, i.e., those of the form `i` independent nondescendants(i) given</span>
-<span class="sd">        the parents of `i`.</span>
+<span class="sd">        Return the local Markov statements of this DAG, i.e., those of the form ``i`` independent nondescendants(i) given</span>
+<span class="sd">        the parents of ``i``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TODO</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1076,14 +1204,14 @@
         <span class="n">statements</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-            <span class="n">nondescendants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="p">{</span><span class="n">node</span><span class="p">}</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">downstream</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">-</span> <span class="n">parents</span>
+            <span class="n">nondescendants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="p">{</span><span class="n">node</span><span class="p">}</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">descendants_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">-</span> <span class="n">parents</span>
             <span class="n">statements</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">node</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">nondescendants</span><span class="p">),</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">parents</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">statements</span>
 
     <span class="k">def</span> <span class="nf">is_imap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this DAG is an IMAP of the `other` DAG, i.e., all d-separation statements in this graph</span>
-<span class="sd">        are also d-separation statements in `other`.</span>
+<span class="sd">        Check if this DAG is an IMAP of the DAG ``other``, i.e., all d-separation statements in this graph</span>
+<span class="sd">        are also d-separation statements in ``other``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1093,6 +1221,11 @@
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        is_minimal_imap</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if ``other`` is an I-MAP of this DAG, otherwise False.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1128,6 +1261,11 @@
 <span class="sd">        --------</span>
 <span class="sd">        is_imap</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if ``other`` is a minimal I-MAP of this DAG, otherwise False.</span>
+
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
@@ -1137,87 +1275,97 @@
 <span class="sd">        False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">check_imap</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_imap</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">certify</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
-            <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">certify</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
 
         <span class="n">certificate</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">dsep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">})),</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">certify</span><span class="p">:</span> <span class="k">return</span> <span class="n">certificate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">certificate</span>
-        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">certificate</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">certify</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">certificate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="n">certificate</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">certificate</span> <span class="ow">is</span> <span class="kc">None</span>
 
     <span class="c1"># === CONVENIENCE</span>
-    <span class="k">def</span> <span class="nf">_add_downstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">downstream</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_add_descendants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descendants</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">downstream</span><span class="p">:</span>
-                <span class="n">downstream</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add_downstream</span><span class="p">(</span><span class="n">downstream</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
+                <span class="n">descendants</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_descendants</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DAG.downstream"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.downstream.html#causaldag.classes.dag.DAG.downstream">[docs]</a>    <span class="k">def</span> <span class="nf">downstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">descendants_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the nodes downstream of node.</span>
+<span class="sd">        Return the descendants of ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node:</span>
+<span class="sd">        nodes:</span>
 <span class="sd">            The node.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
-<span class="sd">        upstream</span>
+<span class="sd">        ancestors_of</span>
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        Set[node]</span>
-<span class="sd">            Return all nodes j such that there is a directed path from node to j.</span>
+<span class="sd">            Return all nodes j such that there is a directed path from ``node`` to j.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
-<span class="sd">        &gt;&gt;&gt; g.downstream(1)</span>
+<span class="sd">        &gt;&gt;&gt; g.descendants_of(1)</span>
 <span class="sd">        {2, 3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">downstream</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_downstream</span><span class="p">(</span><span class="n">downstream</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">downstream</span></div>
+        <span class="n">descendants</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_descendants</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descendants_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">descendants</span>
 
-    <span class="k">def</span> <span class="nf">_add_upstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upstream</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_add_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ancestors</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">parent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upstream</span><span class="p">:</span>
-                <span class="n">upstream</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_add_upstream</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ancestors</span><span class="p">:</span>
+                <span class="n">ancestors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">ancestors</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DAG.upstream"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.upstream.html#causaldag.classes.dag.DAG.upstream">[docs]</a>    <span class="k">def</span> <span class="nf">upstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">ancestors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the nodes upstream of node</span>
+<span class="sd">        Return the ancestors of ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node:</span>
+<span class="sd">        nodes:</span>
 <span class="sd">            The node.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
-<span class="sd">        downstream</span>
+<span class="sd">        descendants_of</span>
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        Set[node]</span>
-<span class="sd">            Return all nodes j such that there is a directed path from j to node.</span>
+<span class="sd">            Return all nodes j such that there is a directed path from j to ``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (2, 3)})</span>
-<span class="sd">        &gt;&gt;&gt; g.upstream(3)</span>
-<span class="sd">        {1, 2, 3g}</span>
+<span class="sd">        &gt;&gt;&gt; g.ancestors_of(3)</span>
+<span class="sd">        {1, 2, 3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">upstream</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_upstream</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">upstream</span></div>
+        <span class="n">ancestors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">ancestors</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ancestors_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ancestors</span>
 
 <div class="viewcode-block" id="DAG.incident_arcs"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.incident_arcs.html#causaldag.classes.dag.DAG.incident_arcs">[docs]</a>    <span class="k">def</span> <span class="nf">incident_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">DirectedEdge</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all arcs adjacent to node</span>
+<span class="sd">        Return all arcs with ``node`` as either source or target.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1231,7 +1379,7 @@
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        Set[arc]</span>
-<span class="sd">            Return all arcs i-&gt;j such that either i=node of j=node.</span>
+<span class="sd">            Return all arcs i-&gt;j such that either i=``node`` of j=``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
@@ -1249,7 +1397,7 @@
 
 <div class="viewcode-block" id="DAG.incoming_arcs"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.incoming_arcs.html#causaldag.classes.dag.DAG.incoming_arcs">[docs]</a>    <span class="k">def</span> <span class="nf">incoming_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">DirectedEdge</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all arcs with target node</span>
+<span class="sd">        Return all arcs with target ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1263,7 +1411,7 @@
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        Set[arc]</span>
-<span class="sd">            Return all arcs i-&gt;node.</span>
+<span class="sd">            Return all arcs of the form i-&gt;``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
@@ -1279,7 +1427,7 @@
 
 <div class="viewcode-block" id="DAG.outgoing_arcs"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.outgoing_arcs.html#causaldag.classes.dag.DAG.outgoing_arcs">[docs]</a>    <span class="k">def</span> <span class="nf">outgoing_arcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">DirectedEdge</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return all arcs with source node</span>
+<span class="sd">        Return all arcs with source ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1293,7 +1441,7 @@
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        Set[arc]</span>
-<span class="sd">            Return all arcs node-&gt;j.</span>
+<span class="sd">            Return all arcs of the form ``node``-&gt;j.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
@@ -1309,7 +1457,7 @@
 
 <div class="viewcode-block" id="DAG.outdegree"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.outdegree.html#causaldag.classes.dag.DAG.outdegree">[docs]</a>    <span class="k">def</span> <span class="nf">outdegree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the outdegree of node</span>
+<span class="sd">        Return the outdegree of ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1323,7 +1471,7 @@
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        int</span>
-<span class="sd">            Return the number of children of node.</span>
+<span class="sd">            The number of children of ``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
@@ -1338,7 +1486,7 @@
 
 <div class="viewcode-block" id="DAG.indegree"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.indegree.html#causaldag.classes.dag.DAG.indegree">[docs]</a>    <span class="k">def</span> <span class="nf">indegree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the indegree of node</span>
+<span class="sd">        Return the indegree of ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1352,7 +1500,7 @@
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
 <span class="sd">        int</span>
-<span class="sd">            Return the number of parents of node.</span>
+<span class="sd">            The number of parents of ``node``.</span>
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
@@ -1369,24 +1517,29 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        s:</span>
+<span class="sd">        ``s``:</span>
 <span class="sd">            Set of nodes</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        The set of nodes in s with no ancestors in s</span>
+<span class="sd">        The set of nodes in ``s`` with no ancestors in ``s``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">s</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ancestors_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">s</span><span class="p">}</span>
 
     <span class="c1"># === CONVERTERS</span>
     <span class="k">def</span> <span class="nf">resolved_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">res_sinks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">new_resolved</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="n">res_sinks</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span> <span class="ow">and</span>
-                   <span class="ow">not</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span> <span class="ow">and</span>
-                   <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+                                 <span class="ow">not</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span> <span class="ow">and</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
             <span class="p">}</span>
             <span class="n">res_sinks</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_resolved</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">new_resolved</span><span class="p">:</span>
@@ -1395,6 +1548,11 @@
         <span class="k">return</span> <span class="n">res_sinks</span>
 
     <span class="k">def</span> <span class="nf">chickering_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imap</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">curr_graph</span> <span class="o">=</span> <span class="bp">self</span>
 
         <span class="n">ch_seq</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1409,6 +1567,11 @@
         <span class="k">return</span> <span class="n">ch_seq</span><span class="p">,</span> <span class="n">moves</span>
 
     <span class="k">def</span> <span class="nf">apply_edge_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imap</span><span class="p">,</span> <span class="n">seed_sink</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">new_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># STEP 2: REMOVE RESOLVED SINKS</span>
@@ -1429,8 +1592,9 @@
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">4</span>
 
         <span class="c1"># STEP 5: PICK A SPECIFIC CHILD OF Y IN G</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">imap_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">downstream</span><span class="p">(</span><span class="n">sink</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">valid_children</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">sink</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">d</span><span class="p">})</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">imap_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">descendants_of</span><span class="p">(</span><span class="n">sink</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">valid_children</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">sink</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span>
+                    <span class="n">self_subgraph</span><span class="o">.</span><span class="n">ancestors_of</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">d</span><span class="p">})</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">valid_children</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 5: Picked z=</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1459,7 +1623,7 @@
 
     <span class="k">def</span> <span class="nf">marginal_mag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_nodes</span><span class="p">,</span> <span class="n">relabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the maximal ancestral graph (MAG) that results from marginalizing out `latent_nodes`.</span>
+<span class="sd">        Return the maximal ancestral graph (MAG) that results from marginalizing out ``latent_nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1472,6 +1636,8 @@
 <span class="sd">        m:</span>
 <span class="sd">            cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="kn">from</span> <span class="nn">.ancestral_graph</span> <span class="kn">import</span> <span class="n">AncestralGraph</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">new</span><span class="p">:</span>
@@ -1483,9 +1649,9 @@
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="n">latent_nodes</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
                 <span class="n">adjacent</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span> <span class="k">for</span> <span class="n">S</span> <span class="ow">in</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">powerset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}</span> <span class="o">-</span> <span class="n">latent_nodes</span><span class="p">))</span>
                 <span class="k">if</span> <span class="n">adjacent</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_upstream_of</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ancestor_of</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
                         <span class="n">directed</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
-                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_upstream_of</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ancestor_of</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
                         <span class="n">directed</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">bidirected</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
@@ -1551,6 +1717,11 @@
             <span class="k">return</span> <span class="n">ag</span>
 
     <span class="k">def</span> <span class="nf">save_gml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">tab</span> <span class="o">=</span> <span class="s1">&#39;  &#39;</span>
         <span class="n">indent</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">newline</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">indent</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">tab</span> <span class="o">*</span> <span class="n">indent</span><span class="p">)</span>
@@ -1586,6 +1757,11 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">node_list</span><span class="p">:</span>
             <span class="n">node_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
         <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_list</span><span class="p">)}</span>
@@ -1600,7 +1776,12 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dataframe</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">|</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">g</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
@@ -1618,8 +1799,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        d:</span>
-<span class="sd">            cd.DAG</span>
+<span class="sd">        DAG:</span>
+<span class="sd">            TODO.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx_graph</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must be a DiGraph&quot;</span><span class="p">)</span>
@@ -1631,8 +1812,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        g:</span>
-<span class="sd">            networkx.DiGraph</span>
+<span class="sd">        networkx.DiGraph:</span>
+<span class="sd">            TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
         <span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
@@ -1680,6 +1861,11 @@
         <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span></div>
 
     <span class="k">def</span> <span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
@@ -1690,7 +1876,7 @@
 
     <span class="k">def</span> <span class="nf">induced_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the induced subgraph over only `nodes`</span>
+<span class="sd">        Return the induced subgraph over only ``nodes``</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1699,8 +1885,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        g:</span>
-<span class="sd">            Induced subgraph over `nodes`.</span>
+<span class="sd">        DAG:</span>
+<span class="sd">            Induced subgraph over ``nodes``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1713,6 +1899,11 @@
 
     <span class="c1"># === OPTIMAL INTERVENTIONS</span>
     <span class="k">def</span> <span class="nf">simplified_directed_clique_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">dct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed_clique_tree</span><span class="p">()</span>
 
         <span class="c1"># find bidirected connected components</span>
@@ -1734,6 +1925,11 @@
         <span class="k">return</span> <span class="n">g</span>
 
     <span class="k">def</span> <span class="nf">directed_clique_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">cliques</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">chordal_graph_cliques</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_nx</span><span class="p">()</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">())</span>
         <span class="n">ct</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
         <span class="n">ct</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">cliques</span><span class="p">)</span>
@@ -1787,7 +1983,7 @@
 
 <span class="sd">        Return</span>
 <span class="sd">        ------</span>
-<span class="sd">        pdag:</span>
+<span class="sd">        causaldag.PDAG:</span>
 <span class="sd">            CPDAG representing the MEC of this DAG.</span>
 
 <span class="sd">        Examples</span>
@@ -1818,7 +2014,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        u:</span>
+<span class="sd">        UndirectedGraph:</span>
 <span class="sd">            Moral graph of this DAG.</span>
 
 <span class="sd">        Examples</span>
@@ -1828,12 +2024,20 @@
 <span class="sd">        &gt;&gt;&gt; g.moral_graph()</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">UndirectedGraph</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span> <span class="o">|</span> <span class="p">{(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span> <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vstructures</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">UndirectedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">interventional_cpdag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interventions</span><span class="p">,</span> <span class="n">cpdag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the interventional essential graph (aka CPDAG) associated with this DAG.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the interventional essential graph (aka CPDAG) associated with this DAG.</span>
+
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
 
         <span class="k">if</span> <span class="n">cpdag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1874,10 +2078,12 @@
 <span class="sd">        (interventions, cpdags)</span>
 <span class="sd">            The selected interventions and the associated cpdags that they induce.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="k">if</span> <span class="n">cpdag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cpdag</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">num_interventions</span><span class="p">,</span> <span class="p">[</span><span class="n">cpdag</span><span class="p">]</span><span class="o">*</span><span class="n">num_interventions</span>
+            <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_interventions</span><span class="p">,</span> <span class="p">[</span><span class="n">cpdag</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_interventions</span>
 
         <span class="n">nodes2icpdags</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">node</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interventional_cpdag</span><span class="p">([{</span><span class="n">node</span><span class="p">}],</span> <span class="n">cpdag</span><span class="o">=</span><span class="n">cpdag</span><span class="p">)</span>
@@ -1894,7 +2100,8 @@
         <span class="k">if</span> <span class="n">num_interventions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">best_iv</span><span class="p">],</span> <span class="p">[</span><span class="n">icpdag</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">best_ivs</span><span class="p">,</span> <span class="n">icpdags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">greedy_optimal_single_node_intervention</span><span class="p">(</span><span class="n">cpdag</span><span class="o">=</span><span class="n">icpdag</span><span class="p">,</span> <span class="n">num_interventions</span><span class="o">=</span><span class="n">num_interventions</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">best_ivs</span><span class="p">,</span> <span class="n">icpdags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">greedy_optimal_single_node_intervention</span><span class="p">(</span><span class="n">cpdag</span><span class="o">=</span><span class="n">icpdag</span><span class="p">,</span>
+                                                                             <span class="n">num_interventions</span><span class="o">=</span><span class="n">num_interventions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">best_iv</span><span class="p">]</span> <span class="o">+</span> <span class="n">best_ivs</span><span class="p">,</span> <span class="p">[</span><span class="n">icpdag</span><span class="p">]</span> <span class="o">+</span> <span class="n">icpdags</span>
 
     <span class="k">def</span> <span class="nf">greedy_optimal_fully_orienting_interventions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cpdag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1913,6 +2120,8 @@
 <span class="sd">        (interventions, cpdags)</span>
 <span class="sd">            The selected interventions and the associated cpdags that they induce.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="k">if</span> <span class="n">cpdag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
         <span class="n">curr_cpdag</span> <span class="o">=</span> <span class="n">cpdag</span>
         <span class="n">ivs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1975,6 +2184,11 @@
             <span class="c1"># TODO: test!</span>
 
     <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
         <span class="n">sdct_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
         <span class="n">sdct_components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">)</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">sdct_nodes</span><span class="p">]</span>
@@ -1983,6 +2197,11 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">component</span> <span class="o">-</span> <span class="n">parent</span> <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sdct_components</span><span class="p">,</span> <span class="n">sdct_parents</span><span class="p">)]</span>
 
     <span class="k">def</span> <span class="nf">residual_essential_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
 
         <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
@@ -1994,9 +2213,9 @@
         <span class="n">arcs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sdct_parents</span><span class="p">,</span> <span class="n">sdct_residuals</span><span class="p">,</span> <span class="n">sdct_components</span><span class="p">)</span>
 
-           <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">parent</span> <span class="o">&amp;</span> <span class="n">component</span><span class="p">,</span> <span class="n">residual</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">parent</span> <span class="o">&amp;</span> <span class="n">component</span><span class="p">,</span> <span class="n">residual</span><span class="p">)</span>
         <span class="p">}</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">arcs</span><span class="o">&amp;</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="o">-</span><span class="n">arcs</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">arcs</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">arcs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span>
 
     <span class="k">def</span> <span class="nf">optimal_fully_orienting_interventions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cpdag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
@@ -2038,7 +2257,8 @@
                     <span class="k">return</span> <span class="n">ss</span>
 
     <span class="k">def</span> <span class="nf">backdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.</span>
 
 <span class="sd">        S satisfies the backdoor criterion if</span>
 <span class="sd">        (i) S blocks every path from i to j with an arrow into i</span>
@@ -2050,7 +2270,8 @@
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">frontdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.</span>
 
 <span class="sd">        S satisfies the frontdoor criterion if</span>
 <span class="sd">        (i) S blocks all directed paths from i to j</span>
@@ -2061,9 +2282,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="c1"># === SEPARATIONS</span>
-    <span class="k">def</span> <span class="nf">dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">]</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
+             <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if A and B are d-separated given C, using the Bayes ball algorithm.</span>
+<span class="sd">        Check if ``A`` and ``B`` are d-separated given ``C``, using the Bayes ball algorithm.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2093,6 +2315,8 @@
 <span class="sd">        &gt;&gt;&gt; g.dsep(1, 3, 2)</span>
 <span class="sd">        False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="c1"># type coercion</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         <span class="n">B</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
@@ -2101,7 +2325,7 @@
         <span class="c1"># shade ancestors of C</span>
         <span class="n">shaded_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_upstream</span><span class="p">(</span><span class="n">shaded_nodes</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">shaded_nodes</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
 
         <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="c1"># marks for which direction the path is traveling through the node</span>
@@ -2140,7 +2364,7 @@
 
     <span class="k">def</span> <span class="nf">is_invariant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">intervened_nodes</span><span class="p">,</span> <span class="n">cond_set</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if the distribution of A given cond_set is invariant to an intervention on intervened_nodes.</span>
+<span class="sd">        Check if the distribution of ``A`` given cond_set is invariant to an intervention on intervened_nodes.</span>
 
 <span class="sd">        :math:`f^\emptyset(A|C) = f^I(A|C)` if the &quot;intervention node&quot; I with intervened_nodes as its children</span>
 <span class="sd">        is d-separated from A given C. Equivalently, the :math:`f^\emptyset(A|C) \neq f^I(A|C)` if:</span>
@@ -2161,6 +2385,8 @@
 <span class="sd">        verbose:</span>
 <span class="sd">            If True, print moves of the algorithm.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="c1"># type coercion</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         <span class="n">I</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">intervened_nodes</span><span class="p">)</span>
@@ -2169,7 +2395,7 @@
         <span class="c1"># shade ancestors of C</span>
         <span class="n">shaded_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_upstream</span><span class="p">(</span><span class="n">shaded_nodes</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">shaded_nodes</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
 
         <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="c1"># marks for which direction the path is traveling through the node</span>
@@ -2208,11 +2434,15 @@
 
     <span class="k">def</span> <span class="nf">dsep_from_given</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find all nodes d-separated from A given C .</span>
+<span class="sd">        Find all nodes d-separated from ``A`` given ``C``.</span>
 
 <span class="sd">        Uses algorithm in Geiger, D., Verma, T., &amp; Pearl, J. (1990).</span>
 <span class="sd">        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.</span>
+
+<span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
+
         <span class="n">A</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         <span class="n">C</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 
@@ -2222,16 +2452,16 @@
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
             <span class="n">determined</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
             <span class="n">descendants</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_add_upstream</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
-            
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_ancestors</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
         <span class="n">reachable</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">i_links</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">labeled_links</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>
-            <span class="n">i_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span> 
+            <span class="n">i_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
             <span class="n">reachable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-       
+
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">i_p_1_links</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="c1"># Find all unlabled links v-&gt;w adjacent to at least one link u-&gt;v labeled i, such that (u-&gt;v,v-&gt;w) is a legal pair.</span>
@@ -2239,13 +2469,13 @@
                 <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">link</span>
                 <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span> <span class="o">==</span> <span class="n">w</span> <span class="ow">and</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labeled_links</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>  <span class="c1">#Is collider?</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>  <span class="c1"># Is collider?</span>
                             <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
-                                <span class="n">i_p_1_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">))</span>
+                                <span class="n">i_p_1_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
                                 <span class="n">reachable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
                         <span class="k">else</span><span class="p">:</span>  <span class="c1"># Not collider</span>
                             <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">determined</span><span class="p">:</span>
-                                <span class="n">i_p_1_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">))</span>
+                                <span class="n">i_p_1_links</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
                                 <span class="n">reachable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">i_p_1_links</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2260,14 +2490,6 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)})</span>
     <span class="n">d</span><span class="o">.</span><span class="n">save_gml</span><span class="p">(</span><span class="s1">&#39;test_mine.gml&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">adversarial</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-        <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">itr</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">p</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    
-
-
-
 </pre></div>
 
            </div>

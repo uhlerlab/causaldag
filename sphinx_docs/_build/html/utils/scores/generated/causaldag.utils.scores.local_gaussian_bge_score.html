@@ -169,8 +169,35 @@
 <h1>causaldag.utils.scores.local_gaussian_bge_score<a class="headerlink" href="#causaldag-utils-scores-local-gaussian-bge-score" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="causaldag.utils.scores.local_gaussian_bge_score">
-<code class="sig-prename descclassname">causaldag.utils.scores.</code><code class="sig-name descname">local_gaussian_bge_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">parents</span></em>, <em class="sig-param"><span class="n">suffstat</span></em>, <em class="sig-param"><span class="n">alpha_mu</span></em>, <em class="sig-param"><span class="n">inverse_scale_matrix</span></em>, <em class="sig-param"><span class="n">alpha_w</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bge_score.html#local_gaussian_bge_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.local_gaussian_bge_score" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">causaldag.utils.scores.</code><code class="sig-name descname">local_gaussian_bge_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">parents</span></em>, <em class="sig-param"><span class="n">suffstat</span></em>, <em class="sig-param"><span class="n">alpha_mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">alpha_w</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inverse_scale_matrix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parameter_mean</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_diagonal</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bge_score.html#local_gaussian_bge_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.local_gaussian_bge_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the BGE score of a node given its parents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> – TODO - describe.</p></li>
+<li><p><strong>parents</strong> – TODO - describe.</p></li>
+<li><p><strong>suffstat</strong> – <p>dictionary containing:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> – number of samples</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> – sample covariance matrix</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code> – sample mean</p></li>
+</ul>
+</p></li>
+<li><p><strong>alpha_mu</strong> – TODO - describe. Default is the number of variables.</p></li>
+<li><p><strong>alpha_w</strong> – TODO - describe. Default is the (number of variables) + alpha_mu + 1</p></li>
+<li><p><strong>inverse_scale_matrix</strong> – TODO - describe. Default is the identity matrix.</p></li>
+<li><p><strong>parameter_mean</strong> – TODO - describe. Default is the zero vector.</p></li>
+<li><p><strong>is_diagonal</strong> – TODO - describe.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>BGE score.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 

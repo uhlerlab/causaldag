@@ -73,29 +73,6 @@ class DAG:
     def __repr__(self):
         return str(self)
 
-    @classmethod
-    def from_amat(cls, amat: np.ndarray):
-        """
-        Return a DAG with arcs given by ``amat``, i.e. i->j if ``amat[i,j] != 0``.
-
-        Parameters
-        ----------
-        amat:
-            Numpy matrix representing arcs in the DAG.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> import numpy as np
-        >>> amat = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 0]])
-        >>> d = cd.DAG.from_amat(amat)
-        >>> d.arcs
-        {(0, 2), (1, 2)}
-        """
-        nodes = set(range(amat.shape[0]))
-        arcs = {(i, j) for i, j in itr.permutations(nodes, 2) if amat[i, j] != 0}
-        return DAG(nodes=nodes, arcs=arcs)
-
     def copy(self):
         """
         Return a copy of the current DAG.
@@ -124,6 +101,29 @@ class DAG:
             nodes={name_map[n] for n in self._nodes},
             arcs={(name_map[i], name_map[j]) for i, j in self._arcs}
         )
+
+    def induced_subgraph(self, nodes: Set[Node]):
+        """
+        Return the induced subgraph over only ``nodes``
+
+        Parameters
+        ----------
+        nodes:
+            Set of nodes for the induced subgraph.
+
+        Returns
+        -------
+        DAG:
+            Induced subgraph over ``nodes``.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})
+        >>> d.induced_subgraph({1, 2, 3})
+        TODO
+        """
+        return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
     # === PROPERTIES
     @property
@@ -188,6 +188,7 @@ class DAG:
         p = len(self._nodes)
         return len(self._arcs) / p / (p - 1) * 2
 
+    # === NODE PROPERTIES
     def parents_of(self, nodes: NodeSet) -> Set[Node]:
         """
         Return all nodes that are parents of the node or set of nodes ``nodes``.
@@ -199,7 +200,7 @@ class DAG:
 
         See Also
         --------
-        children_of, neighbors_of, markov_blanket
+        children_of, neighbors_of, markov_blanket_of
 
         Examples
         --------
@@ -226,7 +227,7 @@ class DAG:
 
         See Also
         --------
-        parents_of, neighbors_of, markov_blanket
+        parents_of, neighbors_of, markov_blanket_of
 
         Examples
         --------
@@ -253,7 +254,7 @@ class DAG:
 
         See Also
         --------
-        parents_of, children_of, markov_blanket
+        parents_of, children_of, markov_blanket_of
 
         Examples
         --------
@@ -269,27 +270,34 @@ class DAG:
         else:
             return self._neighbors[nodes].copy()
 
-    def has_arc(self, source: Node, target: Node) -> bool:
+    def markov_blanket_of(self, node: Node) -> set:
         """
-        Check if this DAG has an arc ``source``->``target``.
+        Return the Markov blanket of ``node``, i.e., the parents of the node, its children, and the parents of its children.
 
         Parameters
         ----------
-        source:
-            Source node of arc.
-        target:
-            Target node of arc.
+        node:
+            Node whose Markov blanket to return.
 
-        Examples
+        See Also
         --------
+        parents_of, children_of, neighbors_of
+
+        Returns
+        -------
+        set:
+            the Markov blanket of ``node``.
+
+        Example
+        -------
         >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(0,1), (0,2)})
-        >>> g.has_arc(0, 1)
-        True
-        >>> g.has_arc(1, 2)
-        False
+        >>> g = cd.DAG(arcs={(0, 1), (1, 3), (2, 3), (3, 4})
+        >>> g.markov_blanket_of(1)
+        {0, 2, 3}
         """
-        return (source, target) in self._arcs
+        parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[
+            node] else set()
+        return self._parents[node] | self._children[node] | parents_of_children - {node}
 
     def is_ancestor_of(self, anc: Node, desc: Node) -> bool:
         """
@@ -311,90 +319,233 @@ class DAG:
         """
         return desc in self._children[anc] or desc in self.descendants_of(anc)
 
-    # === MUTATORS
-    def add_node(self, node: Node):
+    def _add_descendants(self, descendants, node):
+        for child in self._children[node]:
+            if child not in descendants:
+                descendants.add(child)
+                self._add_descendants(descendants, child)
+
+    def descendants_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Add ``node`` to the DAG.
+        Return the descendants of ``node``.
+
+        Parameters
+        ----------
+        nodes:
+            The node.
+
+        See Also
+        --------
+        ancestors_of
+
+        Return
+        ------
+        Set[node]
+            Return all nodes j such that there is a directed path from ``node`` to j.
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.descendants_of(1)
+        {2, 3}
+        """
+        descendants = set()
+        if not isinstance(nodes, set):
+            self._add_descendants(descendants, nodes)
+        else:
+            return set.union(*(self.descendants_of(node) for node in nodes))
+        return descendants
+
+    def _add_ancestors(self, ancestors, node):
+        for parent in self._parents[node]:
+            if parent not in ancestors:
+                ancestors.add(parent)
+                self._add_ancestors(ancestors, parent)
+
+    def ancestors_of(self, nodes: Node) -> Set[Node]:
+        """
+        Return the ancestors of ``nodes``.
+
+        Parameters
+        ----------
+        nodes:
+            The node.
+
+        See Also
+        --------
+        descendants_of
+
+        Return
+        ------
+        Set[node]
+            Return all nodes j such that there is a directed path from j to ``node``.
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.ancestors_of(3)
+        {1, 2, 3}
+        """
+        ancestors = set()
+        if not isinstance(nodes, set):
+            self._add_ancestors(ancestors, nodes)
+        else:
+            return set.union(*(self.ancestors_of(node) for node in nodes))
+        return ancestors
+
+    def incident_arcs(self, node: Node) -> Set[DirectedEdge]:
+        """
+        Return all arcs with ``node`` as either source or target.
 
         Parameters
         ----------
         node:
-            a hashable Python object
+            The node.
 
         See Also
         --------
-        add_nodes_from
+        incoming_arcs, outgoing_arcs
 
-        Examples
-        --------
+        Return
+        ------
+        Set[arc]
+            Return all arcs i->j such that either i=``node`` of j=``node``.
+
+        Example
+        -------
         >>> import causaldag as cd
-        >>> g = cd.DAG()
-        >>> g.add_node(1)
-        >>> g.add_node(2)
-        >>> len(g.nodes)
-        2
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.incident_arcs(2)
+        {(1, 2), (2, 3)}
         """
-        self._nodes.add(node)
+        incident_arcs = set()
+        for child in self._children[node]:
+            incident_arcs.add((node, child))
+        for parent in self._parents[node]:
+            incident_arcs.add((parent, node))
+        return incident_arcs
 
-    def add_arc(self, i: Node, j: Node, check_acyclic=True):
+    def incoming_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
-        Add the arc ``i``->``j`` to the DAG
+        Return all arcs with target ``node``.
 
         Parameters
         ----------
-        i:
-            source node of the arc
-        j:
-            target node of the arc
-        check_acyclic:
-            if True, check that the DAG remains acyclic after adding the edge.
+        node:
+            The node.
 
         See Also
         --------
-        add_arcs_from
+        incident_arcs, outgoing_arcs
 
-        Examples
-        --------
+        Return
+        ------
+        Set[arc]
+            Return all arcs of the form i->``node``.
+
+        Example
+        -------
         >>> import causaldag as cd
-        >>> g = cd.DAG({1, 2})
-        >>> g.add_arc(1, 2)
-        >>> g.arcs
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.incoming_arcs(2)
         {(1, 2)}
         """
-        self._nodes.add(i)
-        self._nodes.add(j)
-        self._arcs.add((i, j))
+        incoming_arcs = set()
+        for parent in self._parents[node]:
+            incoming_arcs.add((parent, node))
+        return incoming_arcs
 
-        self._neighbors[i].add(j)
-        self._neighbors[j].add(i)
+    def outgoing_arcs(self, node: Node) -> Set[DirectedEdge]:
+        """
+        Return all arcs with source ``node``.
 
-        self._children[i].add(j)
-        self._parents[j].add(i)
+        Parameters
+        ----------
+        node:
+            The node.
 
-        if check_acyclic:
-            try:
-                self._check_acyclic()
-            except CycleError as e:
-                self.remove_arc(i, j)
-                raise e
+        See Also
+        --------
+        incident_arcs, incoming_arcs
 
-    def _check_acyclic(self):
-        self.topological_sort()
+        Return
+        ------
+        Set[arc]
+            Return all arcs of the form ``node``->j.
 
-    def _mark_children_visited(self, node, any_visited, curr_path_visited, curr_path, stack):
-        any_visited[node] = True
-        curr_path_visited[node] = True
-        curr_path.append(node)
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.outgoing_arcs(2)
+        {(2, 3)}
+        """
+        outgoing_arcs = set()
         for child in self._children[node]:
-            if not any_visited[child]:
-                self._mark_children_visited(child, any_visited, curr_path_visited, curr_path, stack)
-            elif curr_path_visited[child]:
-                cycle = curr_path + [child]
-                raise CycleError(cycle)
-        curr_path.pop()
-        curr_path_visited[node] = False
-        stack.append(node)
+            outgoing_arcs.add((node, child))
+        return outgoing_arcs
 
+    def outdegree_of(self, node: Node) -> int:
+        """
+        Return the outdegree of ``node``.
+
+        Parameters
+        ----------
+        node:
+            The node.
+
+        See Also
+        --------
+        indegree_of
+
+        Return
+        ------
+        int
+            The number of children of ``node``.
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.outdegree_of(1)
+        2
+        >>> g.outdegree_of(3)
+        0
+        """
+        return len(self._children[node])
+
+    def indegree_of(self, node: Node) -> int:
+        """
+        Return the indegree of ``node``.
+
+        Parameters
+        ----------
+        node:
+            The node.
+
+        See Also
+        --------
+        outdegree_of
+
+        Return
+        ------
+        int
+            The number of parents of ``node``.
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
+        >>> g.indegree_of(1)
+        0
+        >>> g.indegree_of(2)
+        2
+        """
+        return len(self._parents[node])
+
+    # ==== ORDERS
     def topological_sort(self) -> List[Node]:
         """
         Return a topological sort of the nodes in the graph.
@@ -468,6 +619,31 @@ class DAG:
         node2ix = {node: ix for ix, node in enumerate(order)}
         return sum(node2ix[i] > node2ix[j] for i, j in self._arcs)
 
+    # === GRAPH MODIFICATION
+    def add_node(self, node: Node):
+        """
+        Add ``node`` to the DAG.
+
+        Parameters
+        ----------
+        node:
+            a hashable Python object
+
+        See Also
+        --------
+        add_nodes_from
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG()
+        >>> g.add_node(1)
+        >>> g.add_node(2)
+        >>> len(g.nodes)
+        2
+        """
+        self._nodes.add(node)
+
     def add_nodes_from(self, nodes: Iterable):
         """
         Add nodes to the graph from the collection ``nodes``.
@@ -492,6 +668,86 @@ class DAG:
         """
         for node in nodes:
             self.add_node(node)
+
+    def remove_node(self, node: Node, ignore_error=False):
+        """
+        Remove the node ``node`` from the graph.
+
+        Parameters
+        ----------
+        node:
+            node to be removed.
+        ignore_error:
+            if True, ignore the KeyError raised when node is not in the DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2)})
+        >>> g.remove_node(2)
+        >>> g.nodes
+        {1}
+        """
+        try:
+            self._nodes.remove(node)
+            for parent in self._parents[node]:
+                self._children[parent].remove(node)
+                self._neighbors[parent].remove(node)
+            for child in self._children[node]:
+                self._parents[child].remove(node)
+                self._neighbors[child].remove(node)
+            self._neighbors.pop(node, None)
+            self._parents.pop(node, None)
+            self._children.pop(node, None)
+            self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
+
+        except KeyError as e:
+            if ignore_error:
+                pass
+            else:
+                raise e
+
+    def add_arc(self, i: Node, j: Node, check_acyclic=True):
+        """
+        Add the arc ``i``->``j`` to the DAG
+
+        Parameters
+        ----------
+        i:
+            source node of the arc
+        j:
+            target node of the arc
+        check_acyclic:
+            if True, check that the DAG remains acyclic after adding the edge.
+
+        See Also
+        --------
+        add_arcs_from
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG({1, 2})
+        >>> g.add_arc(1, 2)
+        >>> g.arcs
+        {(1, 2)}
+        """
+        self._nodes.add(i)
+        self._nodes.add(j)
+        self._arcs.add((i, j))
+
+        self._neighbors[i].add(j)
+        self._neighbors[j].add(i)
+
+        self._children[i].add(j)
+        self._parents[j].add(i)
+
+        if check_acyclic:
+            try:
+                self._check_acyclic()
+            except CycleError as e:
+                self.remove_arc(i, j)
+                raise e
 
     def add_arcs_from(self, arcs: Iterable[Tuple], check_acyclic=False):
         """
@@ -539,32 +795,6 @@ class DAG:
                     self.remove_arc(i, j)
                 raise e
 
-    def reverse_arc(self, i: Node, j: Node, ignore_error=False, check_acyclic=False):
-        """
-        Reverse the arc ``i``->``j`` to ``i``<-``j``.
-
-        Parameters
-        ----------
-        i:
-            source of arc to be reversed.
-        j:
-            target of arc to be reversed.
-        ignore_error:
-            if True, ignore the KeyError raised when arc is not in the DAG.
-        check_acyclic:
-            if True, check that the DAG remains acyclic after adding the edge.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2)})
-        >>> g.reverse_arc(1, 2)
-        >>> g.arcs
-        {(2, 1)}
-        """
-        self.remove_arc(i, j, ignore_error=ignore_error)
-        self.add_arc(j, i, check_acyclic=check_acyclic)
-
     def remove_arc(self, i: Node, j: Node, ignore_error=False):
         """
         Remove the arc ``i``->``j``.
@@ -598,7 +828,7 @@ class DAG:
             else:
                 raise e
 
-    def remove_arcs(self, arcs: Iterable, ignore_error=False):
+    def remove_arcs_from(self, arcs: Iterable, ignore_error=False):
         """
         Remove each arc in ``arcs`` from the DAG.
 
@@ -613,52 +843,79 @@ class DAG:
         --------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3), (3, 4)})
-        >>> g.remove_arcs({(1, 2), (2, 3)})
+        >>> g.remove_arcs_from({(1, 2), (2, 3)})
         >>> g.arcs
         {(3, 4)}
         """
         for i, j in arcs:
             self.remove_arc(i, j, ignore_error=ignore_error)
 
-    def remove_node(self, node: Node, ignore_error=False):
+    def reverse_arc(self, i: Node, j: Node, ignore_error=False, check_acyclic=False):
         """
-        Remove the node ``node`` from the graph.
+        Reverse the arc ``i``->``j`` to ``i``<-``j``.
 
         Parameters
         ----------
-        node:
-            node to be removed.
+        i:
+            source of arc to be reversed.
+        j:
+            target of arc to be reversed.
         ignore_error:
-            if True, ignore the KeyError raised when node is not in the DAG.
+            if True, ignore the KeyError raised when arc is not in the DAG.
+        check_acyclic:
+            if True, check that the DAG remains acyclic after adding the edge.
 
         Examples
         --------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2)})
-        >>> g.remove_node(2)
-        >>> g.nodes
-        {1}
+        >>> g.reverse_arc(1, 2)
+        >>> g.arcs
+        {(2, 1)}
         """
-        try:
-            self._nodes.remove(node)
-            for parent in self._parents[node]:
-                self._children[parent].remove(node)
-                self._neighbors[parent].remove(node)
-            for child in self._children[node]:
-                self._parents[child].remove(node)
-                self._neighbors[child].remove(node)
-            self._neighbors.pop(node, None)
-            self._parents.pop(node, None)
-            self._children.pop(node, None)
-            self._arcs = {(i, j) for i, j in self._arcs if i != node and j != node}
+        self.remove_arc(i, j, ignore_error=ignore_error)
+        self.add_arc(j, i, check_acyclic=check_acyclic)
 
-        except KeyError as e:
-            if ignore_error:
-                pass
-            else:
-                raise e
+    def _check_acyclic(self):
+        self.topological_sort()
+
+    def _mark_children_visited(self, node, any_visited, curr_path_visited, curr_path, stack):
+        any_visited[node] = True
+        curr_path_visited[node] = True
+        curr_path.append(node)
+        for child in self._children[node]:
+            if not any_visited[child]:
+                self._mark_children_visited(child, any_visited, curr_path_visited, curr_path, stack)
+            elif curr_path_visited[child]:
+                cycle = curr_path + [child]
+                raise CycleError(cycle)
+        curr_path.pop()
+        curr_path_visited[node] = False
+        stack.append(node)
 
     # === GRAPH PROPERTIES
+    def has_arc(self, source: Node, target: Node) -> bool:
+        """
+        Check if this DAG has an arc ``source``->``target``.
+
+        Parameters
+        ----------
+        source:
+            Source node of arc.
+        target:
+            Target node of arc.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(0,1), (0,2)})
+        >>> g.has_arc(0, 1)
+        True
+        >>> g.has_arc(1, 2)
+        False
+        """
+        return (source, target) in self._arcs
+
     def sources(self) -> Set[Node]:
         """
         Get all nodes in the graph that have no parents.
@@ -799,34 +1056,18 @@ class DAG:
             t |= {(n1, node, n2) for n1, n2 in itr.combinations(self._neighbors[node], 2)}
         return t
 
-    def markov_blanket(self, node: Node) -> set:
+    def upstream_most(self, s: Set[Node]) -> Set[Node]:
         """
-        Return the Markov blanket of ``node``, i.e., the parents of the node, its children, and the parents of its children.
-
         Parameters
         ----------
-        node:
-            Node whose Markov blanket to return.
-
-        See Also
-        --------
-        parents_of, children_of, neighbors_of
+        ``s``:
+            Set of nodes
 
         Returns
         -------
-        set:
-            the Markov blanket of ``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(0, 1), (1, 3), (2, 3), (3, 4})
-        >>> g.markov_blanket(1)
-        {0, 2, 3}
+        The set of nodes in ``s`` with no ancestors in ``s``.
         """
-        parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[
-            node] else set()
-        return self._parents[node] | self._children[node] | parents_of_children - {node}
+        return {node for node in s if not self.ancestors_of(node) & s}
 
     # === COMPARISON
     def chickering_distance(self, other) -> int:
@@ -1014,6 +1255,7 @@ class DAG:
         """
         return len(self.skeleton.symmetric_difference(other.skeleton))
 
+    # === COMPARISON: MARKOV EQUIVALENCE
     def markov_equivalent(self, other, interventions=None) -> bool:
         """
         Check if this DAG is (interventionally) Markov equivalent to the DAG ``other``.
@@ -1136,247 +1378,7 @@ class DAG:
         else:
             return certificate is None
 
-    # === CONVENIENCE
-    def _add_descendants(self, descendants, node):
-        for child in self._children[node]:
-            if child not in descendants:
-                descendants.add(child)
-                self._add_descendants(descendants, child)
-
-    def descendants_of(self, nodes: NodeSet) -> Set[Node]:
-        """
-        Return the descendants of ``node``.
-
-        Parameters
-        ----------
-        nodes:
-            The node.
-
-        See Also
-        --------
-        ancestors_of
-
-        Return
-        ------
-        Set[node]
-            Return all nodes j such that there is a directed path from ``node`` to j.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g.descendants_of(1)
-        {2, 3}
-        """
-        descendants = set()
-        if not isinstance(nodes, set):
-            self._add_descendants(descendants, nodes)
-        else:
-            return set.union(*(self.descendants_of(node) for node in nodes))
-        return descendants
-
-    def _add_ancestors(self, ancestors, node):
-        for parent in self._parents[node]:
-            if parent not in ancestors:
-                ancestors.add(parent)
-                self._add_ancestors(ancestors, parent)
-
-    def ancestors_of(self, nodes: Node) -> Set[Node]:
-        """
-        Return the ancestors of ``nodes``.
-
-        Parameters
-        ----------
-        nodes:
-            The node.
-
-        See Also
-        --------
-        descendants_of
-
-        Return
-        ------
-        Set[node]
-            Return all nodes j such that there is a directed path from j to ``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g.ancestors_of(3)
-        {1, 2, 3}
-        """
-        ancestors = set()
-        if not isinstance(nodes, set):
-            self._add_ancestors(ancestors, nodes)
-        else:
-            return set.union(*(self.ancestors_of(node) for node in nodes))
-        return ancestors
-
-    def incident_arcs(self, node: Node) -> Set[DirectedEdge]:
-        """
-        Return all arcs with ``node`` as either source or target.
-
-        Parameters
-        ----------
-        node:
-            The node.
-
-        See Also
-        --------
-        incoming_arcs, outgoing_arcs
-
-        Return
-        ------
-        Set[arc]
-            Return all arcs i->j such that either i=``node`` of j=``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.incident_arcs(2)
-        {(1, 2), (2, 3)}
-        """
-        incident_arcs = set()
-        for child in self._children[node]:
-            incident_arcs.add((node, child))
-        for parent in self._parents[node]:
-            incident_arcs.add((parent, node))
-        return incident_arcs
-
-    def incoming_arcs(self, node: Node) -> Set[DirectedEdge]:
-        """
-        Return all arcs with target ``node``.
-
-        Parameters
-        ----------
-        node:
-            The node.
-
-        See Also
-        --------
-        incident_arcs, outgoing_arcs
-
-        Return
-        ------
-        Set[arc]
-            Return all arcs of the form i->``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.incoming_arcs(2)
-        {(1, 2)}
-        """
-        incoming_arcs = set()
-        for parent in self._parents[node]:
-            incoming_arcs.add((parent, node))
-        return incoming_arcs
-
-    def outgoing_arcs(self, node: Node) -> Set[DirectedEdge]:
-        """
-        Return all arcs with source ``node``.
-
-        Parameters
-        ----------
-        node:
-            The node.
-
-        See Also
-        --------
-        incident_arcs, incoming_arcs
-
-        Return
-        ------
-        Set[arc]
-            Return all arcs of the form ``node``->j.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.outgoing_arcs(2)
-        {(2, 3)}
-        """
-        outgoing_arcs = set()
-        for child in self._children[node]:
-            outgoing_arcs.add((node, child))
-        return outgoing_arcs
-
-    def outdegree(self, node: Node) -> int:
-        """
-        Return the outdegree of ``node``.
-
-        Parameters
-        ----------
-        node:
-            The node.
-
-        See Also
-        --------
-        indegree
-
-        Return
-        ------
-        int
-            The number of children of ``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.outdegree(1)
-        2
-        >>> g.outdegree(3)
-        0
-        """
-        return len(self._children[node])
-
-    def indegree(self, node: Node) -> int:
-        """
-        Return the indegree of ``node``.
-
-        Parameters
-        ----------
-        node:
-            The node.
-
-        See Also
-        --------
-        outdegree
-
-        Return
-        ------
-        int
-            The number of parents of ``node``.
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.indegree(1)
-        0
-        >>> g.indegree(2)
-        2
-        """
-        return len(self._parents[node])
-
-    def upstream_most(self, s: Set[Node]) -> Set[Node]:
-        """
-        Parameters
-        ----------
-        ``s``:
-            Set of nodes
-
-        Returns
-        -------
-        The set of nodes in ``s`` with no ancestors in ``s``.
-        """
-        return {node for node in s if not self.ancestors_of(node) & s}
-
-    # === CONVERTERS
+    # === OTHER
     def resolved_sinks(self, other) -> set:
         """
         TODO
@@ -1566,6 +1568,7 @@ class DAG:
 
             return ag
 
+    # === WRITING TO FILES
     def save_gml(self, filename):
         """
         TODO
@@ -1606,69 +1609,40 @@ class DAG:
                 f.write(newline(indent))
             f.write(']')
 
-    def to_dataframe(self, node_list=None):
+    def to_csv(self, filename):
         """
         TODO
         """
         warn_untested()  # TODO: ADD TEST
 
-        if not node_list:
-            node_list = sorted(self._nodes)
-        node2ix = {node: i for i, node in enumerate(node_list)}
+        with open(filename, 'w', newline='\n') as file:
+            writer = csv.writer(file)
+            for source, target in self._arcs:
+                writer.writerow([source, target])
 
-        shape = (len(self._nodes), len(self._nodes))
-        amat = np.zeros(shape, dtype=int)
-        for source, target in self._arcs:
-            amat[node2ix[source], node2ix[target]] = 1
-
-        from pandas import DataFrame
-        return DataFrame(amat, index=node_list, columns=node_list)
-
+    # === NUMPY CONVERSION
     @classmethod
-    def from_dataframe(cls, df):
+    def from_amat(cls, amat: np.ndarray):
         """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        g = DAG(nodes=set(df.index) | set(df.columns))
-        for (i, j), val in np.ndenumerate(df.values):
-            if val != 0:
-                g.add_arc(df.index[i], df.columns[j])
-        return g
-
-    @classmethod
-    def from_nx(cls, nx_graph: nx.DiGraph):
-        """
-        Convert a networkx DiGraph into a DAG.
+        Return a DAG with arcs given by ``amat``, i.e. i->j if ``amat[i,j] != 0``.
 
         Parameters
         ----------
-        nx_graph:
-            networkx DiGraph
+        amat:
+            Numpy matrix representing arcs in the DAG.
 
-        Returns
-        -------
-        DAG:
-            TODO.
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> import numpy as np
+        >>> amat = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 0]])
+        >>> d = cd.DAG.from_amat(amat)
+        >>> d.arcs
+        {(0, 2), (1, 2)}
         """
-        if not isinstance(nx_graph, nx.DiGraph):
-            raise ValueError("Must be a DiGraph")
-        return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
-
-    def to_nx(self) -> nx.DiGraph:
-        """
-        Convert DAG to a networkx DiGraph.
-
-        Returns
-        -------
-        networkx.DiGraph:
-            TODO
-        """
-        g = nx.DiGraph()
-        g.add_nodes_from(self._nodes)
-        g.add_edges_from(self._arcs)
-        return g
+        nodes = set(range(amat.shape[0]))
+        arcs = {(i, j) for i, j in itr.permutations(nodes, 2) if amat[i, j] != 0}
+        return DAG(nodes=nodes, arcs=arcs)
 
     def to_amat(self, node_list=None) -> (np.ndarray, list):
         """
@@ -1710,42 +1684,130 @@ class DAG:
 
         return amat, node_list
 
-    def to_csv(self, filename):
+    # === NETWORKX CONVERSION
+    @classmethod
+    def from_nx(cls, nx_graph: nx.DiGraph):
+        """
+        Convert a networkx DiGraph into a DAG.
+
+        Parameters
+        ----------
+        nx_graph:
+            networkx DiGraph
+
+        Returns
+        -------
+        DAG:
+            TODO.
+        """
+        if not isinstance(nx_graph, nx.DiGraph):
+            raise ValueError("Must be a DiGraph")
+        return DAG(nodes=set(nx_graph.nodes), arcs=set(nx_graph.edges))
+
+    def to_nx(self) -> nx.DiGraph:
+        """
+        Convert DAG to a networkx DiGraph.
+
+        Returns
+        -------
+        networkx.DiGraph:
+            TODO
+        """
+        g = nx.DiGraph()
+        g.add_nodes_from(self._nodes)
+        g.add_edges_from(self._arcs)
+        return g
+
+    # === PANDAS CONVERSION
+    @classmethod
+    def from_dataframe(cls, df):
         """
         TODO
         """
         warn_untested()  # TODO: ADD TEST
 
-        with open(filename, 'w', newline='\n') as file:
-            writer = csv.writer(file)
-            for source, target in self._arcs:
-                writer.writerow([source, target])
+        g = DAG(nodes=set(df.index) | set(df.columns))
+        for (i, j), val in np.ndenumerate(df.values):
+            if val != 0:
+                g.add_arc(df.index[i], df.columns[j])
+        return g
 
+    def to_dataframe(self, node_list=None):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        if not node_list:
+            node_list = sorted(self._nodes)
+        node2ix = {node: i for i, node in enumerate(node_list)}
+
+        shape = (len(self._nodes), len(self._nodes))
+        amat = np.zeros(shape, dtype=int)
+        for source, target in self._arcs:
+            amat[node2ix[source], node2ix[target]] = 1
+
+        from pandas import DataFrame
+        return DataFrame(amat, index=node_list, columns=node_list)
+
+    # === SCIPY CONVERSION
     def to_sparse(self):
         raise NotImplementedError
 
-    def induced_subgraph(self, nodes: Set[Node]):
+    # === MARKOV EQUIVALENCE
+    def cpdag(self):
         """
-        Return the induced subgraph over only ``nodes``
+        Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
+        Markov equivalence class of this DAG.
 
-        Parameters
-        ----------
-        nodes:
-            Set of nodes for the induced subgraph.
-
-        Returns
-        -------
-        DAG:
-            Induced subgraph over ``nodes``.
+        Return
+        ------
+        causaldag.PDAG:
+            CPDAG representing the MEC of this DAG.
 
         Examples
         --------
         >>> import causaldag as cd
-        >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})
-        >>> d.induced_subgraph({1, 2, 3})
+        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
+        >>> g.cpdag()
+
+        """
+        from causaldag import PDAG
+        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
+        pdag.remove_unprotected_orientations()
+        return pdag
+
+    def cpdag_new(self, new=False):
+        from causaldag import PDAG
+        vstruct = self.arcs_in_vstructures()
+        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
+        if new:
+            pdag.to_complete_pdag_new()
+        else:
+            pdag.to_complete_pdag()
+        return pdag
+
+    def moral_graph(self):
+        """
+        Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.
+
+        Returns
+        -------
+        UndirectedGraph:
+            Moral graph of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
+        >>> g.moral_graph()
         TODO
         """
-        return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
+        warn_untested()  # TODO: ADD TEST
+
+        from causaldag import UndirectedGraph
+        edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
+        return UndirectedGraph(self._nodes, edges)
 
     # === OPTIMAL INTERVENTIONS
     def simplified_directed_clique_tree(self):
@@ -1825,60 +1887,6 @@ class DAG:
         nx.set_edge_attributes(ct, labels, name='label')
 
         return ct
-
-    def cpdag(self):
-        """
-        Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
-        Markov equivalence class of this DAG.
-
-        Return
-        ------
-        causaldag.PDAG:
-            CPDAG representing the MEC of this DAG.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
-        >>> g.cpdag()
-
-        """
-        from causaldag import PDAG
-        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
-        pdag.remove_unprotected_orientations()
-        return pdag
-
-    def cpdag_new(self, new=False):
-        from causaldag import PDAG
-        vstruct = self.arcs_in_vstructures()
-        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
-        if new:
-            pdag.to_complete_pdag_new()
-        else:
-            pdag.to_complete_pdag()
-        return pdag
-
-    def moral_graph(self):
-        """
-        Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.
-
-        Returns
-        -------
-        UndirectedGraph:
-            Moral graph of this DAG.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
-        >>> g.moral_graph()
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        from causaldag import UndirectedGraph
-        edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
-        return UndirectedGraph(self._nodes, edges)
 
     def interventional_cpdag(self, interventions, cpdag=None):
         """
@@ -2106,6 +2114,7 @@ class DAG:
                 if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
                     return ss
 
+    # === ADJUSTMENT SETS
     def backdoor(self, i, j):
         """
         Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.
@@ -2212,6 +2221,60 @@ class DAG:
 
         return True
 
+    def dsep_from_given(self, A, C=set()) -> Set[Node]:
+        """
+        Find all nodes d-separated from ``A`` given ``C``.
+
+        Uses algorithm in Geiger, D., Verma, T., & Pearl, J. (1990).
+        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
+
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        A = core_utils.to_set(A)
+        C = core_utils.to_set(C)
+
+        determined = set()
+        descendants = set()
+
+        for c in C:
+            determined.add(c)
+            descendants.add(c)
+            self._add_ancestors(descendants, c)
+
+        reachable = set()
+        i_links = set()
+        labeled_links = set()
+
+        for a in A:
+            i_links.add((None, a))
+            reachable.add(a)
+
+        while True:
+            i_p_1_links = set()
+            # Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
+            for link in i_links:
+                u, v = link
+                for w in self._neighbors[v]:
+                    if not u == w and (v, w) not in labeled_links:
+                        if v in self._children[u] and v in self._children[w]:  # Is collider?
+                            if v in descendants:
+                                i_p_1_links.add((v, w))
+                                reachable.add(w)
+                        else:  # Not collider
+                            if v not in determined:
+                                i_p_1_links.add((v, w))
+                                reachable.add(w)
+
+            if len(i_p_1_links) == 0:
+                break
+
+            labeled_links = labeled_links.union(i_links)
+            i_links = i_p_1_links
+
+        return self._nodes.difference(A).difference(C).difference(reachable)
+
     def is_invariant(self, A, intervened_nodes, cond_set=set(), verbose=False) -> bool:
         """
         Check if the distribution of ``A`` given cond_set is invariant to an intervention on intervened_nodes.
@@ -2281,60 +2344,6 @@ class DAG:
                     schedule.update({(child, _p) for child in self._children[node]})
 
         return True
-
-    def dsep_from_given(self, A, C=set()) -> Set[Node]:
-        """
-        Find all nodes d-separated from ``A`` given ``C``.
-
-        Uses algorithm in Geiger, D., Verma, T., & Pearl, J. (1990).
-        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
-
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        A = core_utils.to_set(A)
-        C = core_utils.to_set(C)
-
-        determined = set()
-        descendants = set()
-
-        for c in C:
-            determined.add(c)
-            descendants.add(c)
-            self._add_ancestors(descendants, c)
-
-        reachable = set()
-        i_links = set()
-        labeled_links = set()
-
-        for a in A:
-            i_links.add((None, a))
-            reachable.add(a)
-
-        while True:
-            i_p_1_links = set()
-            # Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
-            for link in i_links:
-                u, v = link
-                for w in self._neighbors[v]:
-                    if not u == w and (v, w) not in labeled_links:
-                        if v in self._children[u] and v in self._children[w]:  # Is collider?
-                            if v in descendants:
-                                i_p_1_links.add((v, w))
-                                reachable.add(w)
-                        else:  # Not collider
-                            if v not in determined:
-                                i_p_1_links.add((v, w))
-                                reachable.add(w)
-
-            if len(i_p_1_links) == 0:
-                break
-
-            labeled_links = labeled_links.union(i_links)
-            i_links = i_p_1_links
-
-        return self._nodes.difference(A).difference(C).difference(reachable)
 
 
 if __name__ == '__main__':

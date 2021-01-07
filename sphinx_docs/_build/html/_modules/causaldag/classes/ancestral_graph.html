@@ -154,7 +154,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">BidirectedEdge</span><span class="p">,</span> <span class="n">UndirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">BidirectedEdge</span><span class="p">,</span> <span class="n">UndirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
 
 
 <span class="k">class</span> <span class="nc">CycleError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -214,7 +214,13 @@
 <span class="sd">    Base class for ancestral graphs, used to represent causal models with latent variables.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">directed</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">bidirected</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">undirected</span><span class="o">=</span><span class="nb">set</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+            <span class="n">directed</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+            <span class="n">bidirected</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+            <span class="n">undirected</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -245,13 +251,18 @@
 
 <div class="viewcode-block" id="AncestralGraph.copy"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.copy.html#causaldag.classes.ancestral_graph.AncestralGraph.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a copy of the current ancestral graph.</span>
+<span class="sd">        Return a copy of this ancestral graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        AncestralGraph:</span>
+<span class="sd">            A copy of the ancestral graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">AncestralGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bidirected</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">undirected</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">induced_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the induced subgraph over only `nodes`</span>
+<span class="sd">        Return the induced subgraph over only ``nodes``</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -260,14 +271,15 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        g:</span>
-<span class="sd">            Induced subgraph over `nodes`.</span>
+<span class="sd">        AncestralGraph:</span>
+<span class="sd">            Induced subgraph over ``nodes``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})</span>
-<span class="sd">        &gt;&gt;&gt; g.induced_subgraph()</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; g.induced_subgraph({1, 2, 3})</span>
+<span class="sd">        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 2})}, Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_directed</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">}</span>
         <span class="n">new_bidirected</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">}</span>
@@ -298,6 +310,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph()</span>
 <span class="sd">        &gt;&gt;&gt; g.add_node(1)</span>
 <span class="sd">        &gt;&gt;&gt; g.add_node(2)</span>
@@ -308,7 +321,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.add_nodes_from"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.add_nodes_from.html#causaldag.classes.ancestral_graph.AncestralGraph.add_nodes_from">[docs]</a>    <span class="k">def</span> <span class="nf">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Node</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a node to the ancestral graph.</span>
+<span class="sd">        Add nodes to the ancestral graph.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -321,6 +334,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph()</span>
 <span class="sd">        &gt;&gt;&gt; g.add_nodes_from({1, 2})</span>
 <span class="sd">        &gt;&gt;&gt; len(g.nodes)</span>
@@ -355,7 +369,10 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.topological_sort()</span>
+<span class="sd">        [4, 2, 1, 3]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">any_visited</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">}</span>
         <span class="n">curr_path_visited</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">}</span>
@@ -368,7 +385,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.add_directed"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.add_directed.html#causaldag.classes.ancestral_graph.AncestralGraph.add_directed">[docs]</a>    <span class="k">def</span> <span class="nf">add_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a directed edge from node `i` to node `j`.</span>
+<span class="sd">        Add a directed edge from node ``i`` to node ``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -379,7 +396,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph()</span>
+<span class="sd">        &gt;&gt;&gt; g.add_directed(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; g.directed</span>
+<span class="sd">        {(1, 2)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_directed</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -390,7 +411,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.add_bidirected"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.add_bidirected.html#causaldag.classes.ancestral_graph.AncestralGraph.add_bidirected">[docs]</a>    <span class="k">def</span> <span class="nf">add_bidirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a bidirected edge between nodes `i` and `j`.</span>
+<span class="sd">        Add a bidirected edge between nodes ``i`` and ``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -401,7 +422,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph()</span>
+<span class="sd">        &gt;&gt;&gt; g.add_bidirected(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; g.bidirected</span>
+<span class="sd">        {frozenset({i, j})}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_bidirected</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -423,7 +448,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph()</span>
+<span class="sd">        &gt;&gt;&gt; g.add_undirected(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; g.undirected</span>
+<span class="sd">        {frozenset({i, j})}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_undirected</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span></div>
 
@@ -524,15 +553,22 @@
 
 <div class="viewcode-block" id="AncestralGraph.remove_node"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_node.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove `node`.</span>
+<span class="sd">        Remove ``node``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        node</span>
+<span class="sd">            The node to be removed.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when the node does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_node(4)</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 2})}, Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
@@ -566,7 +602,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.remove_directed"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_directed.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_directed">[docs]</a>    <span class="k">def</span> <span class="nf">remove_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove the directed edge from `i` to `j`.</span>
+<span class="sd">        Remove the directed edge from ``i`` to ``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -574,10 +610,16 @@
 <span class="sd">            source of directed edge.</span>
 <span class="sd">        j:</span>
 <span class="sd">            target of directed edge.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when the directed edge does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_directed(1, 3)</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(2, 3)}, Bidirected edges: {frozenset({1, 4}), frozenset({1, 2})}, Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
@@ -593,7 +635,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.remove_bidirected"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected">[docs]</a>    <span class="k">def</span> <span class="nf">remove_bidirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove the bidirected edge between `i` and `j`.</span>
+<span class="sd">        Remove the bidirected edge between ``i`` and ``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -601,10 +643,16 @@
 <span class="sd">            first endpoint of bidirected edge.</span>
 <span class="sd">        j:</span>
 <span class="sd">            second endpoint of bidirected edge.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when the bidirected edge does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_bidirected(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 4})}, Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}))</span>
@@ -620,7 +668,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.remove_undirected"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_undirected.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_undirected">[docs]</a>    <span class="k">def</span> <span class="nf">remove_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove the undirected edge between `i` and `j`.</span>
+<span class="sd">        Remove the undirected edge between ``i`` and ``j``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -628,10 +676,16 @@
 <span class="sd">            first endpoint of undirected edge.</span>
 <span class="sd">        j:</span>
 <span class="sd">            second endpoint of undirected edge.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when the undirected edge does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_undirected(1, 4)</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(1, 2), (1, 3)}, Bidirected edges: set(), Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_undirected</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}))</span>
@@ -647,7 +701,7 @@
 
 <div class="viewcode-block" id="AncestralGraph.remove_edge"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edge.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edge">[docs]</a>    <span class="k">def</span> <span class="nf">remove_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Remove the edge between ``i`` and ``j``, regardless of edge type.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -655,10 +709,16 @@
 <span class="sd">            first endpoint of edge.</span>
 <span class="sd">        j:</span>
 <span class="sd">            second endpoint of edge.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when the edge does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_edge(1, 4)</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(1, 2), (1, 3)}, Bidirected edges: set(), Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_bidirected</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_bidirected</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
@@ -671,21 +731,27 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">ignore_error</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span></div>
 
-<div class="viewcode-block" id="AncestralGraph.remove_edges"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edges.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edges">[docs]</a>    <span class="k">def</span> <span class="nf">remove_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">):</span>
+<div class="viewcode-block" id="AncestralGraph.remove_edges"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edges.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edges">[docs]</a>    <span class="k">def</span> <span class="nf">remove_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Remove all edges in ``edges`` from the graph, regardless of edge type.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        edges</span>
-<span class="sd">            TODO</span>
+<span class="sd">            The edges to be removed from the graph.</span>
+<span class="sd">        ignore_error:</span>
+<span class="sd">            If False, raises an error when any edge does not belong to the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.remove_edges([(1, 4), (1, 2)])</span>
+<span class="sd">        &gt;&gt;&gt; g</span>
+<span class="sd">        Directed edges: {(1, 3)}, Bidirected edges: set(), Undirected edges: set()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ignore_error</span><span class="o">=</span><span class="n">ignore_error</span><span class="p">)</span></div>
 
     <span class="c1"># === PROPERTIES</span>
     <span class="nd">@property</span>
@@ -729,28 +795,96 @@
         <span class="k">return</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">})</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undirected</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">}</span>
 
 <div class="viewcode-block" id="AncestralGraph.children_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.children_of.html#causaldag.classes.ancestral_graph.AncestralGraph.children_of">[docs]</a>    <span class="k">def</span> <span class="nf">children_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the children of the node or set of nodes ``i``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i</span>
+<span class="sd">            Node.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, undirected={(1, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.children_of(1)</span>
+<span class="sd">        {2}</span>
+<span class="sd">        &gt;&gt;&gt; g.children_of({1, 2})</span>
+<span class="sd">        {2, 3}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">i</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="AncestralGraph.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.parents_of.html#causaldag.classes.ancestral_graph.AncestralGraph.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">i</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+<div class="viewcode-block" id="AncestralGraph.parents_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.parents_of.html#causaldag.classes.ancestral_graph.AncestralGraph.parents_of">[docs]</a>    <span class="k">def</span> <span class="nf">parents_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the parents of the node or set of nodes ``nodes``.</span>
 
-<div class="viewcode-block" id="AncestralGraph.spouses_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.spouses_of.html#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of">[docs]</a>    <span class="k">def</span> <span class="nf">spouses_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">i</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes</span>
+<span class="sd">            Nodes.</span>
 
-<div class="viewcode-block" id="AncestralGraph.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">i</span><span class="p">))</span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, undirected={(1, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; g.parents_of(2)</span>
+<span class="sd">        {1}</span>
+<span class="sd">        &gt;&gt;&gt; g.parents_of({2, 3})</span>
+<span class="sd">        {1, 2}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AncestralGraph.spouses_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.spouses_of.html#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of">[docs]</a>    <span class="k">def</span> <span class="nf">spouses_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the spouses of the node or set of nodes ``nodes``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes</span>
+<span class="sd">            Nodes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, bidirected={(1, 4), (2, 5)})</span>
+<span class="sd">        &gt;&gt;&gt; g.spouses_of(1)</span>
+<span class="sd">        {4}</span>
+<span class="sd">        &gt;&gt;&gt; g.spouses_of({1, 2})</span>
+<span class="sd">        {4, 5}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AncestralGraph.neighbors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of">[docs]</a>    <span class="k">def</span> <span class="nf">neighbors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the neighbors of the node or set of nodes ``nodes``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes</span>
+<span class="sd">            Nodes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(1, 3), (2, 3)}, undirected={(1, 4), (2, 5)})</span>
+<span class="sd">        &gt;&gt;&gt; g.neighbors_of(1)</span>
+<span class="sd">        {4}</span>
+<span class="sd">        &gt;&gt;&gt; g.neighbors_of({1, 2})</span>
+<span class="sd">        {4, 5}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_add_ancestors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ancestors</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">()):</span>
         <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
@@ -764,9 +898,9 @@
                 <span class="n">descendants</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_add_descendants</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="n">exclude_arcs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AncestralGraph.ancestors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of">[docs]</a>    <span class="k">def</span> <span class="nf">ancestors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="AncestralGraph.ancestors_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of">[docs]</a>    <span class="k">def</span> <span class="nf">ancestors_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the nodes upstream of node</span>
+<span class="sd">        Return the ancestors of the node or set of nodes ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -786,6 +920,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ancestors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
@@ -809,6 +944,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">top_sort</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
 
@@ -838,6 +974,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">top_sort</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
 
@@ -852,14 +989,14 @@
 
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="n">node2descendants_plus_self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AncestralGraph.descendants_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.descendants_of.html#causaldag.classes.ancestral_graph.AncestralGraph.descendants_of">[docs]</a>    <span class="k">def</span> <span class="nf">descendants_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="AncestralGraph.descendants_of"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.descendants_of.html#causaldag.classes.ancestral_graph.AncestralGraph.descendants_of">[docs]</a>    <span class="k">def</span> <span class="nf">descendants_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the nodes downstream of node</span>
+<span class="sd">        Return the descendants of the node or set of nodes ``nodes``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node:</span>
-<span class="sd">            The node.</span>
+<span class="sd">        nodes:</span>
+<span class="sd">            The nodes.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -872,14 +1009,18 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">descendants</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_descendants</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="n">exclude_arcs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_descendants</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">exclude_arcs</span><span class="o">=</span><span class="n">exclude_arcs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descendants_of</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">descendants</span></div>
 
     <span class="k">def</span> <span class="nf">has_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this graph has the directed edge i-&gt;j.</span>
+<span class="sd">        Check if this graph has the directed edge ``i``-&gt;``j``.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -902,7 +1043,7 @@
 
     <span class="k">def</span> <span class="nf">has_bidirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this graph has a bidirected edge between `i` and `j`.</span>
+<span class="sd">        Check if this graph has a bidirected edge between ``i`` and ``j``.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -925,7 +1066,7 @@
 
     <span class="k">def</span> <span class="nf">has_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this graph has an undirected edge between `i` and `j`.</span>
+<span class="sd">        Check if this graph has an undirected edge between ``i`` and ``j``.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -948,7 +1089,7 @@
 
     <span class="k">def</span> <span class="nf">has_any_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if i and j are adjacent in this graph.</span>
+<span class="sd">        Check if ``i`` and ``j`` are adjacent in this graph.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1030,7 +1171,7 @@
 
     <span class="k">def</span> <span class="nf">district_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">node_subset</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the district of a node, i.e., the set of nodes reachable by bidirected edges. If `node_subset` is</span>
+<span class="sd">        Return the district of a node, i.e., the set of nodes reachable by bidirected edges. If ``node_subset`` is</span>
 <span class="sd">        provided, do this on the induced subgraph on that subset of nodes.</span>
 
 <span class="sd">        Return</span>
@@ -1147,8 +1288,8 @@
 
     <span class="k">def</span> <span class="nf">is_imap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">certify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this graph is an IMAP of the `other` graph, i.e., all m-separation statements in this graph</span>
-<span class="sd">        are also m-separation statements in `other`.</span>
+<span class="sd">        Check if this graph is an IMAP of the graph ``other``, i.e., all m-separation statements in this graph</span>
+<span class="sd">        are also m-separation statements in ``other``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1163,6 +1304,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1347,8 +1489,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        node: The node whose Markov blanket to find.</span>
-<span class="sd">        flat: if True, return the Markov blanket as a set, otherwise return a dictionary mapping nodes in the district</span>
+<span class="sd">        node:</span>
+<span class="sd">            The node whose Markov blanket to find.</span>
+<span class="sd">        flat:</span>
+<span class="sd">            if ``True``, return the Markov blanket as a set, otherwise return a dictionary mapping nodes in the district</span>
 <span class="sd">            of node to their parents.</span>
 
 <span class="sd">        Returns</span>
@@ -1459,7 +1603,13 @@
     <span class="c1"># === CONVERTERS</span>
 <div class="viewcode-block" id="AncestralGraph.to_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.to_amat.html#causaldag.classes.ancestral_graph.AncestralGraph.to_amat">[docs]</a>    <span class="k">def</span> <span class="nf">to_amat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Convert the graph into an adjacency matrix.</span>
+<span class="sd">        TODO: meaning of numbers</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        amat</span>
+<span class="sd">            The adjacency matrix of this graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1480,11 +1630,13 @@
 <div class="viewcode-block" id="AncestralGraph.from_amat"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.from_amat.html#causaldag.classes.ancestral_graph.AncestralGraph.from_amat">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_amat</span><span class="p">(</span><span class="n">amat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Create a graph from an adjacency matrix.</span>
+<span class="sd">        TODO: meaning of numbers</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        amat</span>
+<span class="sd">            The adjacency matrix</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1510,7 +1662,7 @@
     <span class="c1"># === COMPARISON</span>
 <div class="viewcode-block" id="AncestralGraph.markov_equivalent"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.ancestral_graph.AncestralGraph.markov_equivalent.html#causaldag.classes.ancestral_graph.AncestralGraph.markov_equivalent">[docs]</a>    <span class="k">def</span> <span class="nf">markov_equivalent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if this graph is Markov equivalent to the graph `other`. Two graphs are Markov equivalent iff.</span>
+<span class="sd">        Check if this graph is Markov equivalent to the graph ``other``. Two graphs are Markov equivalent iff.</span>
 <span class="sd">        they have the same skeleton, same v-structures, and if whenever there is the same discriminating path for some</span>
 <span class="sd">        node in both graphs, the node is a collider on that path in one graph iff. it is a collider on that path in</span>
 <span class="sd">        the other graph.</span>
@@ -1518,7 +1670,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        other:</span>
-<span class="sd">            Another AncestralGraph.</span>
+<span class="sd">            another AncestralGraph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1676,7 +1828,7 @@
 
     <span class="k">def</span> <span class="nf">_no_other_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">ancestor_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if there is any path from i to j other than possibly the direct edge i-&gt;j.</span>
+<span class="sd">        Check if there is any path from ``i`` to ``j`` other than possibly the direct edge i-&gt;j.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">other_ancestors_j</span> <span class="o">=</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">}</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">other_ancestors_j</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">()</span>
@@ -1701,6 +1853,7 @@
 
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.AncestralGraph(directed={(0, 1)}, bidirected={(1, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.legitimate_mark_changes()</span>
 <span class="sd">        ({(0, 1)}, {(2, 1)})</span>
@@ -1794,7 +1947,7 @@
 
     <span class="k">def</span> <span class="nf">msep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check whether A and B are m-separated given C, using the Bayes ball algorithm.</span>
+<span class="sd">        Check whether ``A`` and ``B`` are m-separated given ``C``, using the Bayes ball algorithm.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1858,7 +2011,7 @@
 
     <span class="k">def</span> <span class="nf">msep_from_given</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find all nodes m-separated from A given C.</span>
+<span class="sd">        Find all nodes m-separated from ``A`` given ``C``.</span>
 
 <span class="sd">        Uses algorithm similar to that in Geiger, D., Verma, T., &amp; Pearl, J. (1990).</span>
 <span class="sd">        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.</span>
@@ -1878,6 +2031,8 @@
 <span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warn_untested</span><span class="p">()</span>
+
         <span class="n">A</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
         <span class="n">C</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 

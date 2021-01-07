@@ -178,11 +178,14 @@
 <h1>causaldag.classes.dag.DAG.add_arcs_from<a class="headerlink" href="#causaldag-classes-dag-dag-add-arcs-from" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="causaldag.classes.dag.DAG.add_arcs_from">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_arcs_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arcs</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>Tuple<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">unsafe</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_arcs_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_arcs_from" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add arcs to the graph from a collection</p>
+<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_arcs_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arcs</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>Tuple<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">check_acyclic</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_arcs_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_arcs_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add arcs to the graph from the collection <code class="docutils literal notranslate"><span class="pre">arcs</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>arcs</strong> – collection of arcs to be added</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arcs</strong> – collection of arcs to be added.</p></li>
+<li><p><strong>check_acyclic</strong> – if True, check that the DAG remains acyclic after adding the edge.</p></li>
+</ul>
 </dd>
 </dl>
 <div class="admonition seealso">

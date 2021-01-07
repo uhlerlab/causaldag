@@ -207,7 +207,7 @@ class GaussDAG(DAG):
         self._weight_mat[rows, cols] = ws
         zeros = np.where(ws == 0)[0]
         nonzeros = np.where(ws != 0)[0]
-        super().remove_arcs(ixs[zeros], ignore_error=True)
+        super().remove_arcs_from(ixs[zeros], ignore_error=True)
         super().add_arcs_from(ixs[nonzeros])
 
     def set_node_mean(self, i, mean):
@@ -445,11 +445,11 @@ class GaussDAG(DAG):
     def outgoing_arcs(self, node):
         return super().outgoing_arcs(node)
 
-    def outdegree(self, node):
-        return super().outdegree(node)
+    def outdegree_of(self, node):
+        return super().outdegree_of(node)
 
-    def indegree(self, node):
-        return super().indegree(node)
+    def indegree_of(self, node):
+        return super().indegree_of(node)
 
     def save_gml(self, filename):
         raise NotImplementedError

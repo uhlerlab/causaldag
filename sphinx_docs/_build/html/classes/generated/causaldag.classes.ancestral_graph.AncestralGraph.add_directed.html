@@ -178,7 +178,7 @@
 <dl class="py method">
 <dt id="causaldag.classes.ancestral_graph.AncestralGraph.add_directed">
 <code class="sig-prename descclassname">AncestralGraph.</code><code class="sig-name descname">add_directed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">j</span><span class="p">:</span> <span class="n">Hashable</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph.add_directed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph.add_directed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a directed edge from node <cite>i</cite> to node <cite>j</cite>.</p>
+<dd><p>Add a directed edge from node <code class="docutils literal notranslate"><span class="pre">i</span></code> to node <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -188,7 +188,13 @@
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>TODO</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">AncestralGraph</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">add_directed</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">directed</span>
+<span class="go">{(1, 2)}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

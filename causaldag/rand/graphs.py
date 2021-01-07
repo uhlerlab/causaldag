@@ -170,7 +170,7 @@ def rand_nn_functions(
 
     # for each node, create the conditional
     for node in dag._nodes:
-        nparents = dag.indegree(node)
+        nparents = dag.indegree_of(node)
         layer_mats = [np.random.rand(nparents, nparents) * 2 for _ in range(num_layers)]
 
         def conditional(parent_vals):
@@ -264,7 +264,7 @@ def rand_additive_basis(
     node_iterator = top_order if not progress else tqdm(top_order)
     for node in node_iterator:
         parents = dag.parents_of(node)
-        nparents = dag.indegree(node)
+        nparents = dag.indegree_of(node)
         parent2base = dict(zip(parents, random.choices(basis, k=nparents)))
         parent_weights = rand_weight_fn(size=nparents)
         parent_vals = np.array([sample_dict[parent] for parent in parents]).T if nparents > 0 else np.zeros([num_monte_carlo, 0])

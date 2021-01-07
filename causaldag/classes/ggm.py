@@ -106,7 +106,7 @@ class GGM(UndirectedGraph):
         ixs = list(itr.chain.from_iterable(((f, s) for f in range(s)) for s in range(len(perm))))
         for i, j in ixs:
             pi_i, pi_j = perm[i], perm[j]
-            if not np.isclose(self.partial_correlation(pi_i, pi_j, d.markov_blanket(pi_i)), 0):
+            if not np.isclose(self.partial_correlation(pi_i, pi_j, d.markov_blanket_of(pi_i)), 0):
                 d.add_arc(pi_i, pi_j, check_acyclic=True)
 
         arcs = dict()

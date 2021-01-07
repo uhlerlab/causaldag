@@ -177,8 +177,23 @@
 <h1>causaldag.classes.ancestral_graph.AncestralGraph.spouses_of<a class="headerlink" href="#causaldag-classes-ancestral-graph-ancestralgraph-spouses-of" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="causaldag.classes.ancestral_graph.AncestralGraph.spouses_of">
-<code class="sig-prename descclassname">AncestralGraph.</code><code class="sig-name descname">spouses_of</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Hashable<span class="p">, </span>Set<span class="p">[</span>Hashable<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Set<span class="p">[</span>Hashable<span class="p">]</span><a class="reference internal" href="../../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph.spouses_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">AncestralGraph.</code><code class="sig-name descname">spouses_of</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Hashable<span class="p">, </span>Set<span class="p">[</span>Hashable<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Set<span class="p">[</span>Hashable<span class="p">]</span><a class="reference internal" href="../../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph.spouses_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the spouses of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nodes</strong> – Nodes.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">AncestralGraph</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span> <span class="n">bidirected</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">spouses_of</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">{4}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">spouses_of</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">{4, 5}</span>
+</pre></div>
+</div>
+</dd></dl>
 
 </div>
 

@@ -93,7 +93,7 @@ def permutation2dag(
             continue
 
         # === TEST MARKOV BLANKET
-        mb = d.markov_blanket(pi_i)
+        mb = d.markov_blanket_of(pi_i)
 
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
@@ -490,7 +490,7 @@ def gsp(
                     # === FIND THE DAG CORRESPONDING TO THE SPARSER IMAP
                     i, j, rem_arcs = covered_arcs2removed_arcs.pop(selected_ix)
                     current_dag.reverse_arc(i, j, check_acyclic=True)
-                    current_dag.remove_arcs(rem_arcs)
+                    current_dag.remove_arcs_from(rem_arcs)
                     current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
 
                     # if frozenset(current_dag.arcs) in all_kept_dags:  # CHECK IF THIS MAKES SENSE

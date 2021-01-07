@@ -1362,7 +1362,7 @@ class AncestralGraph:
                 node for node in self._nodes - res_qsinks
                 if not (self._children[node] - res_qsinks) and
                                  not (other._children[node] - res_qsinks) and
-                                 self.markov_blanket(node) == other.markov_blanket(node)
+                                 self.markov_blanket(node) == other.markov_blanket_of(node)
             }
             res_qsinks.update(new_resolved)
             if not new_resolved:

@@ -178,17 +178,24 @@
 <dl class="py method">
 <dt id="causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected">
 <code class="sig-prename descclassname">AncestralGraph.</code><code class="sig-name descname">remove_bidirected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">j</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">ignore_error</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph.remove_bidirected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the bidirected edge between <cite>i</cite> and <cite>j</cite>.</p>
+<dd><p>Remove the bidirected edge between <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>i</strong> – first endpoint of bidirected edge.</p></li>
 <li><p><strong>j</strong> – second endpoint of bidirected edge.</p></li>
+<li><p><strong>ignore_error</strong> – If False, raises an error when the bidirected edge does not belong to the graph.</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>TODO</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">AncestralGraph</span><span class="p">(</span><span class="n">bidirected</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)},</span> <span class="n">directed</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">remove_bidirected</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span>
+<span class="go">Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 4})}, Undirected edges: set()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

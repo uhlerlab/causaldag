@@ -177,7 +177,7 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="causaldag.classes.ancestral_graph.AncestralGraph">
-<em class="property">class </em><code class="sig-prename descclassname">causaldag.classes.ancestral_graph.</code><code class="sig-name descname">AncestralGraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">bidirected</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">undirected</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">causaldag.classes.ancestral_graph.</code><code class="sig-name descname">AncestralGraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">frozenset({})</span></em>, <em class="sig-param"><span class="n">directed</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">frozenset({})</span></em>, <em class="sig-param"><span class="n">bidirected</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">frozenset({})</span></em>, <em class="sig-param"><span class="n">undirected</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">frozenset({})</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causaldag/classes/ancestral_graph.html#AncestralGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.ancestral_graph.AncestralGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for ancestral graphs, used to represent causal models with latent variables.</p>
 </dd></dl>
 
@@ -191,13 +191,13 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.copy.html#causaldag.classes.ancestral_graph.AncestralGraph.copy" title="causaldag.classes.ancestral_graph.AncestralGraph.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.copy</span></code></a>()</p></td>
-<td><p>Return a copy of the current ancestral graph.</p></td>
+<td><p>Return a copy of this ancestral graph.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.to_amat.html#causaldag.classes.ancestral_graph.AncestralGraph.to_amat" title="causaldag.classes.ancestral_graph.AncestralGraph.to_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.to_amat</span></code></a>()</p></td>
-<td><p>TODO</p></td>
+<td><p>Convert the graph into an adjacency matrix.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.from_amat.html#causaldag.classes.ancestral_graph.AncestralGraph.from_amat" title="causaldag.classes.ancestral_graph.AncestralGraph.from_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.from_amat</span></code></a>(amat)</p></td>
-<td><p>TODO</p></td>
+<td><p>Create a graph from an adjacency matrix.</p></td>
 </tr>
 </tbody>
 </table>
@@ -213,34 +213,34 @@
 <td><p>Add a node to the ancestral graph.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_node.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_node" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_node</span></code></a>(node[, ignore_error])</p></td>
-<td><p>Remove <cite>node</cite>.</p></td>
+<td><p>Remove <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.add_directed.html#causaldag.classes.ancestral_graph.AncestralGraph.add_directed" title="causaldag.classes.ancestral_graph.AncestralGraph.add_directed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.add_directed</span></code></a>(i, j)</p></td>
-<td><p>Add a directed edge from node <cite>i</cite> to node <cite>j</cite>.</p></td>
+<td><p>Add a directed edge from node <code class="docutils literal notranslate"><span class="pre">i</span></code> to node <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_directed.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_directed" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_directed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_directed</span></code></a>(i, j[, …])</p></td>
-<td><p>Remove the directed edge from <cite>i</cite> to <cite>j</cite>.</p></td>
+<td><p>Remove the directed edge from <code class="docutils literal notranslate"><span class="pre">i</span></code> to <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.add_bidirected.html#causaldag.classes.ancestral_graph.AncestralGraph.add_bidirected" title="causaldag.classes.ancestral_graph.AncestralGraph.add_bidirected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.add_bidirected</span></code></a>(i, j)</p></td>
-<td><p>Add a bidirected edge between nodes <cite>i</cite> and <cite>j</cite>.</p></td>
+<td><p>Add a bidirected edge between nodes <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_bidirected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_bidirected</span></code></a>(i, j[, …])</p></td>
-<td><p>Remove the bidirected edge between <cite>i</cite> and <cite>j</cite>.</p></td>
+<td><p>Remove the bidirected edge between <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.add_undirected.html#causaldag.classes.ancestral_graph.AncestralGraph.add_undirected" title="causaldag.classes.ancestral_graph.AncestralGraph.add_undirected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.add_undirected</span></code></a>(i, j)</p></td>
 <td><p>Add an undirected edge between nodes <cite>i</cite> and <cite>j</cite>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_undirected.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_undirected" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_undirected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_undirected</span></code></a>(i, j[, …])</p></td>
-<td><p>Remove the undirected edge between <cite>i</cite> and <cite>j</cite>.</p></td>
+<td><p>Remove the undirected edge between <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.add_nodes_from.html#causaldag.classes.ancestral_graph.AncestralGraph.add_nodes_from" title="causaldag.classes.ancestral_graph.AncestralGraph.add_nodes_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.add_nodes_from</span></code></a>(nodes)</p></td>
-<td><p>Add a node to the ancestral graph.</p></td>
+<td><p>Add nodes to the ancestral graph.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edge.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edge" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_edge</span></code></a>(i, j[, ignore_error])</p></td>
-<td><p>TODO</p></td>
+<td><p>Remove the edge between <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>, regardless of edge type.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edges.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edges" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_edges</span></code></a>(edges)</p></td>
-<td><p>TODO</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.remove_edges.html#causaldag.classes.ancestral_graph.AncestralGraph.remove_edges" title="causaldag.classes.ancestral_graph.AncestralGraph.remove_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.remove_edges</span></code></a>(edges[, …])</p></td>
+<td><p>Remove all edges in <code class="docutils literal notranslate"><span class="pre">edges</span></code> from the graph, regardless of edge type.</p></td>
 </tr>
 </tbody>
 </table>
@@ -257,7 +257,7 @@
 <td><p>Compute the structure Hamming distance between the skeleton of this graph and the skeleton of another graph.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.markov_equivalent.html#causaldag.classes.ancestral_graph.AncestralGraph.markov_equivalent" title="causaldag.classes.ancestral_graph.AncestralGraph.markov_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.markov_equivalent</span></code></a>(other)</p></td>
-<td><p>Check if this graph is Markov equivalent to the graph <cite>other</cite>.</p></td>
+<td><p>Check if this graph is Markov equivalent to the graph <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -270,23 +270,23 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.descendants_of.html#causaldag.classes.ancestral_graph.AncestralGraph.descendants_of" title="causaldag.classes.ancestral_graph.AncestralGraph.descendants_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.descendants_of</span></code></a>(node[, …])</p></td>
-<td><p>Return the nodes downstream of node</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.descendants_of.html#causaldag.classes.ancestral_graph.AncestralGraph.descendants_of" title="causaldag.classes.ancestral_graph.AncestralGraph.descendants_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.descendants_of</span></code></a>(nodes[, …])</p></td>
+<td><p>Return the descendants of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of" title="causaldag.classes.ancestral_graph.AncestralGraph.ancestors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.ancestors_of</span></code></a>(nodes[, …])</p></td>
-<td><p>Return the nodes upstream of node</p></td>
+<td><p>Return the ancestors of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.parents_of.html#causaldag.classes.ancestral_graph.AncestralGraph.parents_of" title="causaldag.classes.ancestral_graph.AncestralGraph.parents_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.parents_of</span></code></a>(i)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.parents_of.html#causaldag.classes.ancestral_graph.AncestralGraph.parents_of" title="causaldag.classes.ancestral_graph.AncestralGraph.parents_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.parents_of</span></code></a>(nodes)</p></td>
+<td><p>Return the parents of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.children_of.html#causaldag.classes.ancestral_graph.AncestralGraph.children_of" title="causaldag.classes.ancestral_graph.AncestralGraph.children_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.children_of</span></code></a>(i)</p></td>
-<td><p></p></td>
+<td><p>Return the children of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.spouses_of.html#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of" title="causaldag.classes.ancestral_graph.AncestralGraph.spouses_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.spouses_of</span></code></a>(i)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.spouses_of.html#causaldag.classes.ancestral_graph.AncestralGraph.spouses_of" title="causaldag.classes.ancestral_graph.AncestralGraph.spouses_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.spouses_of</span></code></a>(nodes)</p></td>
+<td><p>Return the spouses of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of" title="causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.neighbors_of</span></code></a>(i)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html#causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of" title="causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AncestralGraph.neighbors_of</span></code></a>(nodes)</p></td>
+<td><p>Return the neighbors of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

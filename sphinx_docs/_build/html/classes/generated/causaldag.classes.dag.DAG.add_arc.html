@@ -178,13 +178,14 @@
 <h1>causaldag.classes.dag.DAG.add_arc<a class="headerlink" href="#causaldag-classes-dag-dag-add-arc" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="causaldag.classes.dag.DAG.add_arc">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_arc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">j</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">unsafe</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_arc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_arc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add an arc to the DAG</p>
+<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_arc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">j</span><span class="p">:</span> <span class="n">Hashable</span></em>, <em class="sig-param"><span class="n">check_acyclic</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_arc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_arc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the arc <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` to the DAG</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>i</strong> – source node of the arc</p></li>
 <li><p><strong>j</strong> – target node of the arc</p></li>
+<li><p><strong>check_acyclic</strong> – if True, check that the DAG remains acyclic after adding the edge.</p></li>
 </ul>
 </dd>
 </dl>
