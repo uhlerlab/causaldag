@@ -32,7 +32,7 @@ class DAG:
     """
     Base class for causal DAGs.
     """
-    def __init__(self, nodes: Set=set(), arcs: Set=set(), dag=None):
+    def __init__(self, nodes: Set = frozenset(), arcs: Set = frozenset(), dag=None):
         if dag is not None:
             self._nodes = set(dag._nodes)
             self._arcs = set(dag._arcs)
@@ -102,6 +102,9 @@ class DAG:
         return DAG(dag=self)
 
     def rename_nodes(self, name_map: Dict):
+        """
+        TODO
+        """
         return DAG(
             nodes={name_map[n] for n in self._nodes},
             arcs={(name_map[i], name_map[j]) for i, j in self._arcs}
@@ -126,14 +129,23 @@ class DAG:
 
     @property
     def neighbors(self) -> Dict[Node, Set[Node]]:
+        """
+        TODO: change name to dict?
+        """
         return core_utils.defdict2dict(self._neighbors, self._nodes)
 
     @property
     def parents(self) -> Dict[Node, Set[Node]]:
+        """
+        TODO: change name to dict?
+        """
         return core_utils.defdict2dict(self._parents, self._nodes)
 
     @property
     def children(self) -> Dict[Node, Set[Node]]:
+        """
+        TODO: change name to dict?
+        """
         return core_utils.defdict2dict(self._children, self._nodes)
 
     @property
@@ -159,7 +171,7 @@ class DAG:
     @property
     def sparsity(self) -> float:
         p = len(self._nodes)
-        return len(self._arcs) / p / (p-1) * 2
+        return len(self._arcs) / p / (p - 1) * 2
 
     def parents_of(self, nodes: NodeSet) -> Set[Node]:
         """
@@ -764,7 +776,8 @@ class DAG:
         >>> g.markov_blanket(1)
         {0, 2, 3}
         """
-        parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[node] else set()
+        parents_of_children = set.union(*(self._parents[c] for c in self._children[node])) if self._children[
+            node] else set()
         return self._parents[node] | self._children[node] | parents_of_children - {node}
 
     # === COMPARISON
@@ -773,7 +786,7 @@ class DAG:
         TODO
         """
         reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
-        return len(reversals) + 2*self.shd_skeleton(other)
+        return len(reversals) + 2 * self.shd_skeleton(other)
 
     def shd(self, other) -> int:
         """
@@ -883,7 +896,8 @@ class DAG:
 
         # COMBINED_RESULTS
         num_false_positives = len(false_positive_edges) + len(false_negative_arcs)
-        num_false_negatives = len(false_negative_arcs) + len(false_negative_edges) + len(mistaken_arcs_for_edges) + len(reversed_arcs)
+        num_false_negatives = len(false_negative_arcs) + len(false_negative_edges) + len(mistaken_arcs_for_edges) + len(
+            reversed_arcs)
         num_true_positives = len(true_positive_edges) + len(true_positive_arcs) + len(mistaken_edges_for_arcs)
         num_true_negatives = comb(self.nnodes, 2) - num_false_positives - num_false_negatives - num_true_positives
 
@@ -891,9 +905,9 @@ class DAG:
         num_negatives = comb(self.nnodes, 2) - self.num_arcs
         num_positives = self.num_arcs
         num_returned_positives = (num_true_positives + num_false_positives)
-        fpr = num_false_positives/num_negatives if num_negatives != 0 else 0
-        tpr = num_true_positives/num_positives if num_positives != 0 else 1
-        precision = num_true_positives/num_returned_positives if num_returned_positives != 0 else 1
+        fpr = num_false_positives / num_negatives if num_negatives != 0 else 0
+        tpr = num_true_positives / num_positives if num_positives != 0 else 1
+        precision = num_true_positives / num_returned_positives if num_returned_positives != 0 else 1
 
         if rates_only:
             return dict(
@@ -970,7 +984,8 @@ class DAG:
         if interventions is None:
             return self.cpdag() == other.cpdag()
         else:
-            return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
+            return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions,
+                                                                                                        other.cpdag())
 
     def local_markov_statements(self) -> Set[Tuple[Any, FrozenSet, FrozenSet]]:
         """
@@ -1062,12 +1077,16 @@ class DAG:
         False
         """
         if check_imap and not self.is_imap(other):
-            if certify: return False, None
-            else: return False
+            if certify:
+                return False, None
+            else:
+                return False
 
         certificate = next(((i, j) for i, j in self._arcs if other.dsep(i, j, self._parents[j] - {i})), None)
-        if certify: return certificate is None, certificate
-        else: return certificate is None
+        if certify:
+            return certificate is None, certificate
+        else:
+            return certificate is None
 
     # === CONVENIENCE
     def _add_descendants(self, descendants, node):
@@ -1321,8 +1340,8 @@ class DAG:
             new_resolved = {
                 node for node in self._nodes - res_sinks
                 if not (self._children[node] - res_sinks) and
-                   not (other._children[node] - res_sinks) and
-                   self._parents[node] == other._parents[node]
+                                 not (other._children[node] - res_sinks) and
+                                 self._parents[node] == other._parents[node]
             }
             res_sinks.update(new_resolved)
             if not new_resolved:
@@ -1376,7 +1395,8 @@ class DAG:
 
         # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
         d = list(imap_subgraph.upstream_most(self_subgraph.descendants_of(sink)))[0]
-        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (self_subgraph.ancestors_of(d) | {d})
+        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (
+                    self_subgraph.ancestors_of(d) | {d})
         z = random.choice(list(valid_children))
         if verbose: print(f"Step 5: Picked z={z}")
 
@@ -1563,7 +1583,7 @@ class DAG:
         """
         warn_untested()  # TODO: ADD TEST
 
-        g = DAG(nodes=set(df.index)|set(df.columns))
+        g = DAG(nodes=set(df.index) | set(df.columns))
         for (i, j), val in np.ndenumerate(df.values):
             if val != 0:
                 g.add_arc(df.index[i], df.columns[j])
@@ -1865,7 +1885,7 @@ class DAG:
         if cpdag is None:
             cpdag = self.cpdag()
         if len(cpdag.edges) == 0:
-            return [None]*num_interventions, [cpdag]*num_interventions
+            return [None] * num_interventions, [cpdag] * num_interventions
 
         nodes2icpdags = {
             node: self.interventional_cpdag([{node}], cpdag=cpdag)
@@ -1882,7 +1902,8 @@ class DAG:
         if num_interventions == 1:
             return [best_iv], [icpdag]
         else:
-            best_ivs, icpdags = self.greedy_optimal_single_node_intervention(cpdag=icpdag, num_interventions=num_interventions-1)
+            best_ivs, icpdags = self.greedy_optimal_single_node_intervention(cpdag=icpdag,
+                                                                             num_interventions=num_interventions - 1)
             return [best_iv] + best_ivs, [icpdag] + icpdags
 
     def greedy_optimal_fully_orienting_interventions(self, cpdag=None):
@@ -1994,9 +2015,9 @@ class DAG:
         arcs = {
             (p, r) for parent, residual, component in zip(sdct_parents, sdct_residuals, sdct_components)
 
-           for p, r in itr.product(parent & component, residual)
+            for p, r in itr.product(parent & component, residual)
         }
-        g = PDAG(nodes=self._nodes, arcs=arcs&self._arcs, edges=self._arcs-arcs)
+        g = PDAG(nodes=self._nodes, arcs=arcs & self._arcs, edges=self._arcs - arcs)
         return g
 
     def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
@@ -2063,7 +2084,8 @@ class DAG:
         raise NotImplementedError()
 
     # === SEPARATIONS
-    def dsep(self, A: Union[Set[Node], Node], B: Union[Set[Node], Node], C: Union[Set[Node], Node]=set(), verbose=False, certify=False) -> bool:
+    def dsep(self, A: Union[Set[Node], Node], B: Union[Set[Node], Node], C: Union[Set[Node], Node] = set(),
+             verbose=False, certify=False) -> bool:
         """
         Check if ``A`` and ``B`` are d-separated given ``C``, using the Bayes ball algorithm.
 
@@ -2233,15 +2255,15 @@ class DAG:
             determined.add(c)
             descendants.add(c)
             self._add_ancestors(descendants, c)
-            
+
         reachable = set()
         i_links = set()
         labeled_links = set()
 
         for a in A:
-            i_links.add((None, a)) 
+            i_links.add((None, a))
             reachable.add(a)
-       
+
         while True:
             i_p_1_links = set()
             # Find all unlabled links v->w adjacent to at least one link u->v labeled i, such that (u->v,v->w) is a legal pair.
@@ -2249,13 +2271,13 @@ class DAG:
                 u, v = link
                 for w in self._neighbors[v]:
                     if not u == w and (v, w) not in labeled_links:
-                        if v in self._children[u] and v in self._children[w]:  #Is collider?
+                        if v in self._children[u] and v in self._children[w]:  # Is collider?
                             if v in descendants:
-                                i_p_1_links.add((v,w))
+                                i_p_1_links.add((v, w))
                                 reachable.add(w)
                         else:  # Not collider
                             if v not in determined:
-                                i_p_1_links.add((v,w))
+                                i_p_1_links.add((v, w))
                                 reachable.add(w)
 
             if len(i_p_1_links) == 0:
@@ -2270,9 +2292,3 @@ class DAG:
 if __name__ == '__main__':
     d = DAG(arcs={(1, 2), (1, 3), (3, 4), (2, 4), (3, 5)})
     d.save_gml('test_mine.gml')
-
-
-    
-
-
-

@@ -64,7 +64,13 @@ class AncestralGraph:
     Base class for ancestral graphs, used to represent causal models with latent variables.
     """
 
-    def __init__(self, nodes=set(), directed=set(), bidirected=set(), undirected=set()):
+    def __init__(
+            self,
+            nodes: Set = frozenset(),
+            directed: Set = frozenset(),
+            bidirected: Set = frozenset(),
+            undirected: Set = frozenset()
+    ):
         self._nodes = nodes.copy()
         self._directed = set()
         self._bidirected = set()
@@ -95,7 +101,7 @@ class AncestralGraph:
 
     def copy(self):
         """
-        Return a copy of the current ancestral graph.
+        Return a copy of this ancestral graph.
 
         Returns
         -------
