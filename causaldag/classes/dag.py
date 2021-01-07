@@ -1554,32 +1554,6 @@ class DAG:
     def to_sparse(self):
         raise NotImplementedError
 
-    # === ADJUSTMENT SETS
-    def backdoor(self, i, j):
-        """
-        Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.
-
-        S satisfies the backdoor criterion if
-        (i) S blocks every path from i to j with an arrow into i
-        (ii) no node in S is a descendant of i
-
-
-        """
-        raise NotImplementedError
-        pass
-
-    def frontdoor(self, i, j):
-        """
-        Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.
-
-        S satisfies the frontdoor criterion if
-        (i) S blocks all directed paths from i to j
-        (ii) there are no unblocked backdoor paths from i to S
-        (iii) i blocks all backdoor paths from S to j
-
-        """
-        raise NotImplementedError()
-
     # === SEPARATIONS
     def dsep(self, A: Union[Set[Node], Node], B: Union[Set[Node], Node], C: Union[Set[Node], Node] = set(),
              verbose=False, certify=False) -> bool:
@@ -2011,6 +1985,17 @@ class DAG:
 
     def chickering_sequence(self, imap, verbose=False):
         """
+        Return a *Chickering sequence* from this DAG to an I-MAP ``imap``.
+
+        TODO: add reference
+
+        Parameters
+        ----------
+        imap
+            The I-MAP of this DAG at which the Chickering sequence will end.
+
+        Examples
+        --------
         TODO
         """
         warn_untested()  # TODO: ADD TEST
@@ -2358,6 +2343,32 @@ class DAG:
 
             return intervened_nodes
             # TODO: test!
+
+    # === ADJUSTMENT SETS
+    def backdoor(self, i, j):
+        """
+        Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.
+
+        S satisfies the backdoor criterion if
+        (i) S blocks every path from i to j with an arrow into i
+        (ii) no node in S is a descendant of i
+
+
+        """
+        raise NotImplementedError
+        pass
+
+    def frontdoor(self, i, j):
+        """
+        Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.
+
+        S satisfies the frontdoor criterion if
+        (i) S blocks all directed paths from i to j
+        (ii) there are no unblocked backdoor paths from i to S
+        (iii) i blocks all backdoor paths from S to j
+
+        """
+        raise NotImplementedError()
 
 
 if __name__ == '__main__':

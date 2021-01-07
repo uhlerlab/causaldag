@@ -60,6 +60,15 @@ Graph properties
    DAG.triples
    DAG.upstream_most
 
+Ordering
+--------
+.. autosummary::
+   :toctree: generated
+
+   DAG.topological_sort
+   DAG.is_topological
+   DAG.permutation_score
+
 Comparison to other DAGs
 ------------------------
 .. autosummary::

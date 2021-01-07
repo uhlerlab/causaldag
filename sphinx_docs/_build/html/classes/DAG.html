@@ -127,6 +127,12 @@
 <li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.upstream_most.html">causaldag.classes.dag.DAG.upstream_most</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#ordering">Ordering</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.topological_sort.html">causaldag.classes.dag.DAG.topological_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_topological.html">causaldag.classes.dag.DAG.is_topological</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.permutation_score.html">causaldag.classes.dag.DAG.permutation_score</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#comparison-to-other-dags">Comparison to other DAGs</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd.html">causaldag.classes.dag.DAG.shd</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd_skeleton.html">causaldag.classes.dag.DAG.shd_skeleton</a></li>
@@ -392,6 +398,26 @@
 </tbody>
 </table>
 </div>
+<div class="section" id="ordering">
+<h2>Ordering<a class="headerlink" href="#ordering" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.topological_sort.html#causaldag.classes.dag.DAG.topological_sort" title="causaldag.classes.dag.DAG.topological_sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.topological_sort</span></code></a>()</p></td>
+<td><p>Return a topological sort of the nodes in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_topological.html#causaldag.classes.dag.DAG.is_topological" title="causaldag.classes.dag.DAG.is_topological"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_topological</span></code></a>(order)</p></td>
+<td><p>Check that <code class="docutils literal notranslate"><span class="pre">order</span></code> is a topological order consistent with this DAG, i.e., if <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG, then <code class="docutils literal notranslate"><span class="pre">i</span></code> comes before <code class="docutils literal notranslate"><span class="pre">j</span></code> in the order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.permutation_score.html#causaldag.classes.dag.DAG.permutation_score" title="causaldag.classes.dag.DAG.permutation_score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.permutation_score</span></code></a>(order)</p></td>
+<td><p>Return the number of “errors” in <code class="docutils literal notranslate"><span class="pre">order</span></code> with respect to the DAG, i.e., the number of times that <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG but <code class="docutils literal notranslate"><span class="pre">i</span></code> comes <em>after</em> <code class="docutils literal notranslate"><span class="pre">j</span></code> in <code class="docutils literal notranslate"><span class="pre">order</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="comparison-to-other-dags">
 <h2>Comparison to other DAGs<a class="headerlink" href="#comparison-to-other-dags" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
@@ -514,7 +540,7 @@
 <td><p>TODO</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.chickering_sequence.html#causaldag.classes.dag.DAG.chickering_sequence" title="causaldag.classes.dag.DAG.chickering_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.chickering_sequence</span></code></a>(imap[, verbose])</p></td>
-<td><p>TODO</p></td>
+<td><p>Return a <em>Chickering sequence</em> from this DAG to an I-MAP <code class="docutils literal notranslate"><span class="pre">imap</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.apply_edge_operation.html#causaldag.classes.dag.DAG.apply_edge_operation" title="causaldag.classes.dag.DAG.apply_edge_operation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.apply_edge_operation</span></code></a>(imap[, seed_sink, …])</p></td>
 <td><p>TODO</p></td>

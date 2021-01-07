@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>causaldag.classes.dag.DAG.chickering_distance &mdash; causaldag  documentation</title>
+  <title>causaldag.classes.dag.DAG.topological_sort &mdash; causaldag  documentation</title>
   
 
   
@@ -35,8 +35,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.classes.dag.DAG.confusion_matrix" href="causaldag.classes.dag.DAG.confusion_matrix.html" />
-    <link rel="prev" title="causaldag.classes.dag.DAG.is_minimal_imap" href="causaldag.classes.dag.DAG.is_minimal_imap.html" /> 
+    <link rel="next" title="causaldag.classes.dag.DAG.is_topological" href="causaldag.classes.dag.DAG.is_topological.html" />
+    <link rel="prev" title="causaldag.classes.dag.DAG.upstream_most" href="causaldag.classes.dag.DAG.upstream_most.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,18 +89,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#information-about-nodes">Information about nodes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#ordering">Ordering</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.shd.html">causaldag.classes.dag.DAG.shd</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.shd_skeleton.html">causaldag.classes.dag.DAG.shd_skeleton</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.markov_equivalent.html">causaldag.classes.dag.DAG.markov_equivalent</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.is_imap.html">causaldag.classes.dag.DAG.is_imap</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.is_minimal_imap.html">causaldag.classes.dag.DAG.is_minimal_imap</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.chickering_distance</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix.html">causaldag.classes.dag.DAG.confusion_matrix</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix_skeleton.html">causaldag.classes.dag.DAG.confusion_matrix_skeleton</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#ordering">Ordering</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.topological_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.is_topological.html">causaldag.classes.dag.DAG.is_topological</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.permutation_score.html">causaldag.classes.dag.DAG.permutation_score</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-formats">Conversion to other formats</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-graphs">Conversion to other graphs</a></li>
@@ -166,13 +161,13 @@
         
           <li><a href="../DAG.html">DAG</a> &raquo;</li>
         
-      <li>causaldag.classes.dag.DAG.chickering_distance</li>
+      <li>causaldag.classes.dag.DAG.topological_sort</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.chickering_distance.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.topological_sort.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -185,12 +180,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="causaldag-classes-dag-dag-chickering-distance">
-<h1>causaldag.classes.dag.DAG.chickering_distance<a class="headerlink" href="#causaldag-classes-dag-dag-chickering-distance" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="causaldag-classes-dag-dag-topological-sort">
+<h1>causaldag.classes.dag.DAG.topological_sort<a class="headerlink" href="#causaldag-classes-dag-dag-topological-sort" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
-<dt id="causaldag.classes.dag.DAG.chickering_distance">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">chickering_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.chickering_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.chickering_distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO</p>
+<dt id="causaldag.classes.dag.DAG.topological_sort">
+<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">topological_sort</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>Hashable<span class="p">]</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.topological_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.topological_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a topological sort of the nodes in the graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A topological sort of the nodes in a graph.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[Node]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">topological_sort</span>
+<span class="go">[1, 2, 3]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -203,10 +213,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="causaldag.classes.dag.DAG.confusion_matrix.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.confusion_matrix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="causaldag.classes.dag.DAG.is_topological.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.is_topological" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="causaldag.classes.dag.DAG.is_minimal_imap.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.is_minimal_imap" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="causaldag.classes.dag.DAG.upstream_most.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.upstream_most" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

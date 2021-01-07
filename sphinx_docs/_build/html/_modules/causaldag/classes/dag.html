@@ -696,7 +696,7 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">])</span></div>
 
     <span class="c1"># ==== ORDERS</span>
-    <span class="k">def</span> <span class="nf">topological_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<div class="viewcode-block" id="DAG.topological_sort"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.topological_sort.html#causaldag.classes.dag.DAG.topological_sort">[docs]</a>    <span class="k">def</span> <span class="nf">topological_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a topological sort of the nodes in the graph.</span>
 
@@ -719,9 +719,9 @@
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">any_visited</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_mark_children_visited</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">any_visited</span><span class="p">,</span> <span class="n">curr_path_visited</span><span class="p">,</span> <span class="n">curr_path</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">is_topological</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="DAG.is_topological"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.is_topological.html#causaldag.classes.dag.DAG.is_topological">[docs]</a>    <span class="k">def</span> <span class="nf">is_topological</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that ``order`` is a topological order consistent with this DAG, i.e., if ``i``-&gt;``j`` in the DAG,</span>
 <span class="sd">        then ``i`` comes before ``j`` in the order.</span>
@@ -743,9 +743,9 @@
 <span class="sd">        False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
-        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">permutation_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="DAG.permutation_score"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.permutation_score.html#causaldag.classes.dag.DAG.permutation_score">[docs]</a>    <span class="k">def</span> <span class="nf">permutation_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the number of &quot;errors&quot; in ``order`` with respect to the DAG, i.e., the number of times that ``i``-&gt;``j``</span>
 <span class="sd">        in the DAG but ``i`` comes *after* ``j`` in ``order``.</span>
@@ -767,7 +767,7 @@
 <span class="sd">        2</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">node2ix</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">ix</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span></div>
 
     <span class="c1"># === GRAPH MODIFICATION</span>
 <div class="viewcode-block" id="DAG.add_node"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
@@ -1704,32 +1704,6 @@
     <span class="k">def</span> <span class="nf">to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="c1"># === ADJUSTMENT SETS</span>
-    <span class="k">def</span> <span class="nf">backdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.</span>
-
-<span class="sd">        S satisfies the backdoor criterion if</span>
-<span class="sd">        (i) S blocks every path from i to j with an arrow into i</span>
-<span class="sd">        (ii) no node in S is a descendant of i</span>
-
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-        <span class="k">pass</span>
-
-    <span class="k">def</span> <span class="nf">frontdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.</span>
-
-<span class="sd">        S satisfies the frontdoor criterion if</span>
-<span class="sd">        (i) S blocks all directed paths from i to j</span>
-<span class="sd">        (ii) there are no unblocked backdoor paths from i to S</span>
-<span class="sd">        (iii) i blocks all backdoor paths from S to j</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-
     <span class="c1"># === SEPARATIONS</span>
 <div class="viewcode-block" id="DAG.dsep"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.dsep.html#causaldag.classes.dag.DAG.dsep">[docs]</a>    <span class="k">def</span> <span class="nf">dsep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">],</span> <span class="n">C</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">],</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
              <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -2161,6 +2135,15 @@
 
 <div class="viewcode-block" id="DAG.chickering_sequence"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.chickering_sequence.html#causaldag.classes.dag.DAG.chickering_sequence">[docs]</a>    <span class="k">def</span> <span class="nf">chickering_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imap</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a *Chickering sequence* from this DAG to an I-MAP ``imap``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        imap</span>
+<span class="sd">            The I-MAP of this DAG at which the Chickering sequence will end.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
@@ -2508,6 +2491,32 @@
 
             <span class="k">return</span> <span class="n">intervened_nodes</span>
             <span class="c1"># TODO: test!</span>
+
+    <span class="c1"># === ADJUSTMENT SETS</span>
+    <span class="k">def</span> <span class="nf">backdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of nodes S satisfying the backdoor criterion if such an S exists, otherwise False.</span>
+
+<span class="sd">        S satisfies the backdoor criterion if</span>
+<span class="sd">        (i) S blocks every path from i to j with an arrow into i</span>
+<span class="sd">        (ii) no node in S is a descendant of i</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">frontdoor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of nodes S satisfying the frontdoor criterion if such an S exists, otherwise False.</span>
+
+<span class="sd">        S satisfies the frontdoor criterion if</span>
+<span class="sd">        (i) S blocks all directed paths from i to j</span>
+<span class="sd">        (ii) there are no unblocked backdoor paths from i to S</span>
+<span class="sd">        (iii) i blocks all backdoor paths from S to j</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
