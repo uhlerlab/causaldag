@@ -1075,7 +1075,7 @@ class DAG:
         Returns
         -------
         bool
-            TODO
+            True if ``other`` is an I-MAP of this DAG, otherwise False.
 
         Examples
         --------
@@ -1114,7 +1114,7 @@ class DAG:
         Returns
         -------
         bool
-            TODO
+            True if ``other`` is a minimal I-MAP of this DAG, otherwise False.
 
         Examples
         --------
