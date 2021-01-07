@@ -76,7 +76,7 @@ class DAG:
     @classmethod
     def from_amat(cls, amat: np.ndarray):
         """
-        Return a DAG with arcs given by amat, i.e. i->j if amat[i,j] != 0
+        Return a DAG with arcs given by ``amat``, i.e. i->j if ``amat[i,j] != 0``.
 
         Parameters
         ----------
@@ -86,9 +86,11 @@ class DAG:
         Examples
         --------
         >>> import causaldag as cd
-        >>> amat = np.array([[0, 0, 1], [0, 1, 0], [0, 0, 0]])
-        >>> cd.DAG.from_amat(amat)
-        TODO
+        >>> import numpy as np
+        >>> amat = np.array([[0, 0, 1], [0, 0, 1], [0, 0, 0]])
+        >>> d = cd.DAG.from_amat(amat)
+        >>> d.arcs
+        {(0, 2), (1, 2)}
         """
         nodes = set(range(amat.shape[0]))
         arcs = {(i, j) for i, j in itr.permutations(nodes, 2) if amat[i, j] != 0}
@@ -96,14 +98,27 @@ class DAG:
 
     def copy(self):
         """
-        Return a copy of the current DAG
+        Return a copy of the current DAG.
         """
         # return DAG(nodes=self._nodes, arcs=self._arcs)
         return DAG(dag=self)
 
     def rename_nodes(self, name_map: Dict):
         """
-        TODO
+        Rename the nodes in this graph according to ``name_map``.
+
+        Parameters
+        ----------
+        name_map:
+            A dictionary from the current name of each node to the desired name of each node.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={('a', 'b'), ('b', 'c')})
+        >>> g2 = g.rename_nodes({'a': 1, 'b': 2, 'c': 3})
+        >>> g2.arcs
+        {(1, 2), (2, 3)}
         """
         return DAG(
             nodes={name_map[n] for n in self._nodes},
@@ -431,7 +446,24 @@ class DAG:
 
     def permutation_score(self, order: list) -> int:
         """
-        TODO
+        Return the number of "errors" in ``order`` with respect to the DAG, i.e., the number of times that ``i``->``j``
+        in the DAG but ``i`` comes *after* ``j`` in ``order``.
+
+        Parameters
+        ----------
+        order:
+            the order to check.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3)})
+        >>> g.permutation_score([1, 2, 3])
+        0
+        >>> g.permutation_score([2, 1, 3])
+        1
+        >>> g.permutation_score([2, 3, 1])
+        2
         """
         node2ix = {node: ix for ix, node in enumerate(order)}
         return sum(node2ix[i] > node2ix[j] for i, j in self._arcs)
