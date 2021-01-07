@@ -744,7 +744,7 @@ class AncestralGraph:
 
     def ancestors_of(self, nodes, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the nodes upstream of node.
+        Return the nodes ancestors of ``nodes``.
 
         Parameters
         ----------
@@ -835,7 +835,7 @@ class AncestralGraph:
 
     def descendants_of(self, node: Node, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the nodes downstream of node
+        Return the descendants of ``nodes``.
 
         Parameters
         ----------

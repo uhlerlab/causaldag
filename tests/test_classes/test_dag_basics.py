@@ -30,18 +30,18 @@ class TestDAG(TestCase):
         self.assertEqual(self.d._parents[5], {3})
 
     def test_downstream(self):
-        self.assertEqual(self.d.downstream(1), {2, 3, 4, 5})
-        self.assertEqual(self.d.downstream(2), {4})
-        self.assertEqual(self.d.downstream(3), {4, 5})
-        self.assertEqual(self.d.downstream(4), set())
-        self.assertEqual(self.d.downstream(5), set())
+        self.assertEqual(self.d.descendants_of(1), {2, 3, 4, 5})
+        self.assertEqual(self.d.descendants_of(2), {4})
+        self.assertEqual(self.d.descendants_of(3), {4, 5})
+        self.assertEqual(self.d.descendants_of(4), set())
+        self.assertEqual(self.d.descendants_of(5), set())
 
     def test_upstream(self):
-        self.assertEqual(self.d.upstream(1), set())
-        self.assertEqual(self.d.upstream(2), {1})
-        self.assertEqual(self.d.upstream(3), {1})
-        self.assertEqual(self.d.upstream(4), {1, 2, 3})
-        self.assertEqual(self.d.upstream(5), {1, 3})
+        self.assertEqual(self.d.ancestors_of(1), set())
+        self.assertEqual(self.d.ancestors_of(2), {1})
+        self.assertEqual(self.d.ancestors_of(3), {1})
+        self.assertEqual(self.d.ancestors_of(4), {1, 2, 3})
+        self.assertEqual(self.d.ancestors_of(5), {1, 3})
 
     def test_add_node(self):
         self.d.add_node(6)
@@ -53,8 +53,8 @@ class TestDAG(TestCase):
         self.assertEqual(self.d._neighbors[2], {1, 3, 4})
         self.assertEqual(self.d._parents[3], {1, 2})
         self.assertEqual(self.d._neighbors[3], {1, 2, 4, 5})
-        self.assertEqual(self.d.downstream(2), {3, 4, 5})
-        self.assertEqual(self.d.upstream(3), {1, 2})
+        self.assertEqual(self.d.descendants_of(2), {3, 4, 5})
+        self.assertEqual(self.d.ancestors_of(3), {1, 2})
 
     def test_topological_sort(self):
         t = self.d.topological_sort()

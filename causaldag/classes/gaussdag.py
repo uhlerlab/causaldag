@@ -430,11 +430,11 @@ class GaussDAG(DAG):
     def shd(self, other):
         return super().shd(other)
 
-    def downstream(self, node):
-        return super().downstream(node)
+    def descendants_of(self, node):
+        return super().descendants_of(node)
 
-    def upstream(self, node):
-        return super().upstream(node)
+    def ancestors_of(self, node):
+        return super().ancestors_of(node)
 
     def incident_arcs(self, node):
         return super().incident_arcs(node)

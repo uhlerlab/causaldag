@@ -246,24 +246,24 @@ class DAG:
         """
         return (source, target) in self._arcs
 
-    def is_upstream_of(self, anc: Node, desc: Node) -> bool:
-        """Check if `anc` is upstream from `desc`
+    def is_ancestor_of(self, anc: Node, desc: Node) -> bool:
+        """Check if ``anc`` is an ancestor of ``desc``
 
         Return
         ------
         bool
-            True if `anc` is upstream of `desc`
+            True if ``anc`` is an ancestor  of ``desc``
 
         Example
         -------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
-        >>> g.is_upstream_of(1, 3)
+        >>> g.is_ancestor_of(1, 3)
         True
-        >>> g.is_upstream_of(3, 1)
+        >>> g.is_ancestor_of(3, 1)
         False
         """
-        return desc in self._children[anc] or desc in self.downstream(anc)
+        return desc in self._children[anc] or desc in self.descendants_of(anc)
 
     # === MUTATORS
     def add_node(self, node: Node):
@@ -913,8 +913,8 @@ class DAG:
 
     def local_markov_statements(self) -> Set[Tuple[Any, Set, Set]]:
         """
-        Return the local Markov statements of this DAG, i.e., those of the form `i` independent nondescendants(i) given
-        the parents of `i`.
+        Return the local Markov statements of this DAG, i.e., those of the form ``i`` independent nondescendants(i) given
+        the parents of ``i``.
 
         Examples
         --------
@@ -926,14 +926,14 @@ class DAG:
         statements = set()
         for node in self._nodes:
             parents = self._parents[node]
-            nondescendants = self._nodes - {node} - self.downstream(node) - parents
+            nondescendants = self._nodes - {node} - self.descendants_of(node) - parents
             statements.add((node, frozenset(nondescendants), frozenset(parents)))
         return statements
 
     def is_imap(self, other) -> bool:
         """
-        Check if this DAG is an IMAP of the `other` DAG, i.e., all d-separation statements in this graph
-        are also d-separation statements in `other`.
+        Check if this DAG is an IMAP of the DAG ``other``, i.e., all d-separation statements in this graph
+        are also d-separation statements in ``other``.
 
         Parameters
         ----------
@@ -1001,9 +1001,9 @@ class DAG:
                 downstream.add(child)
                 self._add_downstream(downstream, child)
 
-    def downstream(self, node: Node) -> Set[Node]:
+    def descendants_of(self, node: Node) -> Set[Node]:
         """
-        Return the nodes downstream of node.
+        Return the descendants of ``node``.
 
         Parameters
         ----------
@@ -1012,33 +1012,33 @@ class DAG:
 
         See Also
         --------
-        upstream
+        ancestors_of
 
         Return
         ------
         Set[node]
-            Return all nodes j such that there is a directed path from node to j.
+            Return all nodes j such that there is a directed path from ``node`` to j.
 
         Example
         -------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g.downstream(1)
+        >>> g.descendants_of(1)
         {2, 3}
         """
         downstream = set()
         self._add_downstream(downstream, node)
         return downstream
 
-    def _add_upstream(self, upstream, node):
+    def _add_ancestors(self, ancestors, node):
         for parent in self._parents[node]:
-            if parent not in upstream:
-                upstream.add(parent)
-                self._add_upstream(upstream, parent)
+            if parent not in ancestors:
+                ancestors.add(parent)
+                self._add_ancestors(ancestors, parent)
 
-    def upstream(self, node: Node) -> Set[Node]:
+    def ancestors_of(self, node: Node) -> Set[Node]:
         """
-        Return the nodes upstream of node
+        Return the ancestors of ``node``.
 
         Parameters
         ----------
@@ -1047,27 +1047,27 @@ class DAG:
 
         See Also
         --------
-        downstream
+        descendants_of
 
         Return
         ------
         Set[node]
-            Return all nodes j such that there is a directed path from j to node.
+            Return all nodes j such that there is a directed path from j to ``node``.
 
         Example
         -------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g.upstream(3)
-        {1, 2, 3g}
+        >>> g.ancestors_of(3)
+        {1, 2, 3}
         """
-        upstream = set()
-        self._add_upstream(upstream, node)
-        return upstream
+        ancestors = set()
+        self._add_ancestors(ancestors, node)
+        return ancestors
 
     def incident_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
-        Return all arcs adjacent to node
+        Return all arcs with ``node`` as either source or target.
 
         Parameters
         ----------
@@ -1081,7 +1081,7 @@ class DAG:
         Return
         ------
         Set[arc]
-            Return all arcs i->j such that either i=node of j=node.
+            Return all arcs i->j such that either i=``node`` of j=``node``.
 
         Example
         -------
@@ -1099,7 +1099,7 @@ class DAG:
 
     def incoming_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
-        Return all arcs with target node
+        Return all arcs with target ``node``.
 
         Parameters
         ----------
@@ -1113,7 +1113,7 @@ class DAG:
         Return
         ------
         Set[arc]
-            Return all arcs i->node.
+            Return all arcs of the form i->``node``.
 
         Example
         -------
@@ -1129,7 +1129,7 @@ class DAG:
 
     def outgoing_arcs(self, node: Node) -> Set[DirectedEdge]:
         """
-        Return all arcs with source node
+        Return all arcs with source ``node``.
 
         Parameters
         ----------
@@ -1143,7 +1143,7 @@ class DAG:
         Return
         ------
         Set[arc]
-            Return all arcs node->j.
+            Return all arcs of the form ``node``->j.
 
         Example
         -------
@@ -1159,7 +1159,7 @@ class DAG:
 
     def outdegree(self, node: Node) -> int:
         """
-        Return the outdegree of node
+        Return the outdegree of ``node``.
 
         Parameters
         ----------
@@ -1173,7 +1173,7 @@ class DAG:
         Return
         ------
         int
-            Return the number of children of node.
+            The number of children of ``node``.
 
         Example
         -------
@@ -1188,7 +1188,7 @@ class DAG:
 
     def indegree(self, node: Node) -> int:
         """
-        Return the indegree of node
+        Return the indegree of ``node``.
 
         Parameters
         ----------
@@ -1202,7 +1202,7 @@ class DAG:
         Return
         ------
         int
-            Return the number of parents of node.
+            The number of parents of ``node``.
 
         Example
         -------
@@ -1219,14 +1219,14 @@ class DAG:
         """
         Parameters
         ----------
-        s:
+        ``s``:
             Set of nodes
 
         Returns
         -------
-        The set of nodes in s with no ancestors in s
+        The set of nodes in ``s`` with no ancestors in ``s``.
         """
-        return {node for node in s if not self.upstream(node) & s}
+        return {node for node in s if not self.ancestors_of(node) & s}
 
     # === CONVERTERS
     def resolved_sinks(self, other) -> set:
@@ -1279,8 +1279,8 @@ class DAG:
             return new_graph, sink, 4
 
         # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
-        d = list(imap_subgraph.upstream_most(self_subgraph.downstream(sink)))[0]
-        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (self_subgraph.upstream(d) | {d})
+        d = list(imap_subgraph.upstream_most(self_subgraph.descendants_of(sink)))[0]
+        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (self_subgraph.ancestors_of(d) | {d})
         z = random.choice(list(valid_children))
         if verbose: print(f"Step 5: Picked z={z}")
 
@@ -1333,9 +1333,9 @@ class DAG:
             for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
                 adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
                 if adjacent:
-                    if self.is_upstream_of(i, j):
+                    if self.is_ancestor_of(i, j):
                         directed.add((i, j))
-                    elif self.is_upstream_of(j, i):
+                    elif self.is_ancestor_of(j, i):
                         directed.add((j, i))
                     else:
                         bidirected.add((i, j))
@@ -1951,7 +1951,7 @@ class DAG:
         # shade ancestors of C
         shaded_nodes = set(C)
         for node in C:
-            self._add_upstream(shaded_nodes, node)
+            self._add_ancestors(shaded_nodes, node)
 
         visited = set()
         # marks for which direction the path is traveling through the node
@@ -2019,7 +2019,7 @@ class DAG:
         # shade ancestors of C
         shaded_nodes = set(C)
         for node in C:
-            self._add_upstream(shaded_nodes, node)
+            self._add_ancestors(shaded_nodes, node)
 
         visited = set()
         # marks for which direction the path is traveling through the node
@@ -2072,7 +2072,7 @@ class DAG:
         for c in C:
             determined.add(c)
             descendants.add(c)
-            self._add_upstream(descendants, c)
+            self._add_ancestors(descendants, c)
             
         reachable = set()
         i_links = set()
