@@ -161,9 +161,9 @@ class DAG:
         p = len(self._nodes)
         return len(self._arcs) / p / (p-1) * 2
 
-    def parents_of(self, node: NodeSet) -> Set[Node]:
+    def parents_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return all nodes that are parents of `node`.
+        Return all nodes that are parents of ``nodes``.
 
         Parameters
         ----------
@@ -177,18 +177,18 @@ class DAG:
         --------
         TODO
         """
-        if isinstance(node, set):
-            return set.union(*(self._parents[n] for n in node))
+        if isinstance(nodes, set):
+            return set.union(*(self._parents[n] for n in nodes))
         else:
-            return self._parents[node].copy()
+            return self._parents[nodes].copy()
 
-    def children_of(self, node: NodeSet) -> Set[Node]:
+    def children_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return all nodes that are children of `node`.
+        Return all nodes that are children of ``nodes``.
 
         Parameters
         ----------
-        node
+        nodes
 
         See Also
         --------
@@ -198,18 +198,18 @@ class DAG:
         --------
         TODO
         """
-        if isinstance(node, set):
-            return set.union(*(self._children[n] for n in node))
+        if isinstance(nodes, set):
+            return set.union(*(self._children[n] for n in nodes))
         else:
-            return self._children[node].copy()
+            return self._children[nodes].copy()
 
-    def neighbors_of(self, node: NodeSet) -> Set[Node]:
+    def neighbors_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return all nodes that are adjacent to `node`.
+        Return all nodes that are adjacent to ``node``.
 
         Parameters
         ----------
-        node
+        nodes
 
         See Also
         --------
@@ -224,10 +224,10 @@ class DAG:
         >>> g.neighbors_of(2)
         {0}
         """
-        if isinstance(node, set):
-            return set.union(*(self._neighbors[n] for n in node))
+        if isinstance(nodes, set):
+            return set.union(*(self._neighbors[n] for n in nodes))
         else:
-            return self._neighbors[node].copy()
+            return self._neighbors[nodes].copy()
 
     def has_arc(self, source: Node, target: Node) -> bool:
         """
@@ -995,19 +995,19 @@ class DAG:
         else: return certificate is None
 
     # === CONVENIENCE
-    def _add_downstream(self, downstream, node):
+    def _add_descendants(self, descendants, node):
         for child in self._children[node]:
-            if child not in downstream:
-                downstream.add(child)
-                self._add_downstream(downstream, child)
+            if child not in descendants:
+                descendants.add(child)
+                self._add_descendants(descendants, child)
 
-    def descendants_of(self, node: Node) -> Set[Node]:
+    def descendants_of(self, nodes: NodeSet) -> Set[Node]:
         """
         Return the descendants of ``node``.
 
         Parameters
         ----------
-        node:
+        nodes:
             The node.
 
         See Also
@@ -1026,9 +1026,12 @@ class DAG:
         >>> g.descendants_of(1)
         {2, 3}
         """
-        downstream = set()
-        self._add_downstream(downstream, node)
-        return downstream
+        descendants = set()
+        if not isinstance(nodes, set):
+            self._add_descendants(descendants, nodes)
+        else:
+            return set.union(*(self.descendants_of(node) for node in nodes))
+        return descendants
 
     def _add_ancestors(self, ancestors, node):
         for parent in self._parents[node]:
@@ -1036,13 +1039,13 @@ class DAG:
                 ancestors.add(parent)
                 self._add_ancestors(ancestors, parent)
 
-    def ancestors_of(self, node: Node) -> Set[Node]:
+    def ancestors_of(self, nodes: Node) -> Set[Node]:
         """
-        Return the ancestors of ``node``.
+        Return the ancestors of ``nodes``.
 
         Parameters
         ----------
-        node:
+        nodes:
             The node.
 
         See Also
@@ -1062,7 +1065,10 @@ class DAG:
         {1, 2, 3}
         """
         ancestors = set()
-        self._add_ancestors(ancestors, node)
+        if not isinstance(nodes, set):
+            self._add_ancestors(ancestors, nodes)
+        else:
+            return set.union(*(self.ancestors_of(node) for node in nodes))
         return ancestors
 
     def incident_arcs(self, node: Node) -> Set[DirectedEdge]:

@@ -661,14 +661,14 @@ class AncestralGraph:
         else:
             return self._children[i].copy()
 
-    def parents_of(self, i: NodeSet) -> Set[Node]:
+    def parents_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return the parents of the node or set of nodes ``i``.
+        Return the parents of the node or set of nodes ``nodes``.
 
         Parameters
         ----------
-        i
-            Node.
+        nodes
+            Nodes.
 
         Examples
         --------
@@ -679,19 +679,19 @@ class AncestralGraph:
         >>> g.parents_of({2, 3})
         {1, 2}
         """
-        if isinstance(i, set):
-            return set.union(*(self._parents[n] for n in i))
+        if isinstance(nodes, set):
+            return set.union(*(self._parents[n] for n in nodes))
         else:
-            return self._parents[i].copy()
+            return self._parents[nodes].copy()
 
-    def spouses_of(self, i: NodeSet) -> Set[Node]:
+    def spouses_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return the spouses of the node or set of nodes ``i``.
+        Return the spouses of the node or set of nodes ``nodes``.
 
         Parameters
         ----------
-        i
-            Node.
+        nodes
+            Nodes.
 
         Examples
         --------
@@ -702,19 +702,19 @@ class AncestralGraph:
         >>> g.spouses_of({1, 2})
         {4, 5}
         """
-        if isinstance(i, set):
-            return set.union(*(self._spouses[n] for n in i))
+        if isinstance(nodes, set):
+            return set.union(*(self._spouses[n] for n in nodes))
         else:
-            return self._spouses[i].copy()
+            return self._spouses[nodes].copy()
 
-    def neighbors_of(self, i: NodeSet) -> Set[Node]:
+    def neighbors_of(self, nodes: NodeSet) -> Set[Node]:
         """
-        Return the neighbors of the node or set of nodes ``i``.
+        Return the neighbors of the node or set of nodes ``nodes``.
 
         Parameters
         ----------
-        i
-            Node.
+        nodes
+            Nodes.
 
         Examples
         --------
@@ -725,10 +725,10 @@ class AncestralGraph:
         >>> g.neighbors_of({1, 2})
         {4, 5}
         """
-        if isinstance(i, set):
-            return set.union(*(self._neighbors[n] for n in i))
+        if isinstance(nodes, set):
+            return set.union(*(self._neighbors[n] for n in nodes))
         else:
-            return self._neighbors[i].copy()
+            return self._neighbors[nodes].copy()
 
     def _add_ancestors(self, ancestors, node, exclude_arcs=set()):
         for parent in self._parents[node]:
@@ -742,9 +742,9 @@ class AncestralGraph:
                 descendants.add(child)
                 self._add_descendants(descendants, child, exclude_arcs=exclude_arcs)
 
-    def ancestors_of(self, nodes, exclude_arcs=set()) -> Set[Node]:
+    def ancestors_of(self, nodes: NodeSet, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the nodes ancestors of ``nodes``.
+        Return the ancestors of ``nodes``.
 
         Parameters
         ----------
@@ -833,14 +833,14 @@ class AncestralGraph:
 
         return core_utils.defdict2dict(node2descendants_plus_self, self._nodes)
 
-    def descendants_of(self, node: Node, exclude_arcs=set()) -> Set[Node]:
+    def descendants_of(self, nodes: NodeSet, exclude_arcs=set()) -> Set[Node]:
         """
         Return the descendants of ``nodes``.
 
         Parameters
         ----------
-        node:
-            The node.
+        nodes:
+            The nodes.
 
         See Also
         --------
@@ -856,7 +856,10 @@ class AncestralGraph:
         TODO
         """
         descendants = set()
-        self._add_descendants(descendants, node, exclude_arcs=exclude_arcs)
+        if not isinstance(nodes, set):
+            self._add_descendants(descendants, nodes, exclude_arcs=exclude_arcs)
+        else:
+            return set.union(*(self.descendants_of(node) for node in nodes))
         return descendants
 
     def has_directed(self, i: Node, j: Node) -> bool:
