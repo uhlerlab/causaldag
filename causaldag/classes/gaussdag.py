@@ -328,7 +328,7 @@ class GaussDAG(DAG):
             theta = inv(self.correlation[np.ix_([i, j, *cond_set], [i, j, *cond_set])])
             return -theta[0, 1] / np.sqrt(theta[0, 0] * theta[1, 1])
 
-    def add_arc(self, i, j, unsafe=False):
+    def add_arc(self, i, j, check_acyclic=False):
         """
         Add an arc to the graph with weight 1.
 
@@ -336,7 +336,7 @@ class GaussDAG(DAG):
         ----------
         i:
         j:
-        unsafe:
+        check_acyclic:
 
         Examples
         --------
@@ -393,14 +393,14 @@ class GaussDAG(DAG):
         self._weight_mat = self._weight_mat[np.ix_(self._node_list, self._node_list)]
         super().remove_node(node)
 
-    def add_arcs_from(self, arcs: Union[Dict, Set], unsafe=False):
+    def add_arcs_from(self, arcs: Union[Dict, Set], check_acyclic=False):
         """
         TODO
 
         Parameters
         ----------
         arcs:
-        unsafe:
+        check_acyclic:
 
         Examples
         --------
@@ -414,7 +414,7 @@ class GaussDAG(DAG):
         raise NotImplementedError
         pass
 
-    def reverse_arc(self, i, j, ignore_error=False, unsafe=False):
+    def reverse_arc(self, i, j, ignore_error=False, check_acyclic=False):
         raise NotImplementedError
         pass
 

@@ -52,7 +52,7 @@ class DAG:
             self._parents = defaultdict(set)
             self._children = defaultdict(set)
             # print('before call to add arcs from')
-            self.add_arcs_from(arcs, unsafe=True)
+            self.add_arcs_from(arcs, check_acyclic=True)
 
     def __eq__(self, other):
         if not isinstance(other, DAG):
@@ -167,7 +167,8 @@ class DAG:
 
         Parameters
         ----------
-        node
+        nodes
+            A node or set of nodes.
 
         See Also
         --------
@@ -175,7 +176,12 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.parents_of(2)
+        {1}
+        >>> g.parents_of({2, 3})
+        {1, 2}
         """
         if isinstance(nodes, set):
             return set.union(*(self._parents[n] for n in nodes))
@@ -189,6 +195,7 @@ class DAG:
         Parameters
         ----------
         nodes
+            A node or set of nodes.
 
         See Also
         --------
@@ -196,7 +203,12 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.children_of(1)
+        {2}
+        >>> g.children_of({1, 2})
+        {2, 3}
         """
         if isinstance(nodes, set):
             return set.union(*(self._children[n] for n in nodes))
@@ -210,6 +222,7 @@ class DAG:
         Parameters
         ----------
         nodes
+            A node or set of nodes.
 
         See Also
         --------
@@ -242,7 +255,12 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(0,1), (0,2)})
+        >>> g.has_arc(0, 1)
+        True
+        >>> g.has_arc(1, 2)
+        False
         """
         return (source, target) in self._arcs
 
@@ -291,7 +309,7 @@ class DAG:
         """
         self._nodes.add(node)
 
-    def add_arc(self, i: Node, j: Node, unsafe=False):
+    def add_arc(self, i: Node, j: Node, check_acyclic=True):
         """
         Add the arc ``i``->``j`` to the DAG
 
@@ -301,8 +319,8 @@ class DAG:
             source node of the arc
         j:
             target node of the arc
-        unsafe:
-            TODO
+        check_acyclic:
+            if True, check that the DAG remains acyclic after adding the edge.
 
         See Also
         --------
@@ -326,7 +344,7 @@ class DAG:
         self._children[i].add(j)
         self._parents[j].add(i)
 
-        if not unsafe:
+        if check_acyclic:
             try:
                 self._check_acyclic()
             except CycleError as e:
@@ -376,10 +394,33 @@ class DAG:
         return list(reversed(stack))
 
     def is_topological(self, order: list) -> bool:
+        """
+        Check that ``order`` is a topological order consistent with this DAG, i.e., if ``i``->``j`` in the DAG,
+        then ``i`` comes before ``j`` in the order.
+
+        Parameters
+        ----------
+        order:
+            the order to check.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (1, 3)})
+        >>> g.is_topological([1, 2, 3])
+        True
+        >>> g.is_topological([1, 3, 2])
+        True
+        >>> g.is_topological([2, 1, 3])
+        False
+        """
         node2ix = {node: ix for ix, node in enumerate(order)}
         return all(node2ix[i] < node2ix[j] for i, j in self._arcs)
 
     def permutation_score(self, order: list) -> int:
+        """
+        TODO
+        """
         node2ix = {node: ix for ix, node in enumerate(order)}
         return sum(node2ix[i] > node2ix[j] for i, j in self._arcs)
 
@@ -408,7 +449,7 @@ class DAG:
         for node in nodes:
             self.add_node(node)
 
-    def add_arcs_from(self, arcs: Iterable[Tuple], unsafe=False):
+    def add_arcs_from(self, arcs: Iterable[Tuple], check_acyclic=False):
         """
         Add arcs to the graph from the collection ``arcs``.
 
@@ -416,8 +457,8 @@ class DAG:
         ----------
         arcs:
             collection of arcs to be added.
-        unsafe:
-            TODO
+        check_acyclic:
+            if True, check that the DAG remains acyclic after adding the edge.
 
         See Also
         --------
@@ -446,7 +487,7 @@ class DAG:
             self._children[i].add(j)
             self._parents[j].add(i)
 
-        if not unsafe:
+        if check_acyclic:
             try:
                 self._check_acyclic()
             except CycleError as e:
@@ -454,7 +495,7 @@ class DAG:
                     self.remove_arc(i, j)
                 raise e
 
-    def reverse_arc(self, i: Node, j: Node, ignore_error=False, unsafe=False):
+    def reverse_arc(self, i: Node, j: Node, ignore_error=False, check_acyclic=False):
         """
         Reverse the arc ``i``->``j`` to ``i``<-``j``.
 
@@ -466,8 +507,8 @@ class DAG:
             target of arc to be reversed.
         ignore_error:
             if True, ignore the KeyError raised when arc is not in the DAG.
-        unsafe:
-            TODO
+        check_acyclic:
+            if True, check that the DAG remains acyclic after adding the edge.
 
         Examples
         --------
@@ -478,7 +519,7 @@ class DAG:
         {(2, 1)}
         """
         self.remove_arc(i, j, ignore_error=ignore_error)
-        self.add_arc(j, i, unsafe=unsafe)
+        self.add_arc(j, i, check_acyclic=check_acyclic)
 
     def remove_arc(self, i: Node, j: Node, ignore_error=False):
         """
@@ -515,14 +556,14 @@ class DAG:
 
     def remove_arcs(self, arcs: Iterable, ignore_error=False):
         """
-        TODO
+        Remove each arc in ``arcs`` from the DAG.
 
         Parameters
         ----------
         arcs
             The arcs to be removed from the DAG.
         ignore_error:
-            TODO
+            if True, ignore the KeyError raised when an arc is not in the DAG.
 
         Examples
         --------
@@ -675,11 +716,8 @@ class DAG:
 
     def vstructures(self) -> Set[Tuple]:
         """
-        TODO
-
-        Parameters
-        ----------
-        TODO
+        Get all v-structures in the graph, i.e., triples of the form (i, k, j) such that ``i``->k<-``j`` and ``i``
+        is not adjacent to ``j``.
 
         Examples
         --------
@@ -716,11 +754,12 @@ class DAG:
 
         Returns
         -------
-        mb:
-            the Markov blanket of `node`.
+        set:
+            the Markov blanket of ``node``.
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(0, 1), (1, 3), (2, 3), (3, 4})
         >>> g.markov_blanket(1)
         {0, 2, 3}
@@ -730,6 +769,9 @@ class DAG:
 
     # === COMPARISON
     def chickering_distance(self, other) -> int:
+        """
+        TODO
+        """
         reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
         return len(reversals) + 2*self.shd_skeleton(other)
 
@@ -766,6 +808,9 @@ class DAG:
             return len(additions) + len(deletions) + len(reversals)
 
     def confusion_matrix_skeleton(self, other):
+        """
+        TODO
+        """
         self_skeleton = self.skeleton
         other_skeleton = other.skeleton
 
@@ -799,6 +844,9 @@ class DAG:
         return res
 
     def confusion_matrix(self, other, rates_only=False):
+        """
+        TODO
+        """
         self_cpdag = self.cpdag()
 
         from causaldag.classes.pdag import PDAG
@@ -924,7 +972,7 @@ class DAG:
         else:
             return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions, other.cpdag())
 
-    def local_markov_statements(self) -> Set[Tuple[Any, Set, Set]]:
+    def local_markov_statements(self) -> Set[Tuple[Any, FrozenSet, FrozenSet]]:
         """
         Return the local Markov statements of this DAG, i.e., those of the form ``i`` independent nondescendants(i) given
         the parents of ``i``.

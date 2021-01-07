@@ -97,7 +97,7 @@ def permutation2dag(
 
         is_ci = ci_tester.is_ci(pi_i, pi_j, mb)
         if not is_ci:
-            d.add_arc(pi_i, pi_j, unsafe=True)
+            d.add_arc(pi_i, pi_j, check_acyclic=True)
         if verbose: print(f"{pi_i} is independent of {pi_j} given {mb}: {is_ci}")
 
     return d
@@ -489,7 +489,7 @@ def gsp(
 
                     # === FIND THE DAG CORRESPONDING TO THE SPARSER IMAP
                     i, j, rem_arcs = covered_arcs2removed_arcs.pop(selected_ix)
-                    current_dag.reverse_arc(i, j, unsafe=True)
+                    current_dag.reverse_arc(i, j, check_acyclic=True)
                     current_dag.remove_arcs(rem_arcs)
                     current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
 
@@ -502,7 +502,7 @@ def gsp(
                     iters_since_improvement += 1
                     trace.append((current_dag.copy(), current_covered_arcs, covered_arcs2removed_arcs))
                     i, j, _ = covered_arcs2removed_arcs.pop(random.randrange(len(covered_arcs2removed_arcs)))
-                    current_dag.reverse_arc(i, j, unsafe=True)
+                    current_dag.reverse_arc(i, j, check_acyclic=True)
                     current_covered_arcs = current_dag.reversible_arcs() - fixed_orders
 
                 # === FIND NEXT POSSIBLE MOVES
