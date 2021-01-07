@@ -2177,7 +2177,30 @@ class DAG:
     # === DIRECTED CLIQUE TREES
     def directed_clique_tree(self, verbose=False):
         """
-        TODO
+        Return the directed clique tree associated with this DAG.
+
+        See the following for the definition of the directed clique tree:
+        Squires, Chandler, et al. "Active Structure Learning of Causal DAGs via Directed Clique Tree." (2020)
+
+        Parameters
+        ----------
+        verbose
+            if True, print out the steps taken to compute the directed clique tree.
+
+        Returns
+        -------
+        networkx.MultiDiGraph
+            The directed clique tree of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (2, 3)})
+        >>> dct = d.directed_clique_tree()
+        >>> dct.nodes
+        NodeView((frozenset({1, 2, 3}), frozenset({0, 1})))
+        >>> dct.edges
+        OutMultiEdgeView([(frozenset({0, 1}), frozenset({1, 2, 3}), 0)])
         """
         warn_untested()  # TODO: ADD TEST
 
