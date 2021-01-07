@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>causaldag.classes.dag.DAG.is_invariant &mdash; causaldag  documentation</title>
+  <title>causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions &mdash; causaldag  documentation</title>
   
 
   
@@ -35,8 +35,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.classes.dag.DAG.local_markov_statements" href="causaldag.classes.dag.DAG.local_markov_statements.html" />
-    <link rel="prev" title="causaldag.classes.dag.DAG.dsep_from_given" href="causaldag.classes.dag.DAG.dsep_from_given.html" /> 
+    <link rel="next" title="PDAG" href="../PDAG.html" />
+    <link rel="prev" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,18 +90,17 @@
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.dsep.html">causaldag.classes.dag.DAG.dsep</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.dsep_from_given.html">causaldag.classes.dag.DAG.dsep_from_given</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.is_invariant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.local_markov_statements.html">causaldag.classes.dag.DAG.local_markov_statements</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-formats">Conversion to other formats</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-graphs">Conversion to other graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#chickering-sequences">Chickering Sequences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#directed-clique-trees">Directed Clique Trees</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#intervention-design">Intervention Design</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#intervention-design">Intervention Design</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html">causaldag.classes.dag.DAG.optimal_fully_orienting_interventions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html">causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../PDAG.html">PDAG</a></li>
@@ -161,13 +160,13 @@
         
           <li><a href="../DAG.html">DAG</a> &raquo;</li>
         
-      <li>causaldag.classes.dag.DAG.is_invariant</li>
+      <li>causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.is_invariant.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -180,41 +179,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="causaldag-classes-dag-dag-is-invariant">
-<h1>causaldag.classes.dag.DAG.is_invariant<a class="headerlink" href="#causaldag-classes-dag-dag-is-invariant" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="causaldag-classes-dag-dag-greedy-optimal-fully-orienting-interventions">
+<h1>causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions<a class="headerlink" href="#causaldag-classes-dag-dag-greedy-optimal-fully-orienting-interventions" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
-<dt id="causaldag.classes.dag.DAG.is_invariant">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">is_invariant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">A</span></em>, <em class="sig-param"><span class="n">intervened_nodes</span></em>, <em class="sig-param"><span class="n">cond_set</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.is_invariant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.is_invariant" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Check if the distribution of <code class="docutils literal notranslate"><span class="pre">A</span></code> given cond_set is invariant to an intervention on intervened_nodes.</p>
-<p><img class="math" src="../../_images/math/eddb539a8c3505386e3eb293f282274df6ee2094.png" alt="f^\emptyset(A|C) = f^I(A|C)"/> if the “intervention node” I with intervened_nodes as its children
-is d-separated from A given C. Equivalently, the :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>f^emptyset(A|C)</p>
-</div></blockquote>
-<p>eq f^I(A|C)` if:</p>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="simple">
-<dt>there is an active path to an intervened node that ends in an arrowhead, and that intervened node</dt><dd><p>or one of its descendants is conditioned on.</p>
+<dt id="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions">
+<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">greedy_optimal_fully_orienting_interventions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cpdag</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.greedy_optimal_fully_orienting_interventions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the
+interventions. By submodularity, the number of interventions is a (1 + ln K) multiplicative approximation
+to the true optimal number of interventions, where K is the number of undirected edges in the CPDAG.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cpdag</strong> – the starting CPDAG containing known orientations. If None, use the observational essential graph.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The selected interventions and the associated cpdags that they induce.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(interventions, cpdags)</p>
 </dd>
 </dl>
-</li>
-<li><dl class="simple">
-<dt>there is an active path to an intervened node that ends in a tail, and that intervened node</dt><dd><p>is not conditioned on.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="simple">
-<dt>A:</dt><dd><p>Set of nodes.</p>
-</dd>
-<dt>intervened_nodes:</dt><dd><p>Nodes on which an intervention has occurred.</p>
-</dd>
-<dt>cond_set:</dt><dd><p>Conditioning set for the tested distribution.</p>
-</dd>
-<dt>verbose:</dt><dd><p>If True, print moves of the algorithm.</p>
-</dd>
-</dl>
-</div></blockquote>
 </dd></dl>
 
 </div>
@@ -227,10 +210,10 @@ is d-separated from A given C. Equivalently, the :math:<a href="#id1"><span clas
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="causaldag.classes.dag.DAG.local_markov_statements.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.local_markov_statements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../PDAG.html" class="btn btn-neutral float-right" title="PDAG" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="causaldag.classes.dag.DAG.dsep_from_given.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.dsep_from_given" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

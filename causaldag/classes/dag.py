@@ -1084,13 +1084,6 @@ class DAG:
         return {node for node in s if not self.ancestors_of(node) & s}
 
     # === COMPARISON
-    def chickering_distance(self, other) -> int:
-        """
-        TODO
-        """
-        reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
-        return len(reversals) + 2 * self.shd_skeleton(other)
-
     def shd(self, other) -> int:
         """
         Compute the structural Hamming distance between this DAG and the DAG ``other``.
@@ -1123,41 +1116,141 @@ class DAG:
             reversals = self.arcs & other_arcs_reversed
             return len(additions) + len(deletions) + len(reversals)
 
-    def confusion_matrix_skeleton(self, other):
+    def shd_skeleton(self, other) -> int:
+        """
+        Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of the graph ``other``.
+
+        Parameters
+        ----------
+        other:
+            the DAG to which the SHD of the skeleton will be computed.
+
+        Return
+        ------
+        int
+            The structural Hamming distance between :math:`G_1` and :math:`G_2` is the minimum number of arc additions,
+            deletions, and reversals required to transform :math:`G_1` into :math:`G_2` (and vice versa).
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g1 = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g2 = cd.DAG(arcs={(2, 1), (2, 3)})
+        >>> g1.shd_skeleton(g2)
+        0
+
+        >>> g1 = cd.DAG(arcs={(1, 2)})
+        >>> g2 = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g1.shd_skeleton(g2)
+        1
+        """
+        return len(self.skeleton.symmetric_difference(other.skeleton))
+
+    def markov_equivalent(self, other, interventions=None) -> bool:
+        """
+        Check if this DAG is (interventionally) Markov equivalent to the DAG ``other``.
+
+        Parameters
+        ----------
+        other:
+            Another DAG.
+        interventions:
+            TODO
+
+        Examples
+        --------
+        TODO
+        """
+        if interventions is None:
+            return self.cpdag() == other.cpdag()
+        else:
+            return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions,
+                                                                                                        other.cpdag())
+
+    def is_imap(self, other) -> bool:
+        """
+        Check if this DAG is an IMAP of the DAG ``other``, i.e., all d-separation statements in this graph
+        are also d-separation statements in ``other``.
+
+        Parameters
+        ----------
+        other:
+            Another DAG.
+
+        See Also
+        --------
+        is_minimal_imap
+
+        Returns
+        -------
+        bool
+            True if ``other`` is an I-MAP of this DAG, otherwise False.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> other = cd.DAG(arcs={(1, 2)})
+        >>> g.is_imap(other)
+        True
+        >>> other = cd.DAG(arcs={(1, 2), (2, 3)})
+        >>> g.is_imap(other)
+        False
+        """
+        return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
+
+    def is_minimal_imap(self, other, certify=False, check_imap=True) -> Union[bool, Tuple[bool, Any]]:
+        """
+        Check if this DAG is a minimal IMAP of `other`, i.e., it is an IMAP and no proper subgraph of this DAG
+        is an IMAP of other. Deleting the arc i->j retains IMAPness when `i` is d-separated from `j` in `other`
+        given the parents of `j` besides `i` in this DAG.
+
+        Parameters
+        ----------
+        other:
+            Another DAG.
+        certify:
+            If True and this DAG is not an IMAP of other, return a certificate of non-minimality in the form
+            of an edge i->j that can be deleted while retaining IMAPness.
+        check_imap:
+            If True, first check whether this DAG is an IMAP of other, if False, this DAG is assumed to be an IMAP
+            of other.
+
+        See Also
+        --------
+        is_imap
+
+        Returns
+        -------
+        bool
+            True if ``other`` is a minimal I-MAP of this DAG, otherwise False.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> other = cd.DAG(arcs={(1, 2)})
+        >>> g.is_minimal_imap(other)
+        False
+        """
+        if check_imap and not self.is_imap(other):
+            if certify:
+                return False, None
+            else:
+                return False
+
+        certificate = next(((i, j) for i, j in self._arcs if other.dsep(i, j, self._parents[j] - {i})), None)
+        if certify:
+            return certificate is None, certificate
+        else:
+            return certificate is None
+
+    def chickering_distance(self, other) -> int:
         """
         TODO
         """
-        self_skeleton = self.skeleton
-        other_skeleton = other.skeleton
-
-        true_positives = self_skeleton & other_skeleton
-        false_positives = other_skeleton - self_skeleton
-        false_negatives = self_skeleton - other_skeleton
-
-        num_true_positives = len(true_positives)
-        num_false_positives = len(false_positives)
-        num_false_negatives = len(false_negatives)
-        num_true_negatives = comb(self.nnodes, 2) - num_true_positives - num_false_positives - num_false_negatives
-
-        num_positives = len(self_skeleton)
-        num_negatives = comb(self.nnodes, 2) - num_positives
-
-        tpr = num_true_positives / num_positives if num_positives != 0 else 1
-        fpr = num_false_positives / num_negatives if num_negatives != 0 else 0
-
-        res = dict(
-            true_positives=true_positives,
-            false_positives=false_positives,
-            false_negatives=false_negatives,
-            num_true_positives=num_true_positives,
-            num_false_positives=num_false_positives,
-            num_true_negatives=num_true_negatives,
-            num_false_negatives=num_false_negatives,
-            tpr=tpr,
-            fpr=fpr
-        )
-
-        return res
+        reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
+        return len(reversals) + 2 * self.shd_skeleton(other)
 
     def confusion_matrix(self, other, rates_only=False):
         """
@@ -1239,348 +1332,41 @@ class DAG:
 
         return res
 
-    def shd_skeleton(self, other) -> int:
-        """
-        Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of the graph ``other``.
-
-        Parameters
-        ----------
-        other:
-            the DAG to which the SHD of the skeleton will be computed.
-
-        Return
-        ------
-        int
-            The structural Hamming distance between :math:`G_1` and :math:`G_2` is the minimum number of arc additions,
-            deletions, and reversals required to transform :math:`G_1` into :math:`G_2` (and vice versa).
-
-        Example
-        -------
-        >>> import causaldag as cd
-        >>> g1 = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g2 = cd.DAG(arcs={(2, 1), (2, 3)})
-        >>> g1.shd_skeleton(g2)
-        0
-
-        >>> g1 = cd.DAG(arcs={(1, 2)})
-        >>> g2 = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g1.shd_skeleton(g2)
-        1
-        """
-        return len(self.skeleton.symmetric_difference(other.skeleton))
-
-    # === COMPARISON: MARKOV EQUIVALENCE
-    def markov_equivalent(self, other, interventions=None) -> bool:
-        """
-        Check if this DAG is (interventionally) Markov equivalent to the DAG ``other``.
-
-        Parameters
-        ----------
-        other:
-            Another DAG.
-        interventions:
-            TODO
-
-        Examples
-        --------
-        TODO
-        """
-        if interventions is None:
-            return self.cpdag() == other.cpdag()
-        else:
-            return self.interventional_cpdag(interventions, self.cpdag()) == other.interventional_cpdag(interventions,
-                                                                                                        other.cpdag())
-
-    def local_markov_statements(self) -> Set[Tuple[Any, FrozenSet, FrozenSet]]:
-        """
-        Return the local Markov statements of this DAG, i.e., those of the form ``i`` independent nondescendants(i) given
-        the parents of ``i``.
-
-        Returns
-        -------
-        TODO
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
-        >>> g.local_markov_statements()
-        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}
-        """
-        statements = set()
-        for node in self._nodes:
-            parents = self._parents[node]
-            nondescendants = self._nodes - {node} - self.descendants_of(node) - parents
-            statements.add((node, frozenset(nondescendants), frozenset(parents)))
-        return statements
-
-    def is_imap(self, other) -> bool:
-        """
-        Check if this DAG is an IMAP of the DAG ``other``, i.e., all d-separation statements in this graph
-        are also d-separation statements in ``other``.
-
-        Parameters
-        ----------
-        other:
-            Another DAG.
-
-        See Also
-        --------
-        is_minimal_imap
-
-        Returns
-        -------
-        bool
-            True if ``other`` is an I-MAP of this DAG, otherwise False.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
-        >>> other = cd.DAG(arcs={(1, 2)})
-        >>> g.is_imap(other)
-        True
-        >>> other = cd.DAG(arcs={(1, 2), (2, 3)})
-        >>> g.is_imap(other)
-        False
-        """
-        return all(other.dsep(node, nondesc, parents) for node, nondesc, parents in self.local_markov_statements())
-
-    def is_minimal_imap(self, other, certify=False, check_imap=True) -> Union[bool, Tuple[bool, Any]]:
-        """
-        Check if this DAG is a minimal IMAP of `other`, i.e., it is an IMAP and no proper subgraph of this DAG
-        is an IMAP of other. Deleting the arc i->j retains IMAPness when `i` is d-separated from `j` in `other`
-        given the parents of `j` besides `i` in this DAG.
-
-        Parameters
-        ----------
-        other:
-            Another DAG.
-        certify:
-            If True and this DAG is not an IMAP of other, return a certificate of non-minimality in the form
-            of an edge i->j that can be deleted while retaining IMAPness.
-        check_imap:
-            If True, first check whether this DAG is an IMAP of other, if False, this DAG is assumed to be an IMAP
-            of other.
-
-        See Also
-        --------
-        is_imap
-
-        Returns
-        -------
-        bool
-            True if ``other`` is a minimal I-MAP of this DAG, otherwise False.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
-        >>> other = cd.DAG(arcs={(1, 2)})
-        >>> g.is_minimal_imap(other)
-        False
-        """
-        if check_imap and not self.is_imap(other):
-            if certify:
-                return False, None
-            else:
-                return False
-
-        certificate = next(((i, j) for i, j in self._arcs if other.dsep(i, j, self._parents[j] - {i})), None)
-        if certify:
-            return certificate is None, certificate
-        else:
-            return certificate is None
-
-    # === OTHER
-    def resolved_sinks(self, other) -> set:
+    def confusion_matrix_skeleton(self, other):
         """
         TODO
         """
-        warn_untested()  # TODO: ADD TEST
+        self_skeleton = self.skeleton
+        other_skeleton = other.skeleton
 
-        res_sinks = set()
-        while True:
-            new_resolved = {
-                node for node in self._nodes - res_sinks
-                if not (self._children[node] - res_sinks) and
-                                 not (other._children[node] - res_sinks) and
-                                 self._parents[node] == other._parents[node]
-            }
-            res_sinks.update(new_resolved)
-            if not new_resolved:
-                break
+        true_positives = self_skeleton & other_skeleton
+        false_positives = other_skeleton - self_skeleton
+        false_negatives = self_skeleton - other_skeleton
 
-        return res_sinks
+        num_true_positives = len(true_positives)
+        num_false_positives = len(false_positives)
+        num_false_negatives = len(false_negatives)
+        num_true_negatives = comb(self.nnodes, 2) - num_true_positives - num_false_positives - num_false_negatives
 
-    def chickering_sequence(self, imap, verbose=False):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
+        num_positives = len(self_skeleton)
+        num_negatives = comb(self.nnodes, 2) - num_positives
 
-        curr_graph = self
+        tpr = num_true_positives / num_positives if num_positives != 0 else 1
+        fpr = num_false_positives / num_negatives if num_negatives != 0 else 0
 
-        ch_seq = []
-        moves = []
-        last_sink = None
-        while curr_graph != imap:
-            ch_seq.append(curr_graph)
-            curr_graph, last_sink, move = curr_graph.apply_edge_operation(imap, seed_sink=last_sink, verbose=verbose)
-            moves.append(move)
+        res = dict(
+            true_positives=true_positives,
+            false_positives=false_positives,
+            false_negatives=false_negatives,
+            num_true_positives=num_true_positives,
+            num_false_positives=num_false_positives,
+            num_true_negatives=num_true_negatives,
+            num_false_negatives=num_false_negatives,
+            tpr=tpr,
+            fpr=fpr
+        )
 
-        ch_seq.append(imap)
-        return ch_seq, moves
-
-    def apply_edge_operation(self, imap, seed_sink=None, verbose=False):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        new_graph = self.copy()
-
-        # STEP 2: REMOVE RESOLVED SINKS
-        resolved_sinks = self.resolved_sinks(imap)
-        self_subgraph = self.induced_subgraph(self._nodes - resolved_sinks)
-        imap_subgraph = imap.induced_subgraph(imap._nodes - resolved_sinks)
-
-        # STEP 3: PICK A SINK IN THE IMAP
-        imap_sinks = imap_subgraph.sinks()
-        sink = random.choice(list(imap_sinks)) if seed_sink is None or seed_sink not in imap_sinks else seed_sink
-        if verbose: print(f"Step 3: Picked {sink}")
-
-        # STEP 4: ADD A PARENT IF Y IS A SINK IN G
-        if sink in self_subgraph.sinks():
-            x = random.choice(list(imap_subgraph._parents[sink] - self_subgraph._parents[sink]))
-            new_graph.add_arc(x, sink)
-            if verbose: print(f"Step 4: Added {x}->{sink}")
-            return new_graph, sink, 4
-
-        # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
-        d = list(imap_subgraph.upstream_most(self_subgraph.descendants_of(sink)))[0]
-        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (
-                    self_subgraph.ancestors_of(d) | {d})
-        z = random.choice(list(valid_children))
-        if verbose: print(f"Step 5: Picked z={z}")
-
-        # STEP 6
-        if self_subgraph.is_reversible(sink, z):
-            new_graph.reverse_arc(sink, z)
-            if verbose: print(f"Step 6: Reversing {sink}->{z}")
-            return new_graph, sink, 6
-
-        # STEP 7
-        par_z = self_subgraph._parents[z] - self_subgraph._parents[sink] - {sink}
-        if par_z:
-            x = random.choice(list(par_z))
-            if verbose: print(f"Step 7: Picked x={x}")
-            new_graph.add_arc(x, sink)
-            if verbose: print(f"Step 7: Adding {x}->{sink}")
-            return new_graph, sink, 7
-
-        # STEP 8
-        par_sink = self_subgraph._parents[sink] - self_subgraph._parents[z]
-        x = random.choice(list(par_sink))
-        if verbose: print(f"Step 8: Picked x={x}")
-        new_graph.add_arc(x, z)
-        if verbose: print(f"Step 8: Adding {x}->{z}")
-        return new_graph, sink, 8
-
-    def marginal_mag(self, latent_nodes, relabel=None, new=True):
-        """
-        Return the maximal ancestral graph (MAG) that results from marginalizing out ``latent_nodes``.
-
-        Parameters
-        ----------
-        latent_nodes: nodes to marginalize over.
-        relabel: if relabel='default', relabel the nodes to have labels 1,2,...,(#nodes).
-        new
-
-        Returns
-        -------
-        m:
-            cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        from .ancestral_graph import AncestralGraph
-
-        if not new:
-            latent_nodes = core_utils.to_set(latent_nodes)
-
-            new_nodes = self._nodes - latent_nodes
-            directed = set()
-            bidirected = set()
-            for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
-                adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
-                if adjacent:
-                    if self.is_ancestor_of(i, j):
-                        directed.add((i, j))
-                    elif self.is_ancestor_of(j, i):
-                        directed.add((j, i))
-                    else:
-                        bidirected.add((i, j))
-
-            if relabel is not None:
-                t = self.topological_sort()
-                t_new = [node for node in t if node not in latent_nodes]
-                node2new_label = dict(map(reversed, enumerate(t_new)))
-                new_nodes = {node2new_label[node] for node in new_nodes}
-                directed = {(node2new_label[i], node2new_label[j]) for i, j in directed}
-                bidirected = {(node2new_label[i], node2new_label[j]) for i, j in bidirected}
-
-            return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
-
-        else:
-            # ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
-            # curr_directed = ag.directed
-            # curr_bidirected = ag.bidirected
-            #
-            # while True:
-            #     for node in latent_nodes:
-            #         parents = ag._parents[node]
-            #         children = ag._children[node]
-            #         spouses = ag._spouses[node]
-            #         for j, i in itr.product(parents, children):
-            #             ag._add_directed(j, i, ignore_error=True)
-            #         for i, j in itr.combinations(children, 2):
-            #             ag._add_bidirected(i, j, ignore_error=True)
-            #         for i, j in itr.product(children, spouses):
-            #             ag._add_bidirected(i, j, ignore_error=True)
-            #
-            #     last_directed = curr_directed
-            #     last_bidirected = curr_bidirected
-            #     curr_directed = ag.directed
-            #     curr_bidirected = ag.bidirected
-            #     if curr_directed == last_directed and curr_bidirected == last_bidirected:
-            #         break
-            # for node in latent_nodes:
-            #     ag.remove_node(node, ignore_error=True)
-
-            ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
-            ancestor_dict = ag.ancestor_dict()
-            for i, j in itr.combinations(self._nodes - latent_nodes, 2):
-                S = (ancestor_dict[i] | ancestor_dict[j]) - {i, j} - latent_nodes
-                if not ag.has_any_edge(i, j) and not ag.msep(i, j, S):
-                    if i in ancestor_dict[j]:
-                        ag._add_directed(i, j)
-                    elif j in ancestor_dict[i]:
-                        ag._add_directed(j, i)
-                    else:
-                        ag._add_bidirected(i, j)
-            for node in latent_nodes:
-                ag.remove_node(node, ignore_error=True)
-
-            if relabel is not None:
-                if relabel == 'default':
-                    relabel = {node: ix for ix, node in enumerate(sorted(self._nodes - set(latent_nodes)))}
-                new_nodes = {relabel[node] for node in self._nodes - set(latent_nodes)}
-                directed = {(relabel[i], relabel[j]) for i, j in ag.directed}
-                bidirected = {(relabel[i], relabel[j]) for i, j in ag.bidirected}
-                return AncestralGraph(new_nodes, directed=directed, bidirected=bidirected)
-
-            return ag
+        return res
 
     # === WRITING TO FILES
     def save_gml(self, filename):
@@ -1767,366 +1553,6 @@ class DAG:
     # === SCIPY CONVERSION
     def to_sparse(self):
         raise NotImplementedError
-
-    # === MARKOV EQUIVALENCE
-    def cpdag(self):
-        """
-        Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
-        Markov equivalence class of this DAG.
-
-        Return
-        ------
-        causaldag.PDAG:
-            CPDAG representing the MEC of this DAG.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
-        >>> g.cpdag()
-
-        """
-        from causaldag import PDAG
-        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
-        pdag.remove_unprotected_orientations()
-        return pdag
-
-    def cpdag_new(self, new=False):
-        from causaldag import PDAG
-        vstruct = self.arcs_in_vstructures()
-        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
-        if new:
-            pdag.to_complete_pdag_new()
-        else:
-            pdag.to_complete_pdag()
-        return pdag
-
-    def moral_graph(self):
-        """
-        Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.
-
-        Returns
-        -------
-        UndirectedGraph:
-            Moral graph of this DAG.
-
-        Examples
-        --------
-        >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
-        >>> g.moral_graph()
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        from causaldag import UndirectedGraph
-        edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
-        return UndirectedGraph(self._nodes, edges)
-
-    # === OPTIMAL INTERVENTIONS
-    def simplified_directed_clique_tree(self):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        dct = self.directed_clique_tree()
-
-        # find bidirected connected components
-        all_edges = set(dct.edges())
-        bidirected_graph = nx.Graph()
-        bidirected_graph.add_nodes_from(dct.nodes())
-        bidirected_graph.add_edges_from({(c1, c2) for c1, c2 in all_edges if (c2, c1) in all_edges})
-        components = [frozenset(component) for component in nx.connected_components(bidirected_graph)]
-        clique2component = {clique: component for component in components for clique in component}
-
-        # contract bidirected connected components
-        g = nx.DiGraph()
-        g.add_nodes_from(components)
-        g.add_edges_from({
-            (clique2component[c1], clique2component[c2]) for c1, c2 in all_edges
-            if clique2component[c1] != clique2component[c2]
-        })
-
-        return g
-
-    def directed_clique_tree(self, verbose=False):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        cliques = nx.chordal_graph_cliques(self.to_nx().to_undirected())
-        ct = nx.MultiDiGraph()
-        ct.add_nodes_from(cliques)
-        edges = {(c1, c2): c1 & c2 for c1, c2 in itr.combinations(cliques, 2) if c1 & c2}
-        subtrees = UnionFind()
-        bidirected_components = UnionFind()
-        for c1, c2 in sorted(edges, key=lambda e: len(edges[e]), reverse=True):
-            if verbose: print(f"Considering edge {c1}-{c2}")
-            if subtrees[c1] != subtrees[c2]:
-                shared = c1 & c2
-                all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(shared, c1 - shared))
-                all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(shared, c2 - shared))
-                if all_into_c1 and all_into_c2:
-                    c1_parent = bidirected_components[c1]
-                    c2_parent = bidirected_components[c2]
-                    b1 = [c for c, parent in bidirected_components.parents.items() if parent == c1_parent]
-                    b2 = [c for c, parent in bidirected_components.parents.items() if parent == c2_parent]
-                    b1_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b1)
-                    b2_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b2)
-                    if not (b1_source and b2_source):
-                        if verbose: print(f"Adding edge {c1}<->{c2}")
-                        subtrees.union(c1, c2)
-                        bidirected_components.union(c1, c2)
-                        ct.add_edge(c1, c2)
-                        ct.add_edge(c2, c1)
-                else:
-                    c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)
-                    c2_parent = bidirected_components[c2]
-                    bidirected_component = [
-                        c for c, parent in bidirected_components.parents.items()
-                        if parent == c2_parent
-                    ]
-                    has_source = any(
-                        set(ct.predecessors(c)) - set(ct.successors(c))
-                        for c in bidirected_component
-                    )
-                    if not has_source:
-                        if verbose: print(f"{c1}->{c2}")
-                        ct.add_edge(c1, c2)
-                        subtrees.union(c1, c2)
-
-        labels = {(c1, c2, 0): c1 & c2 for c1, c2 in ct.edges()}
-        nx.set_edge_attributes(ct, labels, name='label')
-
-        return ct
-
-    def interventional_cpdag(self, interventions, cpdag=None):
-        """
-        Return the interventional essential graph (aka CPDAG) associated with this DAG.
-
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        from causaldag import PDAG
-
-        if cpdag is None:
-            raise ValueError('Need the CPDAG')
-            # dag_cut = self.copy()
-            # known_arcs = set()
-            # for node in intervened_nodes:
-            #     for i, j in dag_cut.incoming_arcs(node):
-            #         dag_cut.remove_arc(i, j)
-            #         known_arcs.update(self.outgoing_arcs(node))
-            # known_arcs.update(dag_cut.vstructs())
-            # pdag = PDAG(dag_cut._nodes, dag_cut._arcs, known_arcs=known_arcs)
-        else:
-            cut_edges = set()
-            for iv_nodes in interventions:
-                cut_edges.update({(i, j) for i, j in self._arcs if len({i, j} & set(iv_nodes)) == 1})
-            known_arcs = cut_edges | cpdag._known_arcs
-            pdag = PDAG(self._nodes, self._arcs, known_arcs=known_arcs)
-
-        pdag.remove_unprotected_orientations()
-        return pdag
-
-    def greedy_optimal_single_node_intervention(self, cpdag=None, num_interventions=1):
-        """
-        Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy
-        strategy. By submodularity, this will orient at least (1 - 1/e) as many edges as the true optimal intervention
-        set.
-
-        Parameters
-        ----------
-        cpdag:
-            the starting CPDAG containing known orientations. If None, use the observational essential graph.
-        num_interventions:
-            the number of single-node interventions used. Default is 1.
-
-        Return
-        ------
-        (interventions, cpdags)
-            The selected interventions and the associated cpdags that they induce.
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        if cpdag is None:
-            cpdag = self.cpdag()
-        if len(cpdag.edges) == 0:
-            return [None] * num_interventions, [cpdag] * num_interventions
-
-        nodes2icpdags = {
-            node: self.interventional_cpdag([{node}], cpdag=cpdag)
-            for node in self._nodes - cpdag.dominated_nodes
-        }
-        nodes2num_oriented = {
-            node: len(icpdag._arcs)
-            for node, icpdag in nodes2icpdags.items()
-        }
-
-        best_iv = max(nodes2num_oriented.items(), key=op.itemgetter(1))[0]
-        icpdag = nodes2icpdags[best_iv]
-
-        if num_interventions == 1:
-            return [best_iv], [icpdag]
-        else:
-            best_ivs, icpdags = self.greedy_optimal_single_node_intervention(cpdag=icpdag,
-                                                                             num_interventions=num_interventions - 1)
-            return [best_iv] + best_ivs, [icpdag] + icpdags
-
-    def greedy_optimal_fully_orienting_interventions(self, cpdag=None):
-        """
-        Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the
-        interventions. By submodularity, the number of interventions is a (1 + ln K) multiplicative approximation
-        to the true optimal number of interventions, where K is the number of undirected edges in the CPDAG.
-
-        Parameters
-        ----------
-        cpdag
-            the starting CPDAG containing known orientations. If None, use the observational essential graph.
-
-        Returns
-        -------
-        (interventions, cpdags)
-            The selected interventions and the associated cpdags that they induce.
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        if cpdag is None: cpdag = self.cpdag()
-        curr_cpdag = cpdag
-        ivs = []
-        icpdags = []
-        while len(curr_cpdag.edges) != 0:
-            iv, icpdag = self.greedy_optimal_single_node_intervention(cpdag=curr_cpdag)
-            iv = iv[0]
-            icpdag = icpdag[0]
-            curr_cpdag = icpdag
-            ivs.append(iv)
-            icpdags.append(icpdag)
-        return ivs, icpdags
-
-    def _verification_optimal_helper(self, component, parent_component, verbose=False) -> set:
-        # for a clique, select every other node
-        if len(component) == 1:
-            if verbose: print('component is clique')
-            residual = list(component)[0] - parent_component
-            if verbose: print(f"residual: {residual}")
-            sorted_nodes = self.induced_subgraph(residual).topological_sort()
-            return set(sorted_nodes[1::2])
-        else:
-            sorted_nodes = self.induced_subgraph(frozenset.union(*component)).topological_sort()
-
-            # determine common head
-            intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
-            common_head = frozenset.union(*intersections) - parent_component
-            max_intersection = max(intersections, key=len)
-            # if max_intersection != frozenset.union(*intersections):
-            #     raise RuntimeError
-            sorted_common_head = [node for node in sorted_nodes if node in common_head]
-            if verbose: print(f'component contains multiple cliques, common head = {sorted_common_head}')
-
-            # determine heads and tails
-            heads = [clique & common_head for clique in component]
-            tails = [clique - common_head - parent_component for clique in component]
-            sorted_heads = [[node for node in sorted_nodes if node in head] for head in heads]
-            sorted_tails = [[node for node in sorted_nodes if node in tail] for tail in tails]
-
-            # add nodes from tails
-            intervened_nodes = set()
-            for head, tail in zip(sorted_heads, sorted_tails):
-                if verbose: print(f"tail={tail}, head={head}")
-                intervened_nodes.update(tail[-2::-2])
-                if len(tail) % 2 == 1 and len(head) > 0:
-                    intervened_nodes.add(head[-1])
-
-            # add remaining nodes from common head
-            counter = 0
-            for node in sorted_common_head:
-                if node in intervened_nodes:
-                    counter = 0
-                else:
-                    counter += 1
-                    if counter == 2:
-                        intervened_nodes.add(node)
-                        counter = 0
-
-            return intervened_nodes
-            # TODO: test!
-
-    def residuals(self):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        sdct = self.simplified_directed_clique_tree()
-        sdct_nodes = list(sdct.nodes)
-        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
-        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
-        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
-        return [component - parent for component, parent in zip(sdct_components, sdct_parents)]
-
-    def residual_essential_graph(self):
-        """
-        TODO
-        """
-        warn_untested()  # TODO: ADD TEST
-
-        from causaldag import PDAG
-
-        sdct = self.simplified_directed_clique_tree()
-        sdct_nodes = list(sdct.nodes)
-        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
-        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
-        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
-        sdct_residuals = [component - parent for component, parent in zip(sdct_components, sdct_parents)]
-        arcs = {
-            (p, r) for parent, residual, component in zip(sdct_parents, sdct_residuals, sdct_components)
-
-            for p, r in itr.product(parent & component, residual)
-        }
-        g = PDAG(nodes=self._nodes, arcs=arcs & self._arcs, edges=self._arcs - arcs)
-        return g
-
-    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
-        """
-        Find the smallest set of interventions which fully orients the CPDAG into this DAG.
-
-        Parameters
-        ----------
-        cpdag
-            the starting CPDAG containing known orientations. If None, use the observational essential graph.
-
-        Returns
-        -------
-        interventions
-            A minimum-size set of interventions which fully orients the DAG.
-        """
-        if new:
-            sdct = self.simplified_directed_clique_tree()
-            top_sort = nx.topological_sort(sdct)
-
-            intervened_nodes = set()
-            for component in top_sort:
-                parent = list(sdct.predecessors(component))
-                parent_nodes = frozenset.union(*parent[0]) if len(parent) != 0 else set()
-                if verbose: print(f"orienting component {component}, parent={parent}")
-                component_intervened_nodes = self._verification_optimal_helper(component, parent_nodes, verbose=verbose)
-                if verbose: print(f"intervened: {component_intervened_nodes}")
-                intervened_nodes.update(component_intervened_nodes)
-            return intervened_nodes
-        else:
-            cpdag = self.cpdag() if cpdag is None else cpdag
-            node2oriented = {
-                node: self.interventional_cpdag([{node}], cpdag=cpdag).arcs
-                for node in self._nodes - cpdag.dominated_nodes
-            }
-            for ss in core_utils.powerset(self._nodes - cpdag.dominated_nodes, r_min=1):
-                oriented = set.union(*(node2oriented[node] for node in ss))
-                if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
-                    return ss
 
     # === ADJUSTMENT SETS
     def backdoor(self, i, j):
@@ -2358,6 +1784,580 @@ class DAG:
                     schedule.update({(child, _p) for child in self._children[node]})
 
         return True
+
+    def local_markov_statements(self) -> Set[Tuple[Any, FrozenSet, FrozenSet]]:
+        """
+        Return the local Markov statements of this DAG, i.e., those of the form ``i`` independent nondescendants(i) given
+        the parents of ``i``.
+
+        Returns
+        -------
+        TODO
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
+        >>> g.local_markov_statements()
+        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}
+        """
+        statements = set()
+        for node in self._nodes:
+            parents = self._parents[node]
+            nondescendants = self._nodes - {node} - self.descendants_of(node) - parents
+            statements.add((node, frozenset(nondescendants), frozenset(parents)))
+        return statements
+
+    # === CONVERSION TO OTHER GRAPHS
+    def moral_graph(self):
+        """
+        Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.
+
+        Returns
+        -------
+        UndirectedGraph:
+            Moral graph of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
+        >>> g.moral_graph()
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        from causaldag import UndirectedGraph
+        edges = {(i, j) for i, j in self._arcs} | {(p1, p2) for p1, node, p2 in self.vstructures()}
+        return UndirectedGraph(self._nodes, edges)
+
+    def marginal_mag(self, latent_nodes, relabel=None, new=True):
+        """
+        Return the maximal ancestral graph (MAG) that results from marginalizing out ``latent_nodes``.
+
+        Parameters
+        ----------
+        latent_nodes: nodes to marginalize over.
+        relabel: if relabel='default', relabel the nodes to have labels 1,2,...,(#nodes).
+        new
+
+        Returns
+        -------
+        m:
+            cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        from .ancestral_graph import AncestralGraph
+
+        if not new:
+            latent_nodes = core_utils.to_set(latent_nodes)
+
+            new_nodes = self._nodes - latent_nodes
+            directed = set()
+            bidirected = set()
+            for i, j in itr.combinations(self._nodes - latent_nodes, r=2):
+                adjacent = all(not self.dsep(i, j, S) for S in core_utils.powerset(self._nodes - {i, j} - latent_nodes))
+                if adjacent:
+                    if self.is_ancestor_of(i, j):
+                        directed.add((i, j))
+                    elif self.is_ancestor_of(j, i):
+                        directed.add((j, i))
+                    else:
+                        bidirected.add((i, j))
+
+            if relabel is not None:
+                t = self.topological_sort()
+                t_new = [node for node in t if node not in latent_nodes]
+                node2new_label = dict(map(reversed, enumerate(t_new)))
+                new_nodes = {node2new_label[node] for node in new_nodes}
+                directed = {(node2new_label[i], node2new_label[j]) for i, j in directed}
+                bidirected = {(node2new_label[i], node2new_label[j]) for i, j in bidirected}
+
+            return AncestralGraph(nodes=new_nodes, directed=directed, bidirected=bidirected)
+
+        else:
+            # ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
+            # curr_directed = ag.directed
+            # curr_bidirected = ag.bidirected
+            #
+            # while True:
+            #     for node in latent_nodes:
+            #         parents = ag._parents[node]
+            #         children = ag._children[node]
+            #         spouses = ag._spouses[node]
+            #         for j, i in itr.product(parents, children):
+            #             ag._add_directed(j, i, ignore_error=True)
+            #         for i, j in itr.combinations(children, 2):
+            #             ag._add_bidirected(i, j, ignore_error=True)
+            #         for i, j in itr.product(children, spouses):
+            #             ag._add_bidirected(i, j, ignore_error=True)
+            #
+            #     last_directed = curr_directed
+            #     last_bidirected = curr_bidirected
+            #     curr_directed = ag.directed
+            #     curr_bidirected = ag.bidirected
+            #     if curr_directed == last_directed and curr_bidirected == last_bidirected:
+            #         break
+            # for node in latent_nodes:
+            #     ag.remove_node(node, ignore_error=True)
+
+            ag = AncestralGraph(nodes=self._nodes, directed=self._arcs)
+            ancestor_dict = ag.ancestor_dict()
+            for i, j in itr.combinations(self._nodes - latent_nodes, 2):
+                S = (ancestor_dict[i] | ancestor_dict[j]) - {i, j} - latent_nodes
+                if not ag.has_any_edge(i, j) and not ag.msep(i, j, S):
+                    if i in ancestor_dict[j]:
+                        ag._add_directed(i, j)
+                    elif j in ancestor_dict[i]:
+                        ag._add_directed(j, i)
+                    else:
+                        ag._add_bidirected(i, j)
+            for node in latent_nodes:
+                ag.remove_node(node, ignore_error=True)
+
+            if relabel is not None:
+                if relabel == 'default':
+                    relabel = {node: ix for ix, node in enumerate(sorted(self._nodes - set(latent_nodes)))}
+                new_nodes = {relabel[node] for node in self._nodes - set(latent_nodes)}
+                directed = {(relabel[i], relabel[j]) for i, j in ag.directed}
+                bidirected = {(relabel[i], relabel[j]) for i, j in ag.bidirected}
+                return AncestralGraph(new_nodes, directed=directed, bidirected=bidirected)
+
+            return ag
+
+    def cpdag(self):
+        """
+        Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the
+        Markov equivalence class of this DAG.
+
+        Return
+        ------
+        causaldag.PDAG:
+            CPDAG representing the MEC of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
+        >>> g.cpdag()
+
+        """
+        from causaldag import PDAG
+        pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
+        pdag.remove_unprotected_orientations()
+        return pdag
+
+    def cpdag_new(self, new=False):
+        from causaldag import PDAG
+        vstruct = self.arcs_in_vstructures()
+        pdag = PDAG(nodes=self._nodes, arcs=vstruct, edges=self._arcs - vstruct)
+        if new:
+            pdag.to_complete_pdag_new()
+        else:
+            pdag.to_complete_pdag()
+        return pdag
+
+    def interventional_cpdag(self, interventions, cpdag=None):
+        """
+        Return the interventional essential graph (aka CPDAG) associated with this DAG.
+
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        from causaldag import PDAG
+
+        if cpdag is None:
+            raise ValueError('Need the CPDAG')
+            # dag_cut = self.copy()
+            # known_arcs = set()
+            # for node in intervened_nodes:
+            #     for i, j in dag_cut.incoming_arcs(node):
+            #         dag_cut.remove_arc(i, j)
+            #         known_arcs.update(self.outgoing_arcs(node))
+            # known_arcs.update(dag_cut.vstructs())
+            # pdag = PDAG(dag_cut._nodes, dag_cut._arcs, known_arcs=known_arcs)
+        else:
+            cut_edges = set()
+            for iv_nodes in interventions:
+                cut_edges.update({(i, j) for i, j in self._arcs if len({i, j} & set(iv_nodes)) == 1})
+            known_arcs = cut_edges | cpdag._known_arcs
+            pdag = PDAG(self._nodes, self._arcs, known_arcs=known_arcs)
+
+        pdag.remove_unprotected_orientations()
+        return pdag
+
+    # === CHICKERING SEQUENCE
+    def resolved_sinks(self, other) -> set:
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        res_sinks = set()
+        while True:
+            new_resolved = {
+                node for node in self._nodes - res_sinks
+                if not (self._children[node] - res_sinks) and
+                                 not (other._children[node] - res_sinks) and
+                                 self._parents[node] == other._parents[node]
+            }
+            res_sinks.update(new_resolved)
+            if not new_resolved:
+                break
+
+        return res_sinks
+
+    def chickering_sequence(self, imap, verbose=False):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        curr_graph = self
+
+        ch_seq = []
+        moves = []
+        last_sink = None
+        while curr_graph != imap:
+            ch_seq.append(curr_graph)
+            curr_graph, last_sink, move = curr_graph.apply_edge_operation(imap, seed_sink=last_sink, verbose=verbose)
+            moves.append(move)
+
+        ch_seq.append(imap)
+        return ch_seq, moves
+
+    def apply_edge_operation(self, imap, seed_sink=None, verbose=False):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        new_graph = self.copy()
+
+        # STEP 2: REMOVE RESOLVED SINKS
+        resolved_sinks = self.resolved_sinks(imap)
+        self_subgraph = self.induced_subgraph(self._nodes - resolved_sinks)
+        imap_subgraph = imap.induced_subgraph(imap._nodes - resolved_sinks)
+
+        # STEP 3: PICK A SINK IN THE IMAP
+        imap_sinks = imap_subgraph.sinks()
+        sink = random.choice(list(imap_sinks)) if seed_sink is None or seed_sink not in imap_sinks else seed_sink
+        if verbose: print(f"Step 3: Picked {sink}")
+
+        # STEP 4: ADD A PARENT IF Y IS A SINK IN G
+        if sink in self_subgraph.sinks():
+            x = random.choice(list(imap_subgraph._parents[sink] - self_subgraph._parents[sink]))
+            new_graph.add_arc(x, sink)
+            if verbose: print(f"Step 4: Added {x}->{sink}")
+            return new_graph, sink, 4
+
+        # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
+        d = list(imap_subgraph.upstream_most(self_subgraph.descendants_of(sink)))[0]
+        valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (
+                    self_subgraph.ancestors_of(d) | {d})
+        z = random.choice(list(valid_children))
+        if verbose: print(f"Step 5: Picked z={z}")
+
+        # STEP 6
+        if self_subgraph.is_reversible(sink, z):
+            new_graph.reverse_arc(sink, z)
+            if verbose: print(f"Step 6: Reversing {sink}->{z}")
+            return new_graph, sink, 6
+
+        # STEP 7
+        par_z = self_subgraph._parents[z] - self_subgraph._parents[sink] - {sink}
+        if par_z:
+            x = random.choice(list(par_z))
+            if verbose: print(f"Step 7: Picked x={x}")
+            new_graph.add_arc(x, sink)
+            if verbose: print(f"Step 7: Adding {x}->{sink}")
+            return new_graph, sink, 7
+
+        # STEP 8
+        par_sink = self_subgraph._parents[sink] - self_subgraph._parents[z]
+        x = random.choice(list(par_sink))
+        if verbose: print(f"Step 8: Picked x={x}")
+        new_graph.add_arc(x, z)
+        if verbose: print(f"Step 8: Adding {x}->{z}")
+        return new_graph, sink, 8
+
+    # === DIRECTED CLIQUE TREES
+    def directed_clique_tree(self, verbose=False):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        cliques = nx.chordal_graph_cliques(self.to_nx().to_undirected())
+        ct = nx.MultiDiGraph()
+        ct.add_nodes_from(cliques)
+        edges = {(c1, c2): c1 & c2 for c1, c2 in itr.combinations(cliques, 2) if c1 & c2}
+        subtrees = UnionFind()
+        bidirected_components = UnionFind()
+        for c1, c2 in sorted(edges, key=lambda e: len(edges[e]), reverse=True):
+            if verbose: print(f"Considering edge {c1}-{c2}")
+            if subtrees[c1] != subtrees[c2]:
+                shared = c1 & c2
+                all_into_c1 = all((s, c) in self._arcs for s, c in itr.product(shared, c1 - shared))
+                all_into_c2 = all((s, c) in self._arcs for s, c in itr.product(shared, c2 - shared))
+                if all_into_c1 and all_into_c2:
+                    c1_parent = bidirected_components[c1]
+                    c2_parent = bidirected_components[c2]
+                    b1 = [c for c, parent in bidirected_components.parents.items() if parent == c1_parent]
+                    b2 = [c for c, parent in bidirected_components.parents.items() if parent == c2_parent]
+                    b1_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b1)
+                    b2_source = any(set(ct.predecessors(c)) - set(ct.successors(c)) for c in b2)
+                    if not (b1_source and b2_source):
+                        if verbose: print(f"Adding edge {c1}<->{c2}")
+                        subtrees.union(c1, c2)
+                        bidirected_components.union(c1, c2)
+                        ct.add_edge(c1, c2)
+                        ct.add_edge(c2, c1)
+                else:
+                    c1, c2 = (c1, c2) if all_into_c2 else (c2, c1)
+                    c2_parent = bidirected_components[c2]
+                    bidirected_component = [
+                        c for c, parent in bidirected_components.parents.items()
+                        if parent == c2_parent
+                    ]
+                    has_source = any(
+                        set(ct.predecessors(c)) - set(ct.successors(c))
+                        for c in bidirected_component
+                    )
+                    if not has_source:
+                        if verbose: print(f"{c1}->{c2}")
+                        ct.add_edge(c1, c2)
+                        subtrees.union(c1, c2)
+
+        labels = {(c1, c2, 0): c1 & c2 for c1, c2 in ct.edges()}
+        nx.set_edge_attributes(ct, labels, name='label')
+
+        return ct
+
+    def simplified_directed_clique_tree(self):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        dct = self.directed_clique_tree()
+
+        # find bidirected connected components
+        all_edges = set(dct.edges())
+        bidirected_graph = nx.Graph()
+        bidirected_graph.add_nodes_from(dct.nodes())
+        bidirected_graph.add_edges_from({(c1, c2) for c1, c2 in all_edges if (c2, c1) in all_edges})
+        components = [frozenset(component) for component in nx.connected_components(bidirected_graph)]
+        clique2component = {clique: component for component in components for clique in component}
+
+        # contract bidirected connected components
+        g = nx.DiGraph()
+        g.add_nodes_from(components)
+        g.add_edges_from({
+            (clique2component[c1], clique2component[c2]) for c1, c2 in all_edges
+            if clique2component[c1] != clique2component[c2]
+        })
+
+        return g
+
+    def residuals(self):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        sdct = self.simplified_directed_clique_tree()
+        sdct_nodes = list(sdct.nodes)
+        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
+        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
+        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
+        return [component - parent for component, parent in zip(sdct_components, sdct_parents)]
+
+    def residual_essential_graph(self):
+        """
+        TODO
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        from causaldag import PDAG
+
+        sdct = self.simplified_directed_clique_tree()
+        sdct_nodes = list(sdct.nodes)
+        sdct_components = [frozenset.union(*component) for component in sdct_nodes]
+        sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
+        sdct_parents = [frozenset.union(*p[0]) if p else set() for p in sdct_parents]
+        sdct_residuals = [component - parent for component, parent in zip(sdct_components, sdct_parents)]
+        arcs = {
+            (p, r) for parent, residual, component in zip(sdct_parents, sdct_residuals, sdct_components)
+
+            for p, r in itr.product(parent & component, residual)
+        }
+        g = PDAG(nodes=self._nodes, arcs=arcs & self._arcs, edges=self._arcs - arcs)
+        return g
+
+    # === INTERVENTION DESIGN
+    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
+        """
+        Find the smallest set of interventions which fully orients the CPDAG into this DAG.
+
+        Parameters
+        ----------
+        cpdag
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+
+        Returns
+        -------
+        interventions
+            A minimum-size set of interventions which fully orients the DAG.
+        """
+        if new:
+            sdct = self.simplified_directed_clique_tree()
+            top_sort = nx.topological_sort(sdct)
+
+            intervened_nodes = set()
+            for component in top_sort:
+                parent = list(sdct.predecessors(component))
+                parent_nodes = frozenset.union(*parent[0]) if len(parent) != 0 else set()
+                if verbose: print(f"orienting component {component}, parent={parent}")
+                component_intervened_nodes = self._verification_optimal_helper(component, parent_nodes, verbose=verbose)
+                if verbose: print(f"intervened: {component_intervened_nodes}")
+                intervened_nodes.update(component_intervened_nodes)
+            return intervened_nodes
+        else:
+            cpdag = self.cpdag() if cpdag is None else cpdag
+            node2oriented = {
+                node: self.interventional_cpdag([{node}], cpdag=cpdag).arcs
+                for node in self._nodes - cpdag.dominated_nodes
+            }
+            for ss in core_utils.powerset(self._nodes - cpdag.dominated_nodes, r_min=1):
+                oriented = set.union(*(node2oriented[node] for node in ss))
+                if len(oriented) == len(cpdag.edges) + len(cpdag.arcs):
+                    return ss
+
+    def greedy_optimal_single_node_intervention(self, cpdag=None, num_interventions=1):
+        """
+        Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy
+        strategy. By submodularity, this will orient at least (1 - 1/e) as many edges as the true optimal intervention
+        set.
+
+        Parameters
+        ----------
+        cpdag:
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+        num_interventions:
+            the number of single-node interventions used. Default is 1.
+
+        Return
+        ------
+        (interventions, cpdags)
+            The selected interventions and the associated cpdags that they induce.
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        if cpdag is None:
+            cpdag = self.cpdag()
+        if len(cpdag.edges) == 0:
+            return [None] * num_interventions, [cpdag] * num_interventions
+
+        nodes2icpdags = {
+            node: self.interventional_cpdag([{node}], cpdag=cpdag)
+            for node in self._nodes - cpdag.dominated_nodes
+        }
+        nodes2num_oriented = {
+            node: len(icpdag._arcs)
+            for node, icpdag in nodes2icpdags.items()
+        }
+
+        best_iv = max(nodes2num_oriented.items(), key=op.itemgetter(1))[0]
+        icpdag = nodes2icpdags[best_iv]
+
+        if num_interventions == 1:
+            return [best_iv], [icpdag]
+        else:
+            best_ivs, icpdags = self.greedy_optimal_single_node_intervention(cpdag=icpdag,
+                                                                             num_interventions=num_interventions - 1)
+            return [best_iv] + best_ivs, [icpdag] + icpdags
+
+    def greedy_optimal_fully_orienting_interventions(self, cpdag=None):
+        """
+        Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the
+        interventions. By submodularity, the number of interventions is a (1 + ln K) multiplicative approximation
+        to the true optimal number of interventions, where K is the number of undirected edges in the CPDAG.
+
+        Parameters
+        ----------
+        cpdag
+            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+
+        Returns
+        -------
+        (interventions, cpdags)
+            The selected interventions and the associated cpdags that they induce.
+        """
+        warn_untested()  # TODO: ADD TEST
+
+        if cpdag is None: cpdag = self.cpdag()
+        curr_cpdag = cpdag
+        ivs = []
+        icpdags = []
+        while len(curr_cpdag.edges) != 0:
+            iv, icpdag = self.greedy_optimal_single_node_intervention(cpdag=curr_cpdag)
+            iv = iv[0]
+            icpdag = icpdag[0]
+            curr_cpdag = icpdag
+            ivs.append(iv)
+            icpdags.append(icpdag)
+        return ivs, icpdags
+
+    def _verification_optimal_helper(self, component, parent_component, verbose=False) -> set:
+        # for a clique, select every other node
+        if len(component) == 1:
+            if verbose: print('component is clique')
+            residual = list(component)[0] - parent_component
+            if verbose: print(f"residual: {residual}")
+            sorted_nodes = self.induced_subgraph(residual).topological_sort()
+            return set(sorted_nodes[1::2])
+        else:
+            sorted_nodes = self.induced_subgraph(frozenset.union(*component)).topological_sort()
+
+            # determine common head
+            intersections = [c1 & c2 for c1, c2 in itr.combinations(component, 2)]
+            common_head = frozenset.union(*intersections) - parent_component
+            max_intersection = max(intersections, key=len)
+            # if max_intersection != frozenset.union(*intersections):
+            #     raise RuntimeError
+            sorted_common_head = [node for node in sorted_nodes if node in common_head]
+            if verbose: print(f'component contains multiple cliques, common head = {sorted_common_head}')
+
+            # determine heads and tails
+            heads = [clique & common_head for clique in component]
+            tails = [clique - common_head - parent_component for clique in component]
+            sorted_heads = [[node for node in sorted_nodes if node in head] for head in heads]
+            sorted_tails = [[node for node in sorted_nodes if node in tail] for tail in tails]
+
+            # add nodes from tails
+            intervened_nodes = set()
+            for head, tail in zip(sorted_heads, sorted_tails):
+                if verbose: print(f"tail={tail}, head={head}")
+                intervened_nodes.update(tail[-2::-2])
+                if len(tail) % 2 == 1 and len(head) > 0:
+                    intervened_nodes.add(head[-1])
+
+            # add remaining nodes from common head
+            counter = 0
+            for node in sorted_common_head:
+                if node in intervened_nodes:
+                    counter = 0
+                else:
+                    counter += 1
+                    if counter == 2:
+                        intervened_nodes.add(node)
+                        counter = 0
+
+            return intervened_nodes
+            # TODO: test!
 
 
 if __name__ == '__main__':

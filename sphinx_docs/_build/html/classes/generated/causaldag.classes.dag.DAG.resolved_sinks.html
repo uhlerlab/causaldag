@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="causaldag.classes.dag.DAG.chickering_sequence" href="causaldag.classes.dag.DAG.chickering_sequence.html" />
-    <link rel="prev" title="causaldag.classes.dag.DAG.local_markov_statements" href="causaldag.classes.dag.DAG.local_markov_statements.html" /> 
+    <link rel="prev" title="causaldag.classes.dag.DAG.interventional_cpdag" href="causaldag.classes.dag.DAG.interventional_cpdag.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,28 +85,22 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Classes</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../AncestralGraph.html">AncestralGraph</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../DAG.html">DAG</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#methods">Methods</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion">Conversion</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#other">Other</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix.html">causaldag.classes.dag.DAG.confusion_matrix</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix_skeleton.html">causaldag.classes.dag.DAG.confusion_matrix_skeleton</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.local_markov_statements.html">causaldag.classes.dag.DAG.local_markov_statements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#copying">Copying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#information-about-nodes">Information about nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-formats">Conversion to other formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-graphs">Conversion to other graphs</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#chickering-sequences">Chickering Sequences</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.resolved_sinks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.chickering_sequence.html">causaldag.classes.dag.DAG.chickering_sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.apply_edge_operation.html">causaldag.classes.dag.DAG.apply_edge_operation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.marginal_mag.html">causaldag.classes.dag.DAG.marginal_mag</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.cpdag.html">causaldag.classes.dag.DAG.cpdag</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.interventional_cpdag.html">causaldag.classes.dag.DAG.interventional_cpdag</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.moral_graph.html">causaldag.classes.dag.DAG.moral_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.directed_clique_tree.html">causaldag.classes.dag.DAG.directed_clique_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.simplified_directed_clique_tree.html">causaldag.classes.dag.DAG.simplified_directed_clique_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.residuals.html">causaldag.classes.dag.DAG.residuals</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.residual_essential_graph.html">causaldag.classes.dag.DAG.residual_essential_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html">causaldag.classes.dag.DAG.optimal_fully_orienting_interventions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html">causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#directed-clique-trees">Directed Clique Trees</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#intervention-design">Intervention Design</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../PDAG.html">PDAG</a></li>
@@ -206,7 +200,7 @@
         <a href="causaldag.classes.dag.DAG.chickering_sequence.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.chickering_sequence" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="causaldag.classes.dag.DAG.local_markov_statements.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.local_markov_statements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="causaldag.classes.dag.DAG.interventional_cpdag.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.interventional_cpdag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

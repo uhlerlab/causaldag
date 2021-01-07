@@ -4,15 +4,7 @@
 DAG
 ***
 
-Overview
-********
 .. currentmodule:: causaldag.classes.dag
-.. autoclass:: DAG
-
-Methods
-*******
-.. autosummary::
-   :toctree: generated
 
 Copying
 -------
@@ -78,6 +70,9 @@ Comparison to other DAGs
    DAG.markov_equivalent
    DAG.is_imap
    DAG.is_minimal_imap
+   DAG.chickering_distance
+   DAG.confusion_matrix
+   DAG.confusion_matrix_skeleton
 
 Separation statements
 ---------------------
@@ -87,9 +82,10 @@ Separation statements
    DAG.dsep
    DAG.dsep_from_given
    DAG.is_invariant
+   DAG.local_markov_statements
 
-Conversion
-----------
+Conversion to other formats
+---------------------------
 .. autosummary::
    :toctree: generated
 
@@ -100,30 +96,40 @@ Conversion
    DAG.from_dataframe
    DAG.to_dataframe
 
-Other
------
+Conversion to other graphs
+--------------------------
 .. autosummary::
    :toctree: generated
 
-   DAG.confusion_matrix
-   DAG.confusion_matrix_skeleton
+   DAG.moral_graph
+   DAG.marginal_mag
+   DAG.cpdag
+   DAG.interventional_cpdag
 
-   DAG.local_markov_statements
+Chickering Sequences
+--------------------
+.. autosummary::
+   :toctree: generated
 
    DAG.resolved_sinks
    DAG.chickering_sequence
    DAG.apply_edge_operation
 
-   DAG.marginal_mag
-
-   DAG.cpdag
-   DAG.interventional_cpdag
-   DAG.moral_graph
+Directed Clique Trees
+---------------------
+.. autosummary::
+   :toctree: generated
 
    DAG.directed_clique_tree
    DAG.simplified_directed_clique_tree
    DAG.residuals
    DAG.residual_essential_graph
 
+Intervention Design
+-------------------
+.. autosummary::
+   :toctree: generated
+
    DAG.optimal_fully_orienting_interventions
    DAG.greedy_optimal_single_node_intervention
+   DAG.greedy_optimal_fully_orienting_interventions

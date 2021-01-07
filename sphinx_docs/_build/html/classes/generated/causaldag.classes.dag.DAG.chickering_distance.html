@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>causaldag.classes.dag.DAG.is_invariant &mdash; causaldag  documentation</title>
+  <title>causaldag.classes.dag.DAG.chickering_distance &mdash; causaldag  documentation</title>
   
 
   
@@ -35,8 +35,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.classes.dag.DAG.local_markov_statements" href="causaldag.classes.dag.DAG.local_markov_statements.html" />
-    <link rel="prev" title="causaldag.classes.dag.DAG.dsep_from_given" href="causaldag.classes.dag.DAG.dsep_from_given.html" /> 
+    <link rel="next" title="causaldag.classes.dag.DAG.confusion_matrix" href="causaldag.classes.dag.DAG.confusion_matrix.html" />
+    <link rel="prev" title="causaldag.classes.dag.DAG.is_minimal_imap" href="causaldag.classes.dag.DAG.is_minimal_imap.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,14 +89,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#information-about-nodes">Information about nodes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.dsep.html">causaldag.classes.dag.DAG.dsep</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.dsep_from_given.html">causaldag.classes.dag.DAG.dsep_from_given</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.is_invariant</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.local_markov_statements.html">causaldag.classes.dag.DAG.local_markov_statements</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.shd.html">causaldag.classes.dag.DAG.shd</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.shd_skeleton.html">causaldag.classes.dag.DAG.shd_skeleton</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.markov_equivalent.html">causaldag.classes.dag.DAG.markov_equivalent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.is_imap.html">causaldag.classes.dag.DAG.is_imap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.is_minimal_imap.html">causaldag.classes.dag.DAG.is_minimal_imap</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.chickering_distance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix.html">causaldag.classes.dag.DAG.confusion_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.confusion_matrix_skeleton.html">causaldag.classes.dag.DAG.confusion_matrix_skeleton</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-formats">Conversion to other formats</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-graphs">Conversion to other graphs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../DAG.html#chickering-sequences">Chickering Sequences</a></li>
@@ -161,13 +165,13 @@
         
           <li><a href="../DAG.html">DAG</a> &raquo;</li>
         
-      <li>causaldag.classes.dag.DAG.is_invariant</li>
+      <li>causaldag.classes.dag.DAG.chickering_distance</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.is_invariant.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.chickering_distance.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -180,41 +184,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="causaldag-classes-dag-dag-is-invariant">
-<h1>causaldag.classes.dag.DAG.is_invariant<a class="headerlink" href="#causaldag-classes-dag-dag-is-invariant" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="causaldag-classes-dag-dag-chickering-distance">
+<h1>causaldag.classes.dag.DAG.chickering_distance<a class="headerlink" href="#causaldag-classes-dag-dag-chickering-distance" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
-<dt id="causaldag.classes.dag.DAG.is_invariant">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">is_invariant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">A</span></em>, <em class="sig-param"><span class="n">intervened_nodes</span></em>, <em class="sig-param"><span class="n">cond_set</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.is_invariant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.is_invariant" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Check if the distribution of <code class="docutils literal notranslate"><span class="pre">A</span></code> given cond_set is invariant to an intervention on intervened_nodes.</p>
-<p><img class="math" src="../../_images/math/eddb539a8c3505386e3eb293f282274df6ee2094.png" alt="f^\emptyset(A|C) = f^I(A|C)"/> if the “intervention node” I with intervened_nodes as its children
-is d-separated from A given C. Equivalently, the :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>f^emptyset(A|C)</p>
-</div></blockquote>
-<p>eq f^I(A|C)` if:</p>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="simple">
-<dt>there is an active path to an intervened node that ends in an arrowhead, and that intervened node</dt><dd><p>or one of its descendants is conditioned on.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>there is an active path to an intervened node that ends in a tail, and that intervened node</dt><dd><p>is not conditioned on.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="simple">
-<dt>A:</dt><dd><p>Set of nodes.</p>
-</dd>
-<dt>intervened_nodes:</dt><dd><p>Nodes on which an intervention has occurred.</p>
-</dd>
-<dt>cond_set:</dt><dd><p>Conditioning set for the tested distribution.</p>
-</dd>
-<dt>verbose:</dt><dd><p>If True, print moves of the algorithm.</p>
-</dd>
-</dl>
-</div></blockquote>
+<dt id="causaldag.classes.dag.DAG.chickering_distance">
+<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">chickering_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.chickering_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.chickering_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO</p>
 </dd></dl>
 
 </div>
@@ -227,10 +202,10 @@ is d-separated from A given C. Equivalently, the :math:<a href="#id1"><span clas
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="causaldag.classes.dag.DAG.local_markov_statements.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.local_markov_statements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="causaldag.classes.dag.DAG.confusion_matrix.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.confusion_matrix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="causaldag.classes.dag.DAG.dsep_from_given.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.dsep_from_given" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="causaldag.classes.dag.DAG.is_minimal_imap.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.is_minimal_imap" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
