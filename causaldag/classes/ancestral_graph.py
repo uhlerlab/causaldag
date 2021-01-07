@@ -744,7 +744,7 @@ class AncestralGraph:
 
     def ancestors_of(self, nodes: NodeSet, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the ancestors of ``nodes``.
+        Return the ancestors of the node or set of nodes ``nodes``.
 
         Parameters
         ----------
@@ -835,7 +835,7 @@ class AncestralGraph:
 
     def descendants_of(self, nodes: NodeSet, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the descendants of ``nodes``.
+        Return the descendants of the node or set of nodes ``nodes``.
 
         Parameters
         ----------
@@ -864,7 +864,7 @@ class AncestralGraph:
 
     def has_directed(self, i: Node, j: Node) -> bool:
         """
-        Check if this graph has the directed edge i->j.
+        Check if this graph has the directed edge ``i``->``j``.
 
         See Also
         --------
