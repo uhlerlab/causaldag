@@ -611,7 +611,11 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 3), (3, 4)})
+        >>> g.remove_arcs({(1, 2), (2, 3)})
+        >>> g.arcs
+        {(3, 4)}
         """
         for i, j in arcs:
             self.remove_arc(i, j, ignore_error=ignore_error)
@@ -669,7 +673,7 @@ class DAG:
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.sources()
-        {1)
+        {1}
         """
         return {node for node in self._nodes if len(self._parents[node]) == 0}
 
@@ -687,7 +691,7 @@ class DAG:
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.sinks()
-        {3)
+        {3}
         """
         return {node for node in self._nodes if len(self._children[node]) == 0}
 
@@ -706,7 +710,7 @@ class DAG:
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (1, 3), (2, 3)})
         >>> g.reversible_arcs()
-        {(1, 2), (2, 3))
+        {(1, 2), (2, 3)}
         """
         reversible_arcs = set()
         for i, j in self._arcs:
@@ -720,8 +724,10 @@ class DAG:
 
         Parameters
         ----------
-        i: source of the arc
-        j: target of the arc
+        i:
+            source of the arc
+        j:
+            target of the arc
 
         Returns
         -------
@@ -763,9 +769,19 @@ class DAG:
         Get all v-structures in the graph, i.e., triples of the form (i, k, j) such that ``i``->k<-``j`` and ``i``
         is not adjacent to ``j``.
 
-        Examples
-        --------
-        TODO
+        Return
+        ------
+        Set[Tuple]
+            Return all triples in the graph in a v-structure (aka an immorality). A v-structure is formed when i->j<-k but
+            there is no arc between i and k. Arcs that participate in a v-structure are identifiable from observational
+            data.
+
+        Example
+        -------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
+        >>> g.vstructures()
+        {(1, 3, 2)}
         """
         vstructs = set()
         for node in self._nodes:
