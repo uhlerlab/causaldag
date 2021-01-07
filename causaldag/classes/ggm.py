@@ -61,7 +61,7 @@ class GGM(UndirectedGraph):
 
     def partial_correlation(self, i, j, cond_set):
         """
-        Return the partial correlation of i and j conditioned on `cond_set`.
+        Return the partial correlation of ``i`` and ``j`` conditioned on ``cond_set``.
 
         Parameters
         ----------

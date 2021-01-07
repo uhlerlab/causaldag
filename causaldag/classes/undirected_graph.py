@@ -25,12 +25,18 @@ class UndirectedGraph:
         return self._nodes == other._nodes and self._edges == other._edges
 
     def to_nx(self) -> Graph:
+        """
+        TODO
+        """
         nx_graph = Graph()
         nx_graph.add_nodes_from(self._nodes)
         nx_graph.add_edges_from(self._edges)
         return nx_graph
 
     def rename_nodes(self, name_map):
+        """
+        TODO
+        """
         return UndirectedGraph(
             nodes={name_map[n] for n in self._nodes},
             edges={(name_map[i], name_map[j]) for i, j in self._edges}
@@ -94,6 +100,9 @@ class UndirectedGraph:
 
     @classmethod
     def from_nx(cls, g: Graph):
+        """
+        TODO
+        """
         return UndirectedGraph(nodes=g.nodes, edges=g.edges)
 
     def copy(self, new=True):

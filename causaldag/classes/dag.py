@@ -120,8 +120,9 @@ class DAG:
         --------
         >>> import causaldag as cd
         >>> d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})
-        >>> d.induced_subgraph({1, 2, 3})
-        TODO
+        >>> d_induced = d.induced_subgraph({1, 2, 3})
+        >>> d_induced.arcs
+        {(1, 2), (2, 3)}
         """
         return DAG(nodes, {(i, j) for i, j in self._arcs if i in nodes and j in nodes})
 
@@ -144,23 +145,14 @@ class DAG:
 
     @property
     def neighbors(self) -> Dict[Node, Set[Node]]:
-        """
-        TODO: change name to dict?
-        """
         return core_utils.defdict2dict(self._neighbors, self._nodes)
 
     @property
     def parents(self) -> Dict[Node, Set[Node]]:
-        """
-        TODO: change name to dict?
-        """
         return core_utils.defdict2dict(self._parents, self._nodes)
 
     @property
     def children(self) -> Dict[Node, Set[Node]]:
-        """
-        TODO: change name to dict?
-        """
         return core_utils.defdict2dict(self._children, self._nodes)
 
     @property
@@ -1155,11 +1147,25 @@ class DAG:
         other:
             Another DAG.
         interventions:
-            TODO
+            If not None, check whether the two DAGs are interventionally Markov equivalent under the interventions.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        >>> d2 = cd.DAG(arcs={(2, 1), (1, 0)})
+        >>> d3 = cd.DAG(arcs={(0, 1), (2, 1)})
+        >>> d4 = cd.DAG(arcs={(1, 0), (1, 2)})
+        >>> d1.markov_equivalent(d2)
+        True
+        >>> d2.markov_equivalent(d1)
+        True
+        >>> d1.markov_equivalent(d3)
+        False
+        >>> d1.markov_equivalent(d2, [{2}])
+        False
+        >>> d1.markov_equivalent(d4, [{2}])
+        True
         """
         if interventions is None:
             return self.cpdag() == other.cpdag()
