@@ -1504,7 +1504,17 @@ class DAG:
         Returns
         -------
         DAG:
-            TODO.
+            The graph as a DAG object.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> import networkx as nx
+        >>> g = nx.DiGraph()
+        >>> g.add_edges_from([(0, 1)])
+        >>> d = cd.DAG.from_nx(g)
+        >>> d.arcs
+        {(0, 1)}
         """
         if not isinstance(nx_graph, nx.DiGraph):
             raise ValueError("Must be a DiGraph")
@@ -1517,7 +1527,15 @@ class DAG:
         Returns
         -------
         networkx.DiGraph:
-            TODO
+            The graph as a networkx.DiGraph object.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1)})
+        >>> g = d.to_nx()
+        >>> g.edges
+        OutEdgeView([(0, 1)])
         """
         g = nx.DiGraph()
         g.add_nodes_from(self._nodes)
