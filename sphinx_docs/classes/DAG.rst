@@ -139,6 +139,6 @@ Intervention Design
 .. autosummary::
    :toctree: generated
 
-   DAG.optimal_fully_orienting_interventions
+   DAG.optimal_fully_orienting_single_node_interventions
    DAG.greedy_optimal_single_node_intervention
    DAG.greedy_optimal_fully_orienting_interventions

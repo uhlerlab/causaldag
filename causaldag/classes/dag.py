@@ -2289,14 +2289,18 @@ class DAG:
         return g
 
     # === INTERVENTION DESIGN
-    def optimal_fully_orienting_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
+    def optimal_fully_orienting_single_node_interventions(self, cpdag=None, new=False, verbose=False) -> Set[Node]:
         """
         Find the smallest set of interventions which fully orients the CPDAG into this DAG.
 
         Parameters
         ----------
         cpdag
-            the starting CPDAG containing known orientations. If None, use the observational essential graph.
+            the starting CPDAG containing known orientations. If None, compute and use the observational essential graph.
+        new:
+            TODO: remove after checking that directed clique tree method works.
+        verbose:
+            TODO: describe.
 
         Returns
         -------
@@ -2305,7 +2309,12 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> import itertools as itr
+        >>> d = cd.DAG(arcs=set(itr.combinations(range(5), 2)))
+        >>> ivs = d.optimal_fully_orienting_single_node_interventions()
+        >>> ivs
+        {1, 3}
         """
         if new:
             sdct = self.simplified_directed_clique_tree()
