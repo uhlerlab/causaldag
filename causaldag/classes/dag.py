@@ -1546,7 +1546,29 @@ class DAG:
     @classmethod
     def from_dataframe(cls, df):
         """
-        TODO
+        Create a DAG from a dataframe, where the indices and columns are node names and a nonzero entry indicates
+        the presence of an edge.
+
+        Parameters
+        ----------
+        df:
+            The pandas dataframe.
+
+        Returns
+        -------
+        DAG:
+            The graph as a DAG object.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> amat = np.array([[0, 1], [0, 0]])
+        >>> df = pd.DataFrame(amat, index=["a", "b"], columns=["a", "b"])
+        >>> d = cd.DAG.from_dataframe(df)
+        >>> d.arcs
+        {('a', 'b')}
         """
         warn_untested()  # TODO: ADD TEST
 
