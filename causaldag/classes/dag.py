@@ -1580,7 +1580,31 @@ class DAG:
 
     def to_dataframe(self, node_list=None):
         """
-        TODO
+        Turn this DAG into a dataframe, where the indices and columns are node names and a nonzero entry indicates
+        the presence of an edge.
+
+        Parameters
+        ----------
+        node_list:
+            Order to use when creating the dataframe. If None, uses a sorted order.
+
+        Returns
+        -------
+        pandas.DataFrame:
+            The graph as a DataFrame.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1)})
+        >>> d.to_dataframe()
+           0  1
+        0  0  1
+        1  0  0
+        >>> d.to_dataframe(node_list=[1, 0])
+           1  0
+        1  0  0
+        0  1  0
         """
         warn_untested()  # TODO: ADD TEST
 
