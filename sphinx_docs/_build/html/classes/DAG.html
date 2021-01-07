@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>DAG &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -50,7 +54,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -235,6 +239,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -248,7 +254,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/classes/DAG.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -266,327 +272,327 @@
 <span id="id1"></span><h1>DAG<a class="headerlink" href="#dag" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="copying">
 <h2>Copying<a class="headerlink" href="#copying" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.copy.html#causaldag.classes.dag.DAG.copy" title="causaldag.classes.dag.DAG.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.copy</span></code></a>()</p></td>
-<td><p>Return a copy of the current DAG.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.copy.html#causaldag.classes.dag.DAG.copy" title="causaldag.classes.dag.DAG.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.copy</span></code></a>()</td>
+<td>Return a copy of the current DAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.rename_nodes.html#causaldag.classes.dag.DAG.rename_nodes" title="causaldag.classes.dag.DAG.rename_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.rename_nodes</span></code></a>(name_map)</p></td>
-<td><p>Rename the nodes in this graph according to <code class="docutils literal notranslate"><span class="pre">name_map</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.rename_nodes.html#causaldag.classes.dag.DAG.rename_nodes" title="causaldag.classes.dag.DAG.rename_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.rename_nodes</span></code></a>(name_map,&nbsp;VT])</td>
+<td>Rename the nodes in this graph according to <code class="docutils literal notranslate"><span class="pre">name_map</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.induced_subgraph.html#causaldag.classes.dag.DAG.induced_subgraph" title="causaldag.classes.dag.DAG.induced_subgraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.induced_subgraph</span></code></a>(nodes)</p></td>
-<td><p>Return the induced subgraph over only <code class="docutils literal notranslate"><span class="pre">nodes</span></code></p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.induced_subgraph.html#causaldag.classes.dag.DAG.induced_subgraph" title="causaldag.classes.dag.DAG.induced_subgraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.induced_subgraph</span></code></a>(nodes)</td>
+<td>Return the induced subgraph over only <code class="docutils literal notranslate"><span class="pre">nodes</span></code></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="information-about-nodes">
 <h2>Information about nodes<a class="headerlink" href="#information-about-nodes" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of" title="causaldag.classes.dag.DAG.parents_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.parents_of</span></code></a>(nodes)</p></td>
-<td><p>Return all nodes that are parents of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of" title="causaldag.classes.dag.DAG.parents_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.parents_of</span></code></a>(nodes,&nbsp;Set[Hashable]])</td>
+<td>Return all nodes that are parents of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of" title="causaldag.classes.dag.DAG.children_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.children_of</span></code></a>(nodes)</p></td>
-<td><p>Return all nodes that are children of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of" title="causaldag.classes.dag.DAG.children_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.children_of</span></code></a>(nodes,&nbsp;Set[Hashable]])</td>
+<td>Return all nodes that are children of the node or set of nodes <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of" title="causaldag.classes.dag.DAG.neighbors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.neighbors_of</span></code></a>(nodes)</p></td>
-<td><p>Return all nodes that are adjacent to the node or set of nodes <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.neighbors_of.html#causaldag.classes.dag.DAG.neighbors_of" title="causaldag.classes.dag.DAG.neighbors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.neighbors_of</span></code></a>(nodes,&nbsp;Set[Hashable]])</td>
+<td>Return all nodes that are adjacent to the node or set of nodes <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.markov_blanket_of.html#causaldag.classes.dag.DAG.markov_blanket_of" title="causaldag.classes.dag.DAG.markov_blanket_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.markov_blanket_of</span></code></a>(node)</p></td>
-<td><p>Return the Markov blanket of <code class="docutils literal notranslate"><span class="pre">node</span></code>, i.e., the parents of the node, its children, and the parents of its children.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.markov_blanket_of.html#causaldag.classes.dag.DAG.markov_blanket_of" title="causaldag.classes.dag.DAG.markov_blanket_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.markov_blanket_of</span></code></a>(node)</td>
+<td>Return the Markov blanket of <code class="docutils literal notranslate"><span class="pre">node</span></code>, i.e., the parents of the node, its children, and the parents of its children.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.ancestors_of.html#causaldag.classes.dag.DAG.ancestors_of" title="causaldag.classes.dag.DAG.ancestors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.ancestors_of</span></code></a>(nodes)</p></td>
-<td><p>Return the ancestors of <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.ancestors_of.html#causaldag.classes.dag.DAG.ancestors_of" title="causaldag.classes.dag.DAG.ancestors_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.ancestors_of</span></code></a>(nodes)</td>
+<td>Return the ancestors of <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.descendants_of.html#causaldag.classes.dag.DAG.descendants_of" title="causaldag.classes.dag.DAG.descendants_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.descendants_of</span></code></a>(nodes)</p></td>
-<td><p>Return the descendants of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.descendants_of.html#causaldag.classes.dag.DAG.descendants_of" title="causaldag.classes.dag.DAG.descendants_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.descendants_of</span></code></a>(nodes,&nbsp;Set[Hashable]])</td>
+<td>Return the descendants of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.indegree_of.html#causaldag.classes.dag.DAG.indegree_of" title="causaldag.classes.dag.DAG.indegree_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.indegree_of</span></code></a>(node)</p></td>
-<td><p>Return the indegree of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.indegree_of.html#causaldag.classes.dag.DAG.indegree_of" title="causaldag.classes.dag.DAG.indegree_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.indegree_of</span></code></a>(node)</td>
+<td>Return the indegree of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.outdegree_of.html#causaldag.classes.dag.DAG.outdegree_of" title="causaldag.classes.dag.DAG.outdegree_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.outdegree_of</span></code></a>(node)</p></td>
-<td><p>Return the outdegree of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.outdegree_of.html#causaldag.classes.dag.DAG.outdegree_of" title="causaldag.classes.dag.DAG.outdegree_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.outdegree_of</span></code></a>(node)</td>
+<td>Return the outdegree of <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.incoming_arcs.html#causaldag.classes.dag.DAG.incoming_arcs" title="causaldag.classes.dag.DAG.incoming_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.incoming_arcs</span></code></a>(node)</p></td>
-<td><p>Return all arcs with target <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.incoming_arcs.html#causaldag.classes.dag.DAG.incoming_arcs" title="causaldag.classes.dag.DAG.incoming_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.incoming_arcs</span></code></a>(node)</td>
+<td>Return all arcs with target <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.outgoing_arcs.html#causaldag.classes.dag.DAG.outgoing_arcs" title="causaldag.classes.dag.DAG.outgoing_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.outgoing_arcs</span></code></a>(node)</p></td>
-<td><p>Return all arcs with source <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.outgoing_arcs.html#causaldag.classes.dag.DAG.outgoing_arcs" title="causaldag.classes.dag.DAG.outgoing_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.outgoing_arcs</span></code></a>(node)</td>
+<td>Return all arcs with source <code class="docutils literal notranslate"><span class="pre">node</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.incident_arcs.html#causaldag.classes.dag.DAG.incident_arcs" title="causaldag.classes.dag.DAG.incident_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.incident_arcs</span></code></a>(node)</p></td>
-<td><p>Return all arcs with <code class="docutils literal notranslate"><span class="pre">node</span></code> as either source or target.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.incident_arcs.html#causaldag.classes.dag.DAG.incident_arcs" title="causaldag.classes.dag.DAG.incident_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.incident_arcs</span></code></a>(node)</td>
+<td>Return all arcs with <code class="docutils literal notranslate"><span class="pre">node</span></code> as either source or target.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="graph-modification">
 <h2>Graph modification<a class="headerlink" href="#graph-modification" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node" title="causaldag.classes.dag.DAG.add_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_node</span></code></a>(node)</p></td>
-<td><p>Add <code class="docutils literal notranslate"><span class="pre">node</span></code> to the DAG.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node" title="causaldag.classes.dag.DAG.add_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_node</span></code></a>(node)</td>
+<td>Add <code class="docutils literal notranslate"><span class="pre">node</span></code> to the DAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_nodes_from.html#causaldag.classes.dag.DAG.add_nodes_from" title="causaldag.classes.dag.DAG.add_nodes_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_nodes_from</span></code></a>(nodes)</p></td>
-<td><p>Add nodes to the graph from the collection <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_nodes_from.html#causaldag.classes.dag.DAG.add_nodes_from" title="causaldag.classes.dag.DAG.add_nodes_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_nodes_from</span></code></a>(nodes)</td>
+<td>Add nodes to the graph from the collection <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.remove_node.html#causaldag.classes.dag.DAG.remove_node" title="causaldag.classes.dag.DAG.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.remove_node</span></code></a>(node[, ignore_error])</p></td>
-<td><p>Remove the node <code class="docutils literal notranslate"><span class="pre">node</span></code> from the graph.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.remove_node.html#causaldag.classes.dag.DAG.remove_node" title="causaldag.classes.dag.DAG.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.remove_node</span></code></a>(node[,&nbsp;ignore_error])</td>
+<td>Remove the node <code class="docutils literal notranslate"><span class="pre">node</span></code> from the graph.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_arc.html#causaldag.classes.dag.DAG.add_arc" title="causaldag.classes.dag.DAG.add_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_arc</span></code></a>(i, j[, check_acyclic])</p></td>
-<td><p>Add the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> to the DAG</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_arc.html#causaldag.classes.dag.DAG.add_arc" title="causaldag.classes.dag.DAG.add_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_arc</span></code></a>(i,&nbsp;j[,&nbsp;check_acyclic])</td>
+<td>Add the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> to the DAG</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_arcs_from.html#causaldag.classes.dag.DAG.add_arcs_from" title="causaldag.classes.dag.DAG.add_arcs_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_arcs_from</span></code></a>(arcs[, check_acyclic])</p></td>
-<td><p>Add arcs to the graph from the collection <code class="docutils literal notranslate"><span class="pre">arcs</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.add_arcs_from.html#causaldag.classes.dag.DAG.add_arcs_from" title="causaldag.classes.dag.DAG.add_arcs_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.add_arcs_from</span></code></a>(arcs[,&nbsp;check_acyclic])</td>
+<td>Add arcs to the graph from the collection <code class="docutils literal notranslate"><span class="pre">arcs</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.remove_arc.html#causaldag.classes.dag.DAG.remove_arc" title="causaldag.classes.dag.DAG.remove_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.remove_arc</span></code></a>(i, j[, ignore_error])</p></td>
-<td><p>Remove the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.remove_arc.html#causaldag.classes.dag.DAG.remove_arc" title="causaldag.classes.dag.DAG.remove_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.remove_arc</span></code></a>(i,&nbsp;j[,&nbsp;ignore_error])</td>
+<td>Remove the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.reverse_arc.html#causaldag.classes.dag.DAG.reverse_arc" title="causaldag.classes.dag.DAG.reverse_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.reverse_arc</span></code></a>(i, j[, ignore_error, …])</p></td>
-<td><p>Reverse the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> to <code class="docutils literal notranslate"><span class="pre">i</span></code> &lt;- <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.reverse_arc.html#causaldag.classes.dag.DAG.reverse_arc" title="causaldag.classes.dag.DAG.reverse_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.reverse_arc</span></code></a>(i,&nbsp;j[,&nbsp;ignore_error,&nbsp;…])</td>
+<td>Reverse the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> to <code class="docutils literal notranslate"><span class="pre">i</span></code> &lt;- <code class="docutils literal notranslate"><span class="pre">j</span></code>.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="graph-properties">
 <h2>Graph properties<a class="headerlink" href="#graph-properties" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.has_arc.html#causaldag.classes.dag.DAG.has_arc" title="causaldag.classes.dag.DAG.has_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.has_arc</span></code></a>(source, target)</p></td>
-<td><p>Check if this DAG has an arc <code class="docutils literal notranslate"><span class="pre">source</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.has_arc.html#causaldag.classes.dag.DAG.has_arc" title="causaldag.classes.dag.DAG.has_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.has_arc</span></code></a>(source,&nbsp;target)</td>
+<td>Check if this DAG has an arc <code class="docutils literal notranslate"><span class="pre">source</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">target</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.sources.html#causaldag.classes.dag.DAG.sources" title="causaldag.classes.dag.DAG.sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.sources</span></code></a>()</p></td>
-<td><p>Get all nodes in the graph that have no parents.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.sources.html#causaldag.classes.dag.DAG.sources" title="causaldag.classes.dag.DAG.sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.sources</span></code></a>()</td>
+<td>Get all nodes in the graph that have no parents.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.sinks.html#causaldag.classes.dag.DAG.sinks" title="causaldag.classes.dag.DAG.sinks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.sinks</span></code></a>()</p></td>
-<td><p>Get all nodes in the graph that have no children.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.sinks.html#causaldag.classes.dag.DAG.sinks" title="causaldag.classes.dag.DAG.sinks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.sinks</span></code></a>()</td>
+<td>Get all nodes in the graph that have no children.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.reversible_arcs.html#causaldag.classes.dag.DAG.reversible_arcs" title="causaldag.classes.dag.DAG.reversible_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.reversible_arcs</span></code></a>()</p></td>
-<td><p>Get all reversible (aka covered) arcs in the DAG.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.reversible_arcs.html#causaldag.classes.dag.DAG.reversible_arcs" title="causaldag.classes.dag.DAG.reversible_arcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.reversible_arcs</span></code></a>()</td>
+<td>Get all reversible (aka covered) arcs in the DAG.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_reversible.html#causaldag.classes.dag.DAG.is_reversible" title="causaldag.classes.dag.DAG.is_reversible"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_reversible</span></code></a>(i, j)</p></td>
-<td><p>Check if the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> is reversible (aka covered), i.e., if <img class="math" src="../_images/math/d17c441054f8b3a626a778cbf20647b4541c23a5.png" alt="pa(i) = pa(j) \setminus \{i\}"/></p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_reversible.html#causaldag.classes.dag.DAG.is_reversible" title="causaldag.classes.dag.DAG.is_reversible"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_reversible</span></code></a>(i,&nbsp;j)</td>
+<td>Check if the arc <code class="docutils literal notranslate"><span class="pre">i</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">j</span></code> is reversible (aka covered), i.e., if <img class="math" src="../_images/math/04c42e8b224b0e116678e856e544e36ee04daff2.png" alt="pa(i) = pa(j) \setminus \{i\}"/></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.arcs_in_vstructures.html#causaldag.classes.dag.DAG.arcs_in_vstructures" title="causaldag.classes.dag.DAG.arcs_in_vstructures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.arcs_in_vstructures</span></code></a>()</p></td>
-<td><p>Get all arcs in the graph that participate in a v-structure.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.arcs_in_vstructures.html#causaldag.classes.dag.DAG.arcs_in_vstructures" title="causaldag.classes.dag.DAG.arcs_in_vstructures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.arcs_in_vstructures</span></code></a>()</td>
+<td>Get all arcs in the graph that participate in a v-structure.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.vstructures.html#causaldag.classes.dag.DAG.vstructures" title="causaldag.classes.dag.DAG.vstructures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.vstructures</span></code></a>()</p></td>
-<td><p>Get all v-structures in the graph, i.e., triples of the form (i, k, j) such that <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;k&lt;-<code class="docutils literal notranslate"><span class="pre">j</span></code> and <code class="docutils literal notranslate"><span class="pre">i</span></code> is not adjacent to <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.vstructures.html#causaldag.classes.dag.DAG.vstructures" title="causaldag.classes.dag.DAG.vstructures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.vstructures</span></code></a>()</td>
+<td>Get all v-structures in the graph, i.e., triples of the form (i, k, j) such that <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;k&lt;-<code class="docutils literal notranslate"><span class="pre">j</span></code> and <code class="docutils literal notranslate"><span class="pre">i</span></code> is not adjacent to <code class="docutils literal notranslate"><span class="pre">j</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.triples.html#causaldag.classes.dag.DAG.triples" title="causaldag.classes.dag.DAG.triples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.triples</span></code></a>()</p></td>
-<td><p>Return all triples of the form (<code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j</span></code>, <code class="docutils literal notranslate"><span class="pre">k</span></code>) such that <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">k</span></code> are both adjacent to <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.triples.html#causaldag.classes.dag.DAG.triples" title="causaldag.classes.dag.DAG.triples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.triples</span></code></a>()</td>
+<td>Return all triples of the form (<code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j</span></code>, <code class="docutils literal notranslate"><span class="pre">k</span></code>) such that <code class="docutils literal notranslate"><span class="pre">i</span></code> and <code class="docutils literal notranslate"><span class="pre">k</span></code> are both adjacent to <code class="docutils literal notranslate"><span class="pre">j</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.upstream_most.html#causaldag.classes.dag.DAG.upstream_most" title="causaldag.classes.dag.DAG.upstream_most"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.upstream_most</span></code></a>(s)</p></td>
-<td><p>Return the set of nodes which in <code class="docutils literal notranslate"><span class="pre">s</span></code> which have no ancestors in <code class="docutils literal notranslate"><span class="pre">s</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.upstream_most.html#causaldag.classes.dag.DAG.upstream_most" title="causaldag.classes.dag.DAG.upstream_most"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.upstream_most</span></code></a>(s)</td>
+<td>Return the set of nodes which in <code class="docutils literal notranslate"><span class="pre">s</span></code> which have no ancestors in <code class="docutils literal notranslate"><span class="pre">s</span></code>.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="ordering">
 <h2>Ordering<a class="headerlink" href="#ordering" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.topological_sort.html#causaldag.classes.dag.DAG.topological_sort" title="causaldag.classes.dag.DAG.topological_sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.topological_sort</span></code></a>()</p></td>
-<td><p>Return a topological sort of the nodes in the graph.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.topological_sort.html#causaldag.classes.dag.DAG.topological_sort" title="causaldag.classes.dag.DAG.topological_sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.topological_sort</span></code></a>()</td>
+<td>Return a topological sort of the nodes in the graph.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_topological.html#causaldag.classes.dag.DAG.is_topological" title="causaldag.classes.dag.DAG.is_topological"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_topological</span></code></a>(order)</p></td>
-<td><p>Check that <code class="docutils literal notranslate"><span class="pre">order</span></code> is a topological order consistent with this DAG, i.e., if <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG, then <code class="docutils literal notranslate"><span class="pre">i</span></code> comes before <code class="docutils literal notranslate"><span class="pre">j</span></code> in the order.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_topological.html#causaldag.classes.dag.DAG.is_topological" title="causaldag.classes.dag.DAG.is_topological"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_topological</span></code></a>(order)</td>
+<td>Check that <code class="docutils literal notranslate"><span class="pre">order</span></code> is a topological order consistent with this DAG, i.e., if <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG, then <code class="docutils literal notranslate"><span class="pre">i</span></code> comes before <code class="docutils literal notranslate"><span class="pre">j</span></code> in the order.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.permutation_score.html#causaldag.classes.dag.DAG.permutation_score" title="causaldag.classes.dag.DAG.permutation_score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.permutation_score</span></code></a>(order)</p></td>
-<td><p>Return the number of “errors” in <code class="docutils literal notranslate"><span class="pre">order</span></code> with respect to the DAG, i.e., the number of times that <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG but <code class="docutils literal notranslate"><span class="pre">i</span></code> comes <em>after</em> <code class="docutils literal notranslate"><span class="pre">j</span></code> in <code class="docutils literal notranslate"><span class="pre">order</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.permutation_score.html#causaldag.classes.dag.DAG.permutation_score" title="causaldag.classes.dag.DAG.permutation_score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.permutation_score</span></code></a>(order)</td>
+<td>Return the number of “errors” in <code class="docutils literal notranslate"><span class="pre">order</span></code> with respect to the DAG, i.e., the number of times that <code class="docutils literal notranslate"><span class="pre">i</span></code>-&gt;``j`` in the DAG but <code class="docutils literal notranslate"><span class="pre">i</span></code> comes <em>after</em> <code class="docutils literal notranslate"><span class="pre">j</span></code> in <code class="docutils literal notranslate"><span class="pre">order</span></code>.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="comparison-to-other-dags">
 <h2>Comparison to other DAGs<a class="headerlink" href="#comparison-to-other-dags" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd.html#causaldag.classes.dag.DAG.shd" title="causaldag.classes.dag.DAG.shd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.shd</span></code></a>(other)</p></td>
-<td><p>Compute the structural Hamming distance between this DAG and the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd.html#causaldag.classes.dag.DAG.shd" title="causaldag.classes.dag.DAG.shd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.shd</span></code></a>(other)</td>
+<td>Compute the structural Hamming distance between this DAG and the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd_skeleton.html#causaldag.classes.dag.DAG.shd_skeleton" title="causaldag.classes.dag.DAG.shd_skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.shd_skeleton</span></code></a>(other)</p></td>
-<td><p>Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of the graph <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.shd_skeleton.html#causaldag.classes.dag.DAG.shd_skeleton" title="causaldag.classes.dag.DAG.shd_skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.shd_skeleton</span></code></a>(other)</td>
+<td>Compute the structure Hamming distance between the skeleton of this DAG and the skeleton of the graph <code class="docutils literal notranslate"><span class="pre">other</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.markov_equivalent.html#causaldag.classes.dag.DAG.markov_equivalent" title="causaldag.classes.dag.DAG.markov_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.markov_equivalent</span></code></a>(other[, interventions])</p></td>
-<td><p>Check if this DAG is (interventionally) Markov equivalent to the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.markov_equivalent.html#causaldag.classes.dag.DAG.markov_equivalent" title="causaldag.classes.dag.DAG.markov_equivalent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.markov_equivalent</span></code></a>(other[,&nbsp;interventions])</td>
+<td>Check if this DAG is (interventionally) Markov equivalent to the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_imap.html#causaldag.classes.dag.DAG.is_imap" title="causaldag.classes.dag.DAG.is_imap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_imap</span></code></a>(other)</p></td>
-<td><p>Check if this DAG is an IMAP of the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>, i.e., all d-separation statements in this graph are also d-separation statements in <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_imap.html#causaldag.classes.dag.DAG.is_imap" title="causaldag.classes.dag.DAG.is_imap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_imap</span></code></a>(other)</td>
+<td>Check if this DAG is an IMAP of the DAG <code class="docutils literal notranslate"><span class="pre">other</span></code>, i.e., all d-separation statements in this graph are also d-separation statements in <code class="docutils literal notranslate"><span class="pre">other</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_minimal_imap.html#causaldag.classes.dag.DAG.is_minimal_imap" title="causaldag.classes.dag.DAG.is_minimal_imap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_minimal_imap</span></code></a>(other[, certify, check_imap])</p></td>
-<td><p>Check if this DAG is a minimal IMAP of <cite>other</cite>, i.e., it is an IMAP and no proper subgraph of this DAG is an IMAP of other.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_minimal_imap.html#causaldag.classes.dag.DAG.is_minimal_imap" title="causaldag.classes.dag.DAG.is_minimal_imap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_minimal_imap</span></code></a>(other[,&nbsp;certify,&nbsp;check_imap])</td>
+<td>Check if this DAG is a minimal IMAP of <cite>other</cite>, i.e., it is an IMAP and no proper subgraph of this DAG is an IMAP of other.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.chickering_distance.html#causaldag.classes.dag.DAG.chickering_distance" title="causaldag.classes.dag.DAG.chickering_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.chickering_distance</span></code></a>(other)</p></td>
-<td><p>TODO</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.chickering_distance.html#causaldag.classes.dag.DAG.chickering_distance" title="causaldag.classes.dag.DAG.chickering_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.chickering_distance</span></code></a>(other)</td>
+<td>TODO</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.confusion_matrix.html#causaldag.classes.dag.DAG.confusion_matrix" title="causaldag.classes.dag.DAG.confusion_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.confusion_matrix</span></code></a>(other[, rates_only])</p></td>
-<td><p>TODO</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.confusion_matrix.html#causaldag.classes.dag.DAG.confusion_matrix" title="causaldag.classes.dag.DAG.confusion_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.confusion_matrix</span></code></a>(other[,&nbsp;rates_only])</td>
+<td>TODO</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.confusion_matrix_skeleton.html#causaldag.classes.dag.DAG.confusion_matrix_skeleton" title="causaldag.classes.dag.DAG.confusion_matrix_skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.confusion_matrix_skeleton</span></code></a>(other)</p></td>
-<td><p>TODO</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.confusion_matrix_skeleton.html#causaldag.classes.dag.DAG.confusion_matrix_skeleton" title="causaldag.classes.dag.DAG.confusion_matrix_skeleton"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.confusion_matrix_skeleton</span></code></a>(other)</td>
+<td>TODO</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="separation-statements">
 <h2>Separation statements<a class="headerlink" href="#separation-statements" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.dsep.html#causaldag.classes.dag.DAG.dsep" title="causaldag.classes.dag.DAG.dsep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.dsep</span></code></a>(A, B[, C, verbose, certify])</p></td>
-<td><p>Check if <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are d-separated given <code class="docutils literal notranslate"><span class="pre">C</span></code>, using the Bayes ball algorithm.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.dsep.html#causaldag.classes.dag.DAG.dsep" title="causaldag.classes.dag.DAG.dsep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.dsep</span></code></a>(A,&nbsp;Hashable],&nbsp;B,&nbsp;Hashable],&nbsp;C,&nbsp;…)</td>
+<td>Check if <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are d-separated given <code class="docutils literal notranslate"><span class="pre">C</span></code>, using the Bayes ball algorithm.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.dsep_from_given.html#causaldag.classes.dag.DAG.dsep_from_given" title="causaldag.classes.dag.DAG.dsep_from_given"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.dsep_from_given</span></code></a>(A[, C])</p></td>
-<td><p>Find all nodes d-separated from <code class="docutils literal notranslate"><span class="pre">A</span></code> given <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.dsep_from_given.html#causaldag.classes.dag.DAG.dsep_from_given" title="causaldag.classes.dag.DAG.dsep_from_given"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.dsep_from_given</span></code></a>(A[,&nbsp;C])</td>
+<td>Find all nodes d-separated from <code class="docutils literal notranslate"><span class="pre">A</span></code> given <code class="docutils literal notranslate"><span class="pre">C</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_invariant.html#causaldag.classes.dag.DAG.is_invariant" title="causaldag.classes.dag.DAG.is_invariant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_invariant</span></code></a>(A, intervened_nodes[, …])</p></td>
-<td><p>Check if the distribution of <code class="docutils literal notranslate"><span class="pre">A</span></code> given cond_set is invariant to an intervention on intervened_nodes.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.is_invariant.html#causaldag.classes.dag.DAG.is_invariant" title="causaldag.classes.dag.DAG.is_invariant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.is_invariant</span></code></a>(A,&nbsp;intervened_nodes[,&nbsp;…])</td>
+<td>Check if the distribution of <code class="docutils literal notranslate"><span class="pre">A</span></code> given cond_set is invariant to an intervention on intervened_nodes.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.local_markov_statements.html#causaldag.classes.dag.DAG.local_markov_statements" title="causaldag.classes.dag.DAG.local_markov_statements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.local_markov_statements</span></code></a>()</p></td>
-<td><p>Return the local Markov statements of this DAG, i.e., those of the form <code class="docutils literal notranslate"><span class="pre">i</span></code> independent nondescendants(i) given the parents of <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.local_markov_statements.html#causaldag.classes.dag.DAG.local_markov_statements" title="causaldag.classes.dag.DAG.local_markov_statements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.local_markov_statements</span></code></a>()</td>
+<td>Return the local Markov statements of this DAG, i.e., those of the form <code class="docutils literal notranslate"><span class="pre">i</span></code> independent nondescendants(i) given the parents of <code class="docutils literal notranslate"><span class="pre">i</span></code>.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="conversion-to-other-formats">
 <h2>Conversion to other formats<a class="headerlink" href="#conversion-to-other-formats" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_amat.html#causaldag.classes.dag.DAG.from_amat" title="causaldag.classes.dag.DAG.from_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_amat</span></code></a>(amat)</p></td>
-<td><p>Return a DAG with arcs given by <code class="docutils literal notranslate"><span class="pre">amat</span></code>, i.e. i-&gt;j if <code class="docutils literal notranslate"><span class="pre">amat[i,j]</span> <span class="pre">!=</span> <span class="pre">0</span></code>.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_amat.html#causaldag.classes.dag.DAG.from_amat" title="causaldag.classes.dag.DAG.from_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_amat</span></code></a>(amat)</td>
+<td>Return a DAG with arcs given by <code class="docutils literal notranslate"><span class="pre">amat</span></code>, i.e.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_amat.html#causaldag.classes.dag.DAG.to_amat" title="causaldag.classes.dag.DAG.to_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_amat</span></code></a>([node_list])</p></td>
-<td><p>Return an adjacency matrix for this DAG.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_amat.html#causaldag.classes.dag.DAG.to_amat" title="causaldag.classes.dag.DAG.to_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_amat</span></code></a>([node_list])</td>
+<td>Return an adjacency matrix for this DAG.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_nx.html#causaldag.classes.dag.DAG.from_nx" title="causaldag.classes.dag.DAG.from_nx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_nx</span></code></a>(nx_graph)</p></td>
-<td><p>Convert a networkx DiGraph into a DAG.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_nx.html#causaldag.classes.dag.DAG.from_nx" title="causaldag.classes.dag.DAG.from_nx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_nx</span></code></a>(nx_graph)</td>
+<td>Convert a networkx DiGraph into a DAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_nx.html#causaldag.classes.dag.DAG.to_nx" title="causaldag.classes.dag.DAG.to_nx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_nx</span></code></a>()</p></td>
-<td><p>Convert DAG to a networkx DiGraph.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_nx.html#causaldag.classes.dag.DAG.to_nx" title="causaldag.classes.dag.DAG.to_nx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_nx</span></code></a>()</td>
+<td>Convert DAG to a networkx DiGraph.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_dataframe.html#causaldag.classes.dag.DAG.from_dataframe" title="causaldag.classes.dag.DAG.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_dataframe</span></code></a>(df)</p></td>
-<td><p>TODO</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.from_dataframe.html#causaldag.classes.dag.DAG.from_dataframe" title="causaldag.classes.dag.DAG.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.from_dataframe</span></code></a>(df)</td>
+<td>Create a DAG from a dataframe, where the indices and columns are node names and a nonzero entry indicates the presence of an edge.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_dataframe.html#causaldag.classes.dag.DAG.to_dataframe" title="causaldag.classes.dag.DAG.to_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_dataframe</span></code></a>([node_list])</p></td>
-<td><p>TODO</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.to_dataframe.html#causaldag.classes.dag.DAG.to_dataframe" title="causaldag.classes.dag.DAG.to_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.to_dataframe</span></code></a>([node_list])</td>
+<td>Turn this DAG into a dataframe, where the indices and columns are node names and a nonzero entry indicates the presence of an edge.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="conversion-to-other-graphs">
 <h2>Conversion to other graphs<a class="headerlink" href="#conversion-to-other-graphs" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.moral_graph.html#causaldag.classes.dag.DAG.moral_graph" title="causaldag.classes.dag.DAG.moral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.moral_graph</span></code></a>()</p></td>
-<td><p>Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.moral_graph.html#causaldag.classes.dag.DAG.moral_graph" title="causaldag.classes.dag.DAG.moral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.moral_graph</span></code></a>()</td>
+<td>Return the (undirected) moral graph of this DAG, i.e., the graph with the parents of all nodes made adjacent.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.marginal_mag.html#causaldag.classes.dag.DAG.marginal_mag" title="causaldag.classes.dag.DAG.marginal_mag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.marginal_mag</span></code></a>(latent_nodes[, relabel, new])</p></td>
-<td><p>Return the maximal ancestral graph (MAG) that results from marginalizing out <code class="docutils literal notranslate"><span class="pre">latent_nodes</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.marginal_mag.html#causaldag.classes.dag.DAG.marginal_mag" title="causaldag.classes.dag.DAG.marginal_mag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.marginal_mag</span></code></a>(latent_nodes[,&nbsp;relabel,&nbsp;new])</td>
+<td>Return the maximal ancestral graph (MAG) that results from marginalizing out <code class="docutils literal notranslate"><span class="pre">latent_nodes</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.cpdag.html#causaldag.classes.dag.DAG.cpdag" title="causaldag.classes.dag.DAG.cpdag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.cpdag</span></code></a>()</p></td>
-<td><p>Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the Markov equivalence class of this DAG.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.cpdag.html#causaldag.classes.dag.DAG.cpdag" title="causaldag.classes.dag.DAG.cpdag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.cpdag</span></code></a>()</td>
+<td>Return the completed partially directed acyclic graph (CPDAG, aka essential graph) that represents the Markov equivalence class of this DAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.interventional_cpdag.html#causaldag.classes.dag.DAG.interventional_cpdag" title="causaldag.classes.dag.DAG.interventional_cpdag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.interventional_cpdag</span></code></a>(interventions[, cpdag])</p></td>
-<td><p>Return the interventional essential graph (aka CPDAG) associated with this DAG.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.interventional_cpdag.html#causaldag.classes.dag.DAG.interventional_cpdag" title="causaldag.classes.dag.DAG.interventional_cpdag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.interventional_cpdag</span></code></a>(interventions[,&nbsp;cpdag])</td>
+<td>Return the interventional essential graph (aka CPDAG) associated with this DAG.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="chickering-sequences">
 <h2>Chickering Sequences<a class="headerlink" href="#chickering-sequences" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.resolved_sinks.html#causaldag.classes.dag.DAG.resolved_sinks" title="causaldag.classes.dag.DAG.resolved_sinks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.resolved_sinks</span></code></a>(other)</p></td>
-<td><p>TODO</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.resolved_sinks.html#causaldag.classes.dag.DAG.resolved_sinks" title="causaldag.classes.dag.DAG.resolved_sinks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.resolved_sinks</span></code></a>(other)</td>
+<td>TODO</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.chickering_sequence.html#causaldag.classes.dag.DAG.chickering_sequence" title="causaldag.classes.dag.DAG.chickering_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.chickering_sequence</span></code></a>(imap[, verbose])</p></td>
-<td><p>Return a <em>Chickering sequence</em> from this DAG to an I-MAP <code class="docutils literal notranslate"><span class="pre">imap</span></code>.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.chickering_sequence.html#causaldag.classes.dag.DAG.chickering_sequence" title="causaldag.classes.dag.DAG.chickering_sequence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.chickering_sequence</span></code></a>(imap[,&nbsp;verbose])</td>
+<td>Return a <em>Chickering sequence</em> from this DAG to an I-MAP <code class="docutils literal notranslate"><span class="pre">imap</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.apply_edge_operation.html#causaldag.classes.dag.DAG.apply_edge_operation" title="causaldag.classes.dag.DAG.apply_edge_operation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.apply_edge_operation</span></code></a>(imap[, seed_sink, …])</p></td>
-<td><p>TODO</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.apply_edge_operation.html#causaldag.classes.dag.DAG.apply_edge_operation" title="causaldag.classes.dag.DAG.apply_edge_operation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.apply_edge_operation</span></code></a>(imap[,&nbsp;seed_sink,&nbsp;…])</td>
+<td>TODO</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="directed-clique-trees">
 <h2>Directed Clique Trees<a class="headerlink" href="#directed-clique-trees" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.directed_clique_tree.html#causaldag.classes.dag.DAG.directed_clique_tree" title="causaldag.classes.dag.DAG.directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.directed_clique_tree</span></code></a>([verbose])</p></td>
-<td><p>TODO</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.directed_clique_tree.html#causaldag.classes.dag.DAG.directed_clique_tree" title="causaldag.classes.dag.DAG.directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.directed_clique_tree</span></code></a>([verbose])</td>
+<td>TODO</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.simplified_directed_clique_tree.html#causaldag.classes.dag.DAG.simplified_directed_clique_tree" title="causaldag.classes.dag.DAG.simplified_directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.simplified_directed_clique_tree</span></code></a>()</p></td>
-<td><p>TODO</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.simplified_directed_clique_tree.html#causaldag.classes.dag.DAG.simplified_directed_clique_tree" title="causaldag.classes.dag.DAG.simplified_directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.simplified_directed_clique_tree</span></code></a>()</td>
+<td>TODO</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.residuals.html#causaldag.classes.dag.DAG.residuals" title="causaldag.classes.dag.DAG.residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.residuals</span></code></a>()</p></td>
-<td><p>TODO</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.residuals.html#causaldag.classes.dag.DAG.residuals" title="causaldag.classes.dag.DAG.residuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.residuals</span></code></a>()</td>
+<td>TODO</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.residual_essential_graph.html#causaldag.classes.dag.DAG.residual_essential_graph" title="causaldag.classes.dag.DAG.residual_essential_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.residual_essential_graph</span></code></a>()</p></td>
-<td><p>TODO</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.residual_essential_graph.html#causaldag.classes.dag.DAG.residual_essential_graph" title="causaldag.classes.dag.DAG.residual_essential_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.residual_essential_graph</span></code></a>()</td>
+<td>TODO</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="intervention-design">
 <h2>Intervention Design<a class="headerlink" href="#intervention-design" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.optimal_fully_orienting_interventions</span></code></a>([…])</p></td>
-<td><p>Find the smallest set of interventions which fully orients the CPDAG into this DAG.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.optimal_fully_orienting_interventions</span></code></a>([…])</td>
+<td>Find the smallest set of interventions which fully orients the CPDAG into this DAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html#causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_single_node_intervention</span></code></a>([…])</p></td>
-<td><p>Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy strategy.</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html#causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_single_node_intervention</span></code></a>([…])</td>
+<td>Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy strategy.</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_fully_orienting_interventions</span></code></a>([cpdag])</p></td>
-<td><p>Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the interventions.</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_fully_orienting_interventions</span></code></a>([cpdag])</td>
+<td>Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the interventions.</td>
 </tr>
 </tbody>
 </table>
@@ -598,37 +604,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="generated/causaldag.classes.dag.DAG.copy.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.copy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html" class="btn btn-neutral float-left" title="causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="generated/causaldag.classes.dag.DAG.copy.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.copy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of.html" class="btn btn-neutral float-left" title="causaldag.classes.ancestral_graph.AncestralGraph.neighbors_of" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

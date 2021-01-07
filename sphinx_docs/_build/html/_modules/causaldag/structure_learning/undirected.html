@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.structure_learning.undirected &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -149,10 +155,10 @@
             
   <h1>Source code for causaldag.structure_learning.undirected</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes</span> <span class="kn">import</span> <span class="n">UndirectedGraph</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="kn">import</span> <span class="n">CI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">log1p</span><span class="p">,</span> <span class="n">ndenumerate</span><span class="p">,</span> <span class="n">errstate</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">,</span> <span class="n">fill_diagonal</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">erf</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes</span> <span class="k">import</span> <span class="n">UndirectedGraph</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="k">import</span> <span class="n">CI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">log1p</span><span class="p">,</span> <span class="n">ndenumerate</span><span class="p">,</span> <span class="n">errstate</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">,</span> <span class="n">fill_diagonal</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">erf</span>
 
 
 <div class="viewcode-block" id="threshold_ug"><a class="viewcode-back" href="../../../structure_learning/generated/causaldag.structure_learning.threshold_ug.html#causaldag.structure_learning.threshold_ug">[docs]</a><span class="k">def</span> <span class="nf">threshold_ug</span><span class="p">(</span><span class="n">nodes</span><span class="p">:</span> <span class="nb">set</span><span class="p">,</span> <span class="n">ci_tester</span><span class="p">:</span> <span class="n">CI_Tester</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UndirectedGraph</span><span class="p">:</span>
@@ -226,28 +232,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

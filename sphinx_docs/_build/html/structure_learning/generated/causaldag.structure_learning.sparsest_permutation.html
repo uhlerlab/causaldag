@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.structure_learning.sparsest_permutation &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -50,7 +54,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -136,6 +140,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -149,7 +155,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/structure_learning/generated/causaldag.structure_learning.sparsest_permutation.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -165,21 +171,25 @@
             
   <div class="section" id="causaldag-structure-learning-sparsest-permutation">
 <h1>causaldag.structure_learning.sparsest_permutation<a class="headerlink" href="#causaldag-structure-learning-sparsest-permutation" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
+<dl class="function">
 <dt id="causaldag.structure_learning.sparsest_permutation">
-<code class="sig-prename descclassname">causaldag.structure_learning.</code><code class="sig-name descname">sparsest_permutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span></em>, <em class="sig-param"><span class="n">ci_tester</span></em>, <em class="sig-param"><span class="n">progress</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/structure_learning/dag/gsp.html#sparsest_permutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.structure_learning.sparsest_permutation" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">causaldag.structure_learning.</code><code class="descname">sparsest_permutation</code><span class="sig-paren">(</span><em>nodes</em>, <em>ci_tester</em>, <em>progress=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/structure_learning/dag/gsp.html#sparsest_permutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.structure_learning.sparsest_permutation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the Markov equivalence class of a DAG using the Sparsest Permutations (SP) algorithm.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>nodes</strong> – list of nodes.</p></li>
-<li><p><strong>ci_tester</strong> – object for testing conditional independence.</p></li>
-<li><p><strong>progress</strong> – if True, show a progress bar over the enumeration of permutations.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nodes</strong> – list of nodes.</li>
+<li><strong>ci_tester</strong> – object for testing conditional independence.</li>
+<li><strong>progress</strong> – if True, show a progress bar over the enumeration of permutations.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="kn">import</span> <span class="n">MemoizedCI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span><span class="p">,</span> <span class="n">partial_correlation_suffstat</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="k">import</span> <span class="n">MemoizedCI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span><span class="p">,</span> <span class="n">partial_correlation_suffstat</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">random</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -207,37 +217,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="causaldag.structure_learning.gsp.html" class="btn btn-neutral float-right" title="causaldag.structure_learning.gsp" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="causaldag.structure_learning.permutation2dag.html" class="btn btn-neutral float-left" title="causaldag.structure_learning.permutation2dag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="causaldag.structure_learning.gsp.html" class="btn btn-neutral float-right" title="causaldag.structure_learning.gsp" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="causaldag.structure_learning.permutation2dag.html" class="btn btn-neutral float-left" title="causaldag.structure_learning.permutation2dag" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

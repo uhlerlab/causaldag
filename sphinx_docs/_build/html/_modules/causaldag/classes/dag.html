@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.classes.dag &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -152,23 +158,23 @@
 <span class="sd">&quot;&quot;&quot;Base class for causal DAGs</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="k">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">operator</span> <span class="k">as</span> <span class="nn">op</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="k">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">List</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">UnionFind</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">UnionFind</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">ipdb</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">comb</span>
 
 
 <span class="k">class</span> <span class="nc">CycleError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cycle</span> <span class="o">=</span> <span class="n">cycle</span>
         <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Adding arc(s) causes the cycle &#39;</span> <span class="o">+</span> <span class="n">path2str</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
@@ -182,7 +188,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for causal DAGs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span> <span class="n">dag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">_arcs</span><span class="p">)</span>
@@ -204,12 +210,12 @@
             <span class="c1"># print(&#39;before call to add arcs from&#39;)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_arcs_from</span><span class="p">(</span><span class="n">arcs</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DAG</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
         <span class="n">substrings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
@@ -220,7 +226,7 @@
                 <span class="n">substrings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="p">)</span>
         <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">substrings</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DAG.copy"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.copy.html#causaldag.classes.dag.DAG.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -270,8 +276,9 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(1, 2), (2, 3), (1, 4)})</span>
-<span class="sd">        &gt;&gt;&gt; d.induced_subgraph({1, 2, 3})</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; d_induced = d.induced_subgraph({1, 2, 3})</span>
+<span class="sd">        &gt;&gt;&gt; d_induced.arcs</span>
+<span class="sd">        {(1, 2), (2, 3)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DAG</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">})</span></div>
 
@@ -294,23 +301,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO: change name to dict?</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_neighbors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO: change name to dict?</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Node</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Node</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO: change name to dict?</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">defdict2dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1305,11 +1303,25 @@
 <span class="sd">        other:</span>
 <span class="sd">            Another DAG.</span>
 <span class="sd">        interventions:</span>
-<span class="sd">            TODO</span>
+<span class="sd">            If not None, check whether the two DAGs are interventionally Markov equivalent under the interventions.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d1 = cd.DAG(arcs={(0, 1), (1, 2)})</span>
+<span class="sd">        &gt;&gt;&gt; d2 = cd.DAG(arcs={(2, 1), (1, 0)})</span>
+<span class="sd">        &gt;&gt;&gt; d3 = cd.DAG(arcs={(0, 1), (2, 1)})</span>
+<span class="sd">        &gt;&gt;&gt; d4 = cd.DAG(arcs={(1, 0), (1, 2)})</span>
+<span class="sd">        &gt;&gt;&gt; d1.markov_equivalent(d2)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; d2.markov_equivalent(d1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; d1.markov_equivalent(d3)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; d1.markov_equivalent(d2, [{2}])</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; d1.markov_equivalent(d4, [{2}])</span>
+<span class="sd">        True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">interventions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
@@ -1408,7 +1420,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
 
-        <span class="kn">from</span> <span class="nn">causaldag.classes.pdag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag.classes.pdag</span> <span class="k">import</span> <span class="n">PDAG</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PDAG</span><span class="p">):</span>
             <span class="n">other_cpdag</span> <span class="o">=</span> <span class="n">other</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1648,7 +1660,17 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        DAG:</span>
-<span class="sd">            TODO.</span>
+<span class="sd">            The graph as a DAG object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">        &gt;&gt;&gt; g = nx.DiGraph()</span>
+<span class="sd">        &gt;&gt;&gt; g.add_edges_from([(0, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG.from_nx(g)</span>
+<span class="sd">        &gt;&gt;&gt; d.arcs</span>
+<span class="sd">        {(0, 1)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx_graph</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must be a DiGraph&quot;</span><span class="p">)</span>
@@ -1661,7 +1683,15 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        networkx.DiGraph:</span>
-<span class="sd">            TODO</span>
+<span class="sd">            The graph as a networkx.DiGraph object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(0, 1)})</span>
+<span class="sd">        &gt;&gt;&gt; g = d.to_nx()</span>
+<span class="sd">        &gt;&gt;&gt; g.edges</span>
+<span class="sd">        OutEdgeView([(0, 1)])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
         <span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
@@ -1672,7 +1702,29 @@
 <div class="viewcode-block" id="DAG.from_dataframe"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.from_dataframe.html#causaldag.classes.dag.DAG.from_dataframe">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dataframe</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Create a DAG from a dataframe, where the indices and columns are node names and a nonzero entry indicates</span>
+<span class="sd">        the presence of an edge.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df:</span>
+<span class="sd">            The pandas dataframe.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DAG:</span>
+<span class="sd">            The graph as a DAG object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; amat = np.array([[0, 1], [0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; df = pd.DataFrame(amat, index=[&quot;a&quot;, &quot;b&quot;], columns=[&quot;a&quot;, &quot;b&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG.from_dataframe(df)</span>
+<span class="sd">        &gt;&gt;&gt; d.arcs</span>
+<span class="sd">        {(&#39;a&#39;, &#39;b&#39;)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
@@ -1684,7 +1736,31 @@
 
 <div class="viewcode-block" id="DAG.to_dataframe"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.to_dataframe.html#causaldag.classes.dag.DAG.to_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Turn this DAG into a dataframe, where the indices and columns are node names and a nonzero entry indicates</span>
+<span class="sd">        the presence of an edge.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node_list:</span>
+<span class="sd">            Order to use when creating the dataframe. If None, uses a sorted order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame:</span>
+<span class="sd">            The graph as a DataFrame.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(0, 1)})</span>
+<span class="sd">        &gt;&gt;&gt; d.to_dataframe()</span>
+<span class="sd">           0  1</span>
+<span class="sd">        0  0  1</span>
+<span class="sd">        1  0  0</span>
+<span class="sd">        &gt;&gt;&gt; d.to_dataframe(node_list=[1, 0])</span>
+<span class="sd">           1  0</span>
+<span class="sd">        1  0  0</span>
+<span class="sd">        0  1  0</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
@@ -1697,7 +1773,7 @@
         <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">:</span>
             <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">target</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+        <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
         <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">node_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_list</span><span class="p">)</span></div>
 
     <span class="c1"># === SCIPY CONVERSION</span>
@@ -1951,7 +2027,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">UndirectedGraph</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">UndirectedGraph</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span> <span class="o">|</span> <span class="p">{(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span> <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vstructures</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">UndirectedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span></div>
 
@@ -1972,7 +2048,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
-        <span class="kn">from</span> <span class="nn">.ancestral_graph</span> <span class="kn">import</span> <span class="n">AncestralGraph</span>
+        <span class="kn">from</span> <span class="nn">.ancestral_graph</span> <span class="k">import</span> <span class="n">AncestralGraph</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">new</span><span class="p">:</span>
             <span class="n">latent_nodes</span> <span class="o">=</span> <span class="n">core_utils</span><span class="o">.</span><span class="n">to_set</span><span class="p">(</span><span class="n">latent_nodes</span><span class="p">)</span>
@@ -2067,13 +2143,13 @@
 <span class="sd">        &gt;&gt;&gt; g.cpdag()</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
         <span class="n">pdag</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span><span class="p">,</span> <span class="n">known_arcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arcs_in_vstructures</span><span class="p">())</span>
         <span class="n">pdag</span><span class="o">.</span><span class="n">remove_unprotected_orientations</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">pdag</span></div>
 
     <span class="k">def</span> <span class="nf">cpdag_new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
         <span class="n">vstruct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arcs_in_vstructures</span><span class="p">()</span>
         <span class="n">pdag</span> <span class="o">=</span> <span class="n">PDAG</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">,</span> <span class="n">arcs</span><span class="o">=</span><span class="n">vstruct</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">-</span> <span class="n">vstruct</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
@@ -2090,7 +2166,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
 
         <span class="k">if</span> <span class="n">cpdag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Need the CPDAG&#39;</span><span class="p">)</span>
@@ -2137,6 +2213,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a *Chickering sequence* from this DAG to an I-MAP ``imap``.</span>
 
+<span class="sd">        TODO: add reference</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        imap</span>
@@ -2177,13 +2255,13 @@
         <span class="c1"># STEP 3: PICK A SINK IN THE IMAP</span>
         <span class="n">imap_sinks</span> <span class="o">=</span> <span class="n">imap_subgraph</span><span class="o">.</span><span class="n">sinks</span><span class="p">()</span>
         <span class="n">sink</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">imap_sinks</span><span class="p">))</span> <span class="k">if</span> <span class="n">seed_sink</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">seed_sink</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">imap_sinks</span> <span class="k">else</span> <span class="n">seed_sink</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 3: Picked </span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 3: Picked </span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># STEP 4: ADD A PARENT IF Y IS A SINK IN G</span>
         <span class="k">if</span> <span class="n">sink</span> <span class="ow">in</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">sinks</span><span class="p">():</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">imap_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]))</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 4: Added </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 4: Added </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">4</span>
 
         <span class="c1"># STEP 5: PICK A SPECIFIC CHILD OF Y IN G</span>
@@ -2191,29 +2269,29 @@
         <span class="n">valid_children</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">upstream_most</span><span class="p">(</span><span class="n">self_subgraph</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">sink</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span>
                     <span class="n">self_subgraph</span><span class="o">.</span><span class="n">ancestors_of</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">d</span><span class="p">})</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">valid_children</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 5: Picked z=</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 5: Picked z=</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># STEP 6</span>
         <span class="k">if</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">is_reversible</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">reverse_arc</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 6: Reversing </span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 6: Reversing </span><span class="si">{sink}</span><span class="s2">-&gt;</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">6</span>
 
         <span class="c1"># STEP 7</span>
         <span class="n">par_z</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">sink</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">par_z</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">par_z</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 7: Picked x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 7: Picked x=</span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 7: Adding </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">sink</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 7: Adding </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{sink}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">7</span>
 
         <span class="c1"># STEP 8</span>
         <span class="n">par_sink</span> <span class="o">=</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span> <span class="o">-</span> <span class="n">self_subgraph</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">par_sink</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 8: Picked x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 8: Picked x=</span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">new_graph</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Step 8: Adding </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Step 8: Adding </span><span class="si">{x}</span><span class="s2">-&gt;</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_graph</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="mi">8</span></div>
 
     <span class="c1"># === DIRECTED CLIQUE TREES</span>
@@ -2230,7 +2308,7 @@
         <span class="n">subtrees</span> <span class="o">=</span> <span class="n">UnionFind</span><span class="p">()</span>
         <span class="n">bidirected_components</span> <span class="o">=</span> <span class="n">UnionFind</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="n">e</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Considering edge </span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Considering edge </span><span class="si">{c1}</span><span class="s2">-</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">subtrees</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">subtrees</span><span class="p">[</span><span class="n">c2</span><span class="p">]:</span>
                 <span class="n">shared</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">&amp;</span> <span class="n">c2</span>
                 <span class="n">all_into_c1</span> <span class="o">=</span> <span class="nb">all</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">c1</span> <span class="o">-</span> <span class="n">shared</span><span class="p">))</span>
@@ -2243,7 +2321,7 @@
                     <span class="n">b1_source</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">b1</span><span class="p">)</span>
                     <span class="n">b2_source</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ct</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">b2</span><span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">b1_source</span> <span class="ow">and</span> <span class="n">b2_source</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding edge </span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">&lt;-&gt;</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Adding edge </span><span class="si">{c1}</span><span class="s2">&lt;-&gt;</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">subtrees</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">bidirected_components</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">ct</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
@@ -2260,7 +2338,7 @@
                         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bidirected_component</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">has_source</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">c1</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">c2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{c1}</span><span class="s2">-&gt;</span><span class="si">{c2}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">ct</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
                         <span class="n">subtrees</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
 
@@ -2314,7 +2392,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">PDAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
 
         <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
         <span class="n">sdct_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
@@ -2353,9 +2431,9 @@
             <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">top_sort</span><span class="p">:</span>
                 <span class="n">parent</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">component</span><span class="p">))</span>
                 <span class="n">parent_nodes</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">set</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orienting component </span><span class="si">{</span><span class="n">component</span><span class="si">}</span><span class="s2">, parent=</span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;orienting component </span><span class="si">{component}</span><span class="s2">, parent=</span><span class="si">{parent}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">component_intervened_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verification_optimal_helper</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">parent_nodes</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;intervened: </span><span class="si">{</span><span class="n">component_intervened_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;intervened: </span><span class="si">{component_intervened_nodes}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">component_intervened_nodes</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">intervened_nodes</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2449,7 +2527,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;component is clique&#39;</span><span class="p">)</span>
             <span class="n">residual</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">parent_component</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;residual: </span><span class="si">{</span><span class="n">residual</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;residual: </span><span class="si">{residual}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">sorted_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">()</span>
             <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">sorted_nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2462,7 +2540,7 @@
             <span class="c1"># if max_intersection != frozenset.union(*intersections):</span>
             <span class="c1">#     raise RuntimeError</span>
             <span class="n">sorted_common_head</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sorted_nodes</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">common_head</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;component contains multiple cliques, common head = </span><span class="si">{</span><span class="n">sorted_common_head</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;component contains multiple cliques, common head = </span><span class="si">{sorted_common_head}</span><span class="s1">&#39;</span><span class="p">)</span>
 
             <span class="c1"># determine heads and tails</span>
             <span class="n">heads</span> <span class="o">=</span> <span class="p">[</span><span class="n">clique</span> <span class="o">&amp;</span> <span class="n">common_head</span> <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">component</span><span class="p">]</span>
@@ -2473,7 +2551,7 @@
             <span class="c1"># add nodes from tails</span>
             <span class="n">intervened_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_heads</span><span class="p">,</span> <span class="n">sorted_tails</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tail=</span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">, head=</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;tail=</span><span class="si">{tail}</span><span class="s2">, head=</span><span class="si">{head}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">intervened_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">head</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -2528,28 +2606,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

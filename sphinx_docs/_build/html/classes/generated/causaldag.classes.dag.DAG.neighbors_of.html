@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.classes.dag.DAG.neighbors_of &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -50,7 +54,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -159,6 +163,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -174,7 +180,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.neighbors_of.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -190,21 +196,24 @@
             
   <div class="section" id="causaldag-classes-dag-dag-neighbors-of">
 <h1>causaldag.classes.dag.DAG.neighbors_of<a class="headerlink" href="#causaldag-classes-dag-dag-neighbors-of" title="Permalink to this headline">¶</a></h1>
-<dl class="py method">
+<dl class="method">
 <dt id="causaldag.classes.dag.DAG.neighbors_of">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">neighbors_of</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Hashable<span class="p">, </span>Set<span class="p">[</span>Hashable<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Set<span class="p">[</span>Hashable<span class="p">]</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.neighbors_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.neighbors_of" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">DAG.</code><code class="descname">neighbors_of</code><span class="sig-paren">(</span><em>nodes: Union[Hashable, Set[Hashable]]</em><span class="sig-paren">)</span> &#x2192; Set[Hashable]<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.neighbors_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.neighbors_of" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all nodes that are adjacent to the node or set of nodes <code class="docutils literal notranslate"><span class="pre">node</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nodes</strong> – A node or set of nodes.</p>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nodes</strong> – A node or set of nodes.</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of" title="causaldag.classes.dag.DAG.parents_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parents_of</span></code></a>, <a class="reference internal" href="causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of" title="causaldag.classes.dag.DAG.children_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">children_of</span></code></a>, <a class="reference internal" href="causaldag.classes.dag.DAG.markov_blanket_of.html#causaldag.classes.dag.DAG.markov_blanket_of" title="causaldag.classes.dag.DAG.markov_blanket_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">markov_blanket_of</span></code></a></p>
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="causaldag.classes.dag.DAG.parents_of.html#causaldag.classes.dag.DAG.parents_of" title="causaldag.classes.dag.DAG.parents_of"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parents_of()</span></code></a>, <a class="reference internal" href="causaldag.classes.dag.DAG.children_of.html#causaldag.classes.dag.DAG.children_of" title="causaldag.classes.dag.DAG.children_of"><code class="xref py py-meth docutils literal notranslate"><span class="pre">children_of()</span></code></a>, <a class="reference internal" href="causaldag.classes.dag.DAG.markov_blanket_of.html#causaldag.classes.dag.DAG.markov_blanket_of" title="causaldag.classes.dag.DAG.markov_blanket_of"><code class="xref py py-meth docutils literal notranslate"><span class="pre">markov_blanket_of()</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">neighbors_of</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="go">{1, 2}</span>
@@ -221,37 +230,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="causaldag.classes.dag.DAG.markov_blanket_of.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.markov_blanket_of" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="causaldag.classes.dag.DAG.children_of.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.children_of" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="causaldag.classes.dag.DAG.markov_blanket_of.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.markov_blanket_of" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="causaldag.classes.dag.DAG.children_of.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.children_of" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.classes.dag.DAG.add_nodes_from &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -50,7 +54,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -155,6 +159,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -170,7 +176,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../../_sources/classes/generated/causaldag.classes.dag.DAG.add_nodes_from.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -186,21 +192,24 @@
             
   <div class="section" id="causaldag-classes-dag-dag-add-nodes-from">
 <h1>causaldag.classes.dag.DAG.add_nodes_from<a class="headerlink" href="#causaldag-classes-dag-dag-add-nodes-from" title="Permalink to this headline">¶</a></h1>
-<dl class="py method">
+<dl class="method">
 <dt id="causaldag.classes.dag.DAG.add_nodes_from">
-<code class="sig-prename descclassname">DAG.</code><code class="sig-name descname">add_nodes_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">Iterable</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_nodes_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_nodes_from" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">DAG.</code><code class="descname">add_nodes_from</code><span class="sig-paren">(</span><em>nodes: Iterable[T_co]</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.add_nodes_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.add_nodes_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add nodes to the graph from the collection <code class="docutils literal notranslate"><span class="pre">nodes</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nodes</strong> – collection of nodes to be added.</p>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nodes</strong> – collection of nodes to be added.</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node" title="causaldag.classes.dag.DAG.add_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_node</span></code></a></p>
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="causaldag.classes.dag.DAG.add_node.html#causaldag.classes.dag.DAG.add_node" title="causaldag.classes.dag.DAG.add_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_node()</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">({</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
@@ -217,37 +226,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="causaldag.classes.dag.DAG.remove_node.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.remove_node" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="causaldag.classes.dag.DAG.add_node.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.add_node" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="causaldag.classes.dag.DAG.remove_node.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.remove_node" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="causaldag.classes.dag.DAG.add_node.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.add_node" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

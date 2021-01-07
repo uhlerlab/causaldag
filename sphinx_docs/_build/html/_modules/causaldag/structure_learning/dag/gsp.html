@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.structure_learning.dag.gsp &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -148,20 +154,20 @@
            <div itemprop="articleBody">
             
   <h1>Source code for causaldag.structure_learning.dag.gsp</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">DAG</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">DAG</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="kn">import</span> <span class="n">CI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">UndirectedEdge</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils.invariance_tests</span> <span class="kn">import</span> <span class="n">InvarianceTester</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils.core_utils</span> <span class="kn">import</span> <span class="n">powerset</span><span class="p">,</span> <span class="n">iszero</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="k">import</span> <span class="n">CI_Tester</span><span class="p">,</span> <span class="n">partial_correlation_test</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="k">import</span> <span class="n">UndirectedEdge</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils.invariance_tests</span> <span class="k">import</span> <span class="n">InvarianceTester</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils.core_utils</span> <span class="k">import</span> <span class="n">powerset</span><span class="p">,</span> <span class="n">iszero</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">causaldag.structure_learning.undirected</span> <span class="kn">import</span> <span class="n">threshold_ug</span><span class="p">,</span> <span class="n">partial_correlation_threshold</span>
-<span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">UndirectedGraph</span>
+<span class="kn">from</span> <span class="nn">causaldag.structure_learning.undirected</span> <span class="k">import</span> <span class="n">threshold_ug</span><span class="p">,</span> <span class="n">partial_correlation_threshold</span>
+<span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">UndirectedGraph</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">trange</span><span class="p">,</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils.core_utils</span> <span class="kn">import</span> <span class="n">powerset</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">trange</span><span class="p">,</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils.core_utils</span> <span class="k">import</span> <span class="n">powerset</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">factorial</span>
 
 
 <span class="k">def</span> <span class="nf">perm2dag_precision</span><span class="p">(</span><span class="n">perm</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=.</span><span class="mi">01</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -248,7 +254,7 @@
         <span class="n">is_ci</span> <span class="o">=</span> <span class="n">ci_tester</span><span class="o">.</span><span class="n">is_ci</span><span class="p">(</span><span class="n">pi_i</span><span class="p">,</span> <span class="n">pi_j</span><span class="p">,</span> <span class="n">mb</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ci</span><span class="p">:</span>
             <span class="n">d</span><span class="o">.</span><span class="n">add_arc</span><span class="p">(</span><span class="n">pi_i</span><span class="p">,</span> <span class="n">pi_j</span><span class="p">,</span> <span class="n">check_acyclic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pi_i</span><span class="si">}</span><span class="s2"> is independent of </span><span class="si">{</span><span class="n">pi_j</span><span class="si">}</span><span class="s2"> given </span><span class="si">{</span><span class="n">mb</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">is_ci</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{pi_i}</span><span class="s2"> is independent of </span><span class="si">{pi_j}</span><span class="s2"> given </span><span class="si">{mb}</span><span class="s2">: </span><span class="si">{is_ci}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">d</span></div>
 
@@ -595,7 +601,7 @@
 
         <span class="c1"># === FIND NEXT POSSIBLE MOVES</span>
         <span class="n">current_covered_arcs</span> <span class="o">=</span> <span class="n">current_dag</span><span class="o">.</span><span class="n">reversible_arcs</span><span class="p">()</span> <span class="o">-</span> <span class="n">fixed_orders</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current covered arcs: </span><span class="si">{</span><span class="n">current_covered_arcs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Current covered arcs: </span><span class="si">{current_covered_arcs}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">covered_arcs2removed_arcs</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">update_minimal_imap</span><span class="p">(</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ci_tester</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">current_covered_arcs</span>
@@ -842,9 +848,9 @@
             <span class="p">]</span>
 
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="n">desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">current_dag</span><span class="o">.</span><span class="n">arcs</span><span class="p">)</span><span class="si">}</span><span class="s1"> arcs&#39;</span>
-                <span class="n">desc</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;, I-covered: </span><span class="si">{</span><span class="n">current_icovered_arcs</span><span class="si">}</span><span class="s1">&#39;</span>
-                <span class="n">desc</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;, I-contradicting: </span><span class="si">{</span><span class="n">current_contradicting</span><span class="si">}</span><span class="s1">)&#39;</span>
+                <span class="n">desc</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;({len(current_dag.arcs)} arcs&#39;</span>
+                <span class="n">desc</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39;, I-covered: </span><span class="si">{current_icovered_arcs}</span><span class="s1">&#39;</span>
+                <span class="n">desc</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39;, I-contradicting: </span><span class="si">{current_contradicting}</span><span class="s1">)&#39;</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">trace</span><span class="p">),</span> <span class="n">current_dag</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">next_dags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span> <span class="o">!=</span> <span class="n">depth</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">lower_dags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lower_dags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># restart at a lower DAG</span>
@@ -852,14 +858,14 @@
                     <span class="n">trace</span> <span class="o">=</span> <span class="p">[]</span>
                     <span class="n">current_dag</span><span class="p">,</span> <span class="n">current_icovered_arcs</span><span class="p">,</span> <span class="n">current_contradicting</span> <span class="o">=</span> <span class="n">lower_dags</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
                     <span class="n">min_dag_run</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">current_contradicting</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FOUND DAG WITH </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">current_dag</span><span class="o">.</span><span class="n">arcs</span><span class="p">)</span><span class="si">}</span><span class="s2">) ARCS: </span><span class="si">{</span><span class="n">current_dag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;FOUND DAG WITH {len(current_dag.arcs)}) ARCS: </span><span class="si">{current_dag}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">current_icovered_arcs</span><span class="p">,</span> <span class="n">current_contradicting</span><span class="p">))</span>
                     <span class="n">current_dag</span><span class="p">,</span> <span class="n">current_icovered_arcs</span><span class="p">,</span> <span class="n">current_contradicting</span> <span class="o">=</span> <span class="n">next_dags</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_contradicting</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">min_dag_run</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
                         <span class="n">min_dag_run</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">current_contradicting</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FOUND DAG WITH </span><span class="si">{</span><span class="n">current_contradicting</span><span class="si">}</span><span class="s2"> CONTRADICTING ARCS: </span><span class="si">{</span><span class="n">current_dag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;FOUND DAG WITH </span><span class="si">{current_contradicting}</span><span class="s2"> CONTRADICTING ARCS: </span><span class="si">{current_dag}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">next_dags</span> <span class="o">=</span> <span class="p">[</span><span class="n">_reverse_arc</span><span class="p">(</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">current_icovered_arcs</span><span class="p">]</span>
                 <span class="n">next_dags</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">icovered_arcs</span><span class="p">,</span> <span class="n">contradicting_arcs</span><span class="p">)</span>
@@ -1081,7 +1087,7 @@
                     <span class="n">current_dag</span><span class="p">,</span> <span class="n">current_i_covered_arcs</span><span class="p">,</span> <span class="n">current_score</span><span class="p">,</span> <span class="n">current_intervention_targets</span> <span class="o">=</span> <span class="n">lower_dags</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
                         <span class="n">lowest_ix</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FOUND DAG WITH LOWER SCORE:&quot;</span><span class="p">,</span> <span class="n">current_dag</span><span class="p">,</span> <span class="s2">&quot;== SCORE:&quot;</span><span class="p">,</span> <span class="n">current_score</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current intervention targets: </span><span class="si">{</span><span class="n">current_intervention_targets</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Current intervention targets: </span><span class="si">{current_intervention_targets}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_dag</span><span class="p">,</span> <span class="n">current_i_covered_arcs</span><span class="p">,</span> <span class="n">next_dags</span><span class="p">,</span> <span class="n">current_intervention_targets</span><span class="p">))</span>
                     <span class="n">current_dag</span><span class="p">,</span> <span class="n">current_i_covered_arcs</span><span class="p">,</span> <span class="n">current_score</span><span class="p">,</span> <span class="n">current_intervention_targets</span> <span class="o">=</span> <span class="n">next_dags</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
@@ -1116,8 +1122,8 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
-    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests.ci_tester</span> <span class="kn">import</span> <span class="n">MemoizedCI_Tester</span>
-    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests.oracle</span> <span class="kn">import</span> <span class="n">dsep_test</span>
+    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests.ci_tester</span> <span class="k">import</span> <span class="n">MemoizedCI_Tester</span>
+    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests.oracle</span> <span class="k">import</span> <span class="n">dsep_test</span>
 
     <span class="n">p</span> <span class="o">=</span> <span class="mi">10</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">rand</span><span class="o">.</span><span class="n">directed_erdos</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">.</span><span class="mi">2</span><span class="p">)</span>
@@ -1131,28 +1137,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

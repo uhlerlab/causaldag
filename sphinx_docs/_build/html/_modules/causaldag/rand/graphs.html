@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.rand.graphs &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -149,15 +155,15 @@
             
   <h1>Source code for causaldag.rand.graphs</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">GaussDAG</span><span class="p">,</span> <span class="n">SampleDAG</span><span class="p">,</span> <span class="n">CamDAG</span>
+<span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">GaussDAG</span><span class="p">,</span> <span class="n">SampleDAG</span><span class="p">,</span> <span class="n">CamDAG</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
-<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">barabasi_albert_graph</span><span class="p">,</span> <span class="n">fast_gnp_random_graph</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="k">import</span> <span class="n">barabasi_albert_graph</span><span class="p">,</span> <span class="n">fast_gnp_random_graph</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">comb</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
 <span class="kn">import</span> <span class="nn">ipdb</span>
 
 <span class="c1"># class RandWeightFn(Protocol):</span>
@@ -428,7 +434,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">desired_r2</span> <span class="o">=</span> <span class="n">r2_dict</span><span class="p">[</span><span class="n">nparents</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`snr_dict` does not specify a desired R^2 for nodes with </span><span class="si">{</span><span class="n">nparents</span><span class="si">}</span><span class="s2"> parents&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;`snr_dict` does not specify a desired R^2 for nodes with </span><span class="si">{nparents}</span><span class="s2"> parents&quot;</span><span class="p">)</span>
             <span class="n">c_node</span> <span class="o">=</span> <span class="n">internal_variance</span> <span class="o">/</span> <span class="n">variance_from_parents</span> <span class="o">*</span> <span class="n">desired_r2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">desired_r2</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">c_node</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span>
@@ -531,11 +537,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify at least one of `prob_removed` or `num_removed`.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">num_altered</span> <span class="o">+</span> <span class="n">num_removed</span> <span class="o">&gt;</span> <span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Tried altering </span><span class="si">{</span><span class="n">num_altered</span><span class="si">}</span><span class="s2"> arcs and removing </span><span class="si">{</span><span class="n">num_removed</span><span class="si">}</span><span class="s2"> arcs, but there are only </span><span class="si">{</span><span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="si">}</span><span class="s2"> arcs in this DAG.&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="s2">&quot;Tried altering </span><span class="si">{num_altered}</span><span class="s2"> arcs and removing </span><span class="si">{num_removed}</span><span class="s2"> arcs, but there are only </span><span class="si">{gdag.num_arcs}</span><span class="s2"> arcs in this DAG.&quot;</span><span class="p">)</span>
     <span class="n">num_missing_arcs</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">nnodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span>
     <span class="k">if</span> <span class="n">num_added</span> <span class="o">&gt;</span> <span class="n">num_missing_arcs</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Tried adding </span><span class="si">{</span><span class="n">num_added</span><span class="si">}</span><span class="s2"> arcs but there are only </span><span class="si">{</span><span class="n">num_missing_arcs</span><span class="si">}</span><span class="s2"> arcs missing from the DAG.&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="s2">&quot;Tried adding </span><span class="si">{num_added}</span><span class="s2"> arcs but there are only </span><span class="si">{num_missing_arcs}</span><span class="s2"> arcs missing from the DAG.&quot;</span><span class="p">)</span>
 
     <span class="c1"># GET NUMBER ADDED/CHANGED/REMOVED</span>
     <span class="n">num_altered</span> <span class="o">=</span> <span class="n">num_altered</span> <span class="k">if</span> <span class="n">num_altered</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">gdag</span><span class="o">.</span><span class="n">num_arcs</span><span class="p">,</span> <span class="n">prob_altered</span><span class="p">)</span>
@@ -588,28 +594,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

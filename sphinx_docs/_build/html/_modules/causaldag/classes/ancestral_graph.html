@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.classes.ancestral_graph &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -148,17 +154,17 @@
            <div itemprop="articleBody">
             
   <h1>Source code for causaldag.classes.ancestral_graph</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="k">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">BidirectedEdge</span><span class="p">,</span> <span class="n">UndirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">causaldag.classes.custom_types</span> <span class="k">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">DirectedEdge</span><span class="p">,</span> <span class="n">BidirectedEdge</span><span class="p">,</span> <span class="n">UndirectedEdge</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">,</span> <span class="n">warn_untested</span>
 
 
 <span class="k">class</span> <span class="nc">CycleError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="c1"># def __init__(self, source, target):</span>
         <span class="c1">#     self.source = source</span>
@@ -168,7 +174,7 @@
 
 
 <span class="k">class</span> <span class="nc">SpouseError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="c1"># def __init__(self, ancestor, desc):</span>
         <span class="c1">#     self.ancestor = ancestor</span>
@@ -178,7 +184,7 @@
 
 
 <span class="k">class</span> <span class="nc">AdjacentError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">,</span> <span class="n">arrow_type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">,</span> <span class="n">arrow_type</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node1</span> <span class="o">=</span> <span class="n">node1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node2</span> <span class="o">=</span> <span class="n">node2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arrow_type</span> <span class="o">=</span> <span class="n">arrow_type</span>
@@ -188,7 +194,7 @@
 
 
 <span class="k">class</span> <span class="nc">NeighborError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">neighbors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spouses</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">neighbors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spouses</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="n">neighbors</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parents</span> <span class="o">=</span> <span class="n">parents</span>
@@ -214,7 +220,7 @@
 <span class="sd">    Base class for ancestral graphs, used to represent causal models with latent variables.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
             <span class="n">directed</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
@@ -239,7 +245,7 @@
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">undirected</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_undirected</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">AncestralGraph</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -287,11 +293,11 @@
 
         <span class="k">return</span> <span class="n">AncestralGraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="n">new_directed</span><span class="p">,</span> <span class="n">bidirected</span><span class="o">=</span><span class="n">new_bidirected</span><span class="p">,</span> <span class="n">undirected</span><span class="o">=</span><span class="n">new_undirected</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;Directed edges: </span><span class="si">%s</span><span class="s1">, Bidirected edges: </span><span class="si">%s</span><span class="s1">, Undirected edges: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_undirected</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="c1"># === MUTATORS</span>
@@ -1205,7 +1211,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">parents</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">nonadjacent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="n">parents</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">j</span><span class="p">}</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking node </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> and non-adjacent nodes </span><span class="si">{</span><span class="n">nonadjacent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Checking node </span><span class="si">{j}</span><span class="s2"> and non-adjacent nodes </span><span class="si">{nonadjacent}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nonadjacent</span><span class="p">:</span>  <span class="c1"># potential start points of discriminating paths</span>
                 <span class="c1"># search all paths that satisfy discriminating path criteria</span>
                 <span class="n">path_queue</span> <span class="o">=</span> <span class="p">[</span>
@@ -1253,8 +1259,8 @@
             <span class="n">allowed_nbrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">start_node</span><span class="p">])</span>
 
         <span class="n">allowed_nbrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">nbr</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">allowed_nbrs</span> <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">nbr</span><span class="p">)}</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Allowed neighbors of </span><span class="si">{</span><span class="n">start_node</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">allowed_nbrs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visited: </span><span class="si">{</span><span class="n">visited</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Allowed neighbors of </span><span class="si">{start_node}</span><span class="s2">: </span><span class="si">{allowed_nbrs}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Visited: </span><span class="si">{visited}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">allowed_nbrs</span><span class="p">:</span>
@@ -1405,7 +1411,7 @@
                 <span class="n">j</span><span class="p">)</span>
             <span class="n">mb_difference</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_markov_blanket</span> <span class="o">-</span> <span class="n">new_markov_blanket</span> <span class="o">-</span> <span class="p">{</span><span class="n">j</span><span class="p">})</span> <span class="o">|</span> <span class="p">{</span><span class="n">i</span><span class="p">}</span>
             <span class="n">rest</span> <span class="o">=</span> <span class="n">new_markov_blanket</span> <span class="o">-</span> <span class="p">{</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">}</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;i=</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">, j=</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">, mb_diff=</span><span class="si">{</span><span class="n">mb_difference</span><span class="si">}</span><span class="s1">, rest=</span><span class="si">{</span><span class="n">rest</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;i=</span><span class="si">{i}</span><span class="s1">, j=</span><span class="si">{j}</span><span class="s1">, mb_diff=</span><span class="si">{mb_difference}</span><span class="s1">, rest=</span><span class="si">{rest}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
 
@@ -1571,13 +1577,13 @@
                     <span class="n">check_ancestry</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span>
                     <span class="n">nbrs1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span>
                     <span class="n">nbrs2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-------------</span><span class="se">\n</span><span class="s2">Checking </span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;-------------</span><span class="se">\n</span><span class="s2">Checking </span><span class="si">{node1}</span><span class="s2"> and </span><span class="si">{node2}</span><span class="s2">&quot;</span><span class="p">)</span>
 
                     <span class="c1"># ONLY CHECK PATHS BETWEEN SPOUSES/CHILDREN THAT ARE IN THE SAME C-COMPONENT</span>
                     <span class="k">for</span> <span class="n">nbr1</span><span class="p">,</span> <span class="n">nbr2</span> <span class="ow">in</span> <span class="n">itr</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">nbrs1</span><span class="p">,</span> <span class="n">nbrs2</span><span class="p">):</span>
                         <span class="n">same_component</span> <span class="o">=</span> <span class="n">node2component</span><span class="p">[</span><span class="n">nbr1</span><span class="p">]</span> <span class="o">==</span> <span class="n">node2component</span><span class="p">[</span><span class="n">nbr2</span><span class="p">]</span>
                         <span class="k">if</span> <span class="n">same_component</span> <span class="ow">and</span> <span class="n">nbr1</span> <span class="ow">in</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">nbr2</span> <span class="ow">in</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">node1</span><span class="p">]:</span>
-                            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking neighbors </span><span class="si">{</span><span class="n">nbr1</span><span class="si">}</span><span class="s2"> (for </span><span class="si">{</span><span class="n">node1</span><span class="si">}</span><span class="s2">) and </span><span class="si">{</span><span class="n">nbr2</span><span class="si">}</span><span class="s2"> (for </span><span class="si">{</span><span class="n">node2</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Checking neighbors </span><span class="si">{nbr1}</span><span class="s2"> (for </span><span class="si">{node1}</span><span class="s2">) and </span><span class="si">{nbr2}</span><span class="s2"> (for </span><span class="si">{node2}</span><span class="s2">)&quot;</span><span class="p">)</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reachable</span><span class="p">(</span><span class="n">nbr1</span><span class="p">,</span> <span class="n">nbr2</span><span class="p">,</span> <span class="n">visited</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">allowed_edges</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;b&#39;</span><span class="p">},</span> <span class="n">predicate</span><span class="o">=</span><span class="n">check_ancestry</span><span class="p">,</span>
                                                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">):</span>
                                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reachable&quot;</span><span class="p">)</span>
@@ -1585,7 +1591,7 @@
                                 <span class="k">continue</span>
                             <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
                                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No path&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;found induced pairs: </span><span class="si">{</span><span class="n">induced_pairs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;found induced pairs: </span><span class="si">{induced_pairs}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="n">induced_pairs</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">add_bidirected</span><span class="p">(</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">)</span>
 
@@ -1723,7 +1729,7 @@
             <span class="c1"># LINES 10-12</span>
             <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">tail_vw</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_any_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_any_edge</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">z</span><span class="p">)):</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2"> in tail of (</span><span class="si">{</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{z}</span><span class="s2"> in tail of ({v, w})&quot;</span><span class="p">)</span>
                     <span class="n">d_triples</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">z</span><span class="p">}))</span>
 
             <span class="c1"># LINES 13-17</span>
@@ -1733,7 +1739,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_any_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_any_edge</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">z</span><span class="p">)):</span>
                     <span class="n">dis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">district_of</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">a</span> <span class="o">|</span> <span class="n">ancestor_dict</span><span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="o">|</span> <span class="p">{</span><span class="n">z</span><span class="p">})</span>
                     <span class="k">if</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">dis</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="s2"> in district of </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> restricted to spouses, district&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{z}</span><span class="s2"> in district of </span><span class="si">{v}</span><span class="s2"> restricted to spouses, district&quot;</span><span class="p">)</span>
                         <span class="n">d_triples</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">({</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">z</span><span class="p">}))</span>
 
         <span class="k">return</span> <span class="n">d_triples</span> <span class="o">|</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">vstruct</span><span class="p">)</span> <span class="k">for</span> <span class="n">vstruct</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vstructures</span><span class="p">()}</span>
@@ -1885,14 +1891,14 @@
 
             <span class="n">mark_changes_dir</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1"> =&gt; </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&lt;-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1"> ?&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{i}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1"> =&gt; </span><span class="si">{i}</span><span class="s1">&lt;-&gt;</span><span class="si">{j}</span><span class="s1"> ?&#39;</span><span class="p">)</span>
                 <span class="n">parents_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">parents_condition</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed parents condition on </span><span class="si">{</span><span class="n">parents_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parents condition on </span><span class="si">{parents_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="n">spouses_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">spouses_condition</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed spouses condition on </span><span class="si">{</span><span class="n">spouses_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed spouses condition on </span><span class="si">{spouses_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="n">ancestral_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_no_other_path</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ancestor_dict</span><span class="p">)</span>
                 <span class="c1"># ancestral_condition2 = i not in self.ancestors_of(j, exclude_arcs={(i, j)})</span>
@@ -1900,7 +1906,7 @@
                 <span class="c1"># if ancestral_condition != ancestral_condition2:</span>
                 <span class="c1">#     print(self, i, j, (ancestor_dict[j] - {i}) &amp; self._children[i], ancestor_dict[j], self._children[i])</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">ancestral_condition</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed ancestral condition&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed ancestral condition&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
 
                 <span class="c1"># SECOND CONDITION</span>
@@ -1908,7 +1914,7 @@
                 <span class="n">disc_paths_condition</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">disc_paths_for_i</span> <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">j</span><span class="p">),</span>
                                             <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">disc_paths_for_i</span> <span class="k">else</span> <span class="kc">None</span>
                 <span class="k">if</span> <span class="n">disc_paths_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed discriminating path condition on </span><span class="si">{</span><span class="n">disc_paths_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed discriminating path condition on </span><span class="si">{disc_paths_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
 
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Passed&#39;</span><span class="p">)</span>
@@ -1917,14 +1923,14 @@
             <span class="n">mark_changes_bidir</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="n">forward_edges</span> <span class="o">=</span> <span class="p">{(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bidirected</span><span class="p">}</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">forward_edges</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">reversed</span><span class="p">,</span> <span class="n">forward_edges</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&lt;-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1"> =&gt; </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1"> ?&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{i}</span><span class="s1">&lt;-&gt;</span><span class="si">{j}</span><span class="s1"> =&gt; </span><span class="si">{i}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1"> ?&#39;</span><span class="p">)</span>
                 <span class="n">parents_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">parents_condition</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed parents condition on </span><span class="si">{</span><span class="n">parents_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed parents condition on </span><span class="si">{parents_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="n">spouses_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">j</span><span class="p">}</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spouses</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">spouses_condition</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed spouses condition on </span><span class="si">{</span><span class="n">spouses_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed spouses condition on </span><span class="si">{spouses_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
                 <span class="n">ancestral_condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_no_other_path</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ancestor_dict</span><span class="p">)</span>
 
@@ -1937,7 +1943,7 @@
                 <span class="n">disc_paths_condition</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">disc_paths_for_i</span> <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">j</span><span class="p">),</span>
                                             <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">disc_paths_for_i</span> <span class="k">else</span> <span class="kc">None</span>
                 <span class="k">if</span> <span class="n">disc_paths_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed discriminating path condition on </span><span class="si">{</span><span class="n">disc_paths_condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Failed discriminating path condition on </span><span class="si">{disc_paths_condition}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="k">continue</span>
 
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Passed&#39;</span><span class="p">)</span>
@@ -2086,28 +2092,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

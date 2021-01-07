@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>PDAG &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -50,7 +54,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -145,6 +149,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -158,7 +164,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/classes/PDAG.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -176,92 +182,92 @@
 <span id="id1"></span><h1>PDAG<a class="headerlink" href="#pdag" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="causaldag.classes.pdag.PDAG">
-<em class="property">class </em><code class="sig-prename descclassname">causaldag.classes.pdag.</code><code class="sig-name descname">PDAG</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">known_arcs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">new</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causaldag/classes/pdag.html#PDAG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.pdag.PDAG" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">causaldag.classes.pdag.</code><code class="descname">PDAG</code><span class="sig-paren">(</span><em>nodes: Set[T] = {}</em>, <em>arcs: Set[T] = {}</em>, <em>edges: Set[T] = {}</em>, <em>known_arcs={}</em>, <em>new=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causaldag/classes/pdag.html#PDAG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.pdag.PDAG" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
 <div class="section" id="methods">
 <h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.copy.html#causaldag.classes.pdag.PDAG.copy" title="causaldag.classes.pdag.PDAG.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.copy</span></code></a>()</p></td>
-<td><p>Return a copy of the graph</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.copy.html#causaldag.classes.pdag.PDAG.copy" title="causaldag.classes.pdag.PDAG.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.copy</span></code></a>()</td>
+<td>Return a copy of the graph</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.to_amat.html#causaldag.classes.pdag.PDAG.to_amat" title="causaldag.classes.pdag.PDAG.to_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.to_amat</span></code></a>([node_list, source_axis])</p></td>
-<td><p>Return an adjacency matrix for the graph</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.to_amat.html#causaldag.classes.pdag.PDAG.to_amat" title="causaldag.classes.pdag.PDAG.to_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.to_amat</span></code></a>(node_list[,&nbsp;source_axis])</td>
+<td>Return an adjacency matrix for the graph</td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.from_amat.html#causaldag.classes.pdag.PDAG.from_amat" title="causaldag.classes.pdag.PDAG.from_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.from_amat</span></code></a>(amat[, source_axis])</p></td>
-<td><p>Return a PDAG with arcs/edges given by amat</p></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.from_amat.html#causaldag.classes.pdag.PDAG.from_amat" title="causaldag.classes.pdag.PDAG.from_amat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.from_amat</span></code></a>(amat[,&nbsp;source_axis])</td>
+<td>Return a PDAG with arcs/edges given by amat</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="graph-modification">
 <h3>Graph modification<a class="headerlink" href="#graph-modification" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.remove_node.html#causaldag.classes.pdag.PDAG.remove_node" title="causaldag.classes.pdag.PDAG.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.remove_node</span></code></a>(node)</p></td>
-<td><p>Remove a node from the graph</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.remove_node.html#causaldag.classes.pdag.PDAG.remove_node" title="causaldag.classes.pdag.PDAG.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.remove_node</span></code></a>(node)</td>
+<td>Remove a node from the graph</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.add_known_arc.html#causaldag.classes.pdag.PDAG.add_known_arc" title="causaldag.classes.pdag.PDAG.add_known_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.add_known_arc</span></code></a>(i, j)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.add_known_arc.html#causaldag.classes.pdag.PDAG.add_known_arc" title="causaldag.classes.pdag.PDAG.add_known_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.add_known_arc</span></code></a>(i,&nbsp;j)</td>
+<td></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="graph-properties">
 <h3>Graph properties<a class="headerlink" href="#graph-properties" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.has_edge.html#causaldag.classes.pdag.PDAG.has_edge" title="causaldag.classes.pdag.PDAG.has_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.has_edge</span></code></a>(i, j)</p></td>
-<td><p>Return True if the graph contains the edge i–j</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.has_edge.html#causaldag.classes.pdag.PDAG.has_edge" title="causaldag.classes.pdag.PDAG.has_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.has_edge</span></code></a>(i,&nbsp;j)</td>
+<td>Return True if the graph contains the edge i–j</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.has_edge_or_arc.html#causaldag.classes.pdag.PDAG.has_edge_or_arc" title="causaldag.classes.pdag.PDAG.has_edge_or_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.has_edge_or_arc</span></code></a>(i, j)</p></td>
-<td><p>Return True if the graph contains the edge i–j or an arc i-&gt;j or i&lt;-j</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.has_edge_or_arc.html#causaldag.classes.pdag.PDAG.has_edge_or_arc" title="causaldag.classes.pdag.PDAG.has_edge_or_arc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.has_edge_or_arc</span></code></a>(i,&nbsp;j)</td>
+<td>Return True if the graph contains the edge i–j or an arc i-&gt;j or i&lt;-j</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="comparison-to-other-pdags">
 <h3>Comparison to other PDAGs<a class="headerlink" href="#comparison-to-other-pdags" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.shd.html#causaldag.classes.pdag.PDAG.shd" title="causaldag.classes.pdag.PDAG.shd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.shd</span></code></a>(other)</p></td>
-<td><p>Return the structural Hamming distance between this PDAG and another.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.shd.html#causaldag.classes.pdag.PDAG.shd" title="causaldag.classes.pdag.PDAG.shd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.shd</span></code></a>(other)</td>
+<td>Return the structural Hamming distance between this PDAG and another.</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="functions-for">
 <h3>Functions for<a class="headerlink" href="#functions-for" title="Permalink to this headline">¶</a></h3>
-<table class="longtable docutils align-default">
+<table border="1" class="longtable docutils">
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
+<col width="10%" />
+<col width="90%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.to_dag.html#causaldag.classes.pdag.PDAG.to_dag" title="causaldag.classes.pdag.PDAG.to_dag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.to_dag</span></code></a>()</p></td>
-<td><p>Return a DAG that is consistent with this CPDAG.</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.to_dag.html#causaldag.classes.pdag.PDAG.to_dag" title="causaldag.classes.pdag.PDAG.to_dag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.to_dag</span></code></a>()</td>
+<td>Return a DAG that is consistent with this CPDAG.</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.all_dags.html#causaldag.classes.pdag.PDAG.all_dags" title="causaldag.classes.pdag.PDAG.all_dags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.all_dags</span></code></a>([verbose])</p></td>
-<td><p>Return all DAGs consistent with this PDAG</p></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.pdag.PDAG.all_dags.html#causaldag.classes.pdag.PDAG.all_dags" title="causaldag.classes.pdag.PDAG.all_dags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PDAG.all_dags</span></code></a>([verbose])</td>
+<td>Return all DAGs consistent with this PDAG</td>
 </tr>
 </tbody>
 </table>
@@ -274,37 +280,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="generated/causaldag.classes.pdag.PDAG.copy.html" class="btn btn-neutral float-right" title="causaldag.classes.pdag.PDAG.copy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="generated/causaldag.classes.pdag.PDAG.copy.html" class="btn btn-neutral float-right" title="causaldag.classes.pdag.PDAG.copy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

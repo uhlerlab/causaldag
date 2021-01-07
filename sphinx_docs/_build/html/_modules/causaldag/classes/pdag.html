@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>causaldag.classes.pdag &mdash; causaldag  documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,9 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -48,7 +52,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
+            <a href="../../../index.html" class="icon icon-home"> causaldag
           
 
           
@@ -124,6 +128,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -153,22 +159,22 @@
 <span class="sd">Base class for partially directed acyclic graphs</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="kn">import</span> <span class="n">core_utils</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">causaldag.utils</span> <span class="k">import</span> <span class="n">core_utils</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">itr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">factorial</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">FrozenSet</span><span class="p">,</span> <span class="n">Iterable</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 
 <span class="n">SmallDag</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;SmallDag&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;arcs&#39;</span><span class="p">,</span> <span class="s1">&#39;reversible_arcs&#39;</span><span class="p">,</span> <span class="s1">&#39;parents_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;children_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="PDAG"><a class="viewcode-back" href="../../../classes/PDAG.html#causaldag.classes.pdag.PDAG">[docs]</a><span class="k">class</span> <span class="nc">PDAG</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">nodes</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
             <span class="n">arcs</span><span class="p">:</span> <span class="n">Set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span>
@@ -280,11 +286,11 @@
             <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="n">amat</span><span class="p">[</span><span class="n">node2ix</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">node2ix</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+        <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
         <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">amat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">node_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">node_list</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">source_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">lil_matrix</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">lil_matrix</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
 
         <span class="n">amat</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
@@ -325,14 +331,14 @@
 
         <span class="k">return</span> <span class="n">amat</span><span class="p">,</span> <span class="n">node_list</span></div>
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">same_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_nodes</span>
         <span class="n">same_arcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span>
         <span class="n">same_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_edges</span>
 
         <span class="k">return</span> <span class="n">same_nodes</span> <span class="ow">and</span> <span class="n">same_arcs</span> <span class="ow">and</span> <span class="n">same_edges</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">substrings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
@@ -743,11 +749,11 @@
                     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                             <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                            <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&#39;</span>
+                            <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{k}</span><span class="s1">-&gt;</span><span class="si">{i}</span><span class="s1">-</span><span class="si">{j}</span><span class="s1">&#39;</span>
                             <span class="k">break</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (a)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (a)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="c1"># check configuration (b) -- acyclicity</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -756,11 +762,11 @@
                         <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
                             <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span> <span class="ow">and</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                                <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{k}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1">-</span><span class="si">{i}</span><span class="s1">-&gt;</span><span class="si">{k}</span><span class="s1">&#39;</span>
                                 <span class="k">break</span>
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (b)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (b)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="c1"># check configuration (d)</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -769,11 +775,11 @@
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k1</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k2</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge_or_arc</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
                             <span class="k">if</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k1</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span> <span class="ow">and</span> <span class="n">arc_flags</span><span class="p">[(</span><span class="n">k2</span><span class="p">,</span> <span class="n">j</span><span class="p">)]</span> <span class="o">==</span> <span class="n">PROTECTED</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">PROTECTED</span>
-                                <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;: </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">k1</span><span class="si">}</span><span class="s1">-&gt;</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s1">&lt;-</span><span class="si">{</span><span class="n">k2</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;: </span><span class="si">{i}</span><span class="s1">-</span><span class="si">{k1}</span><span class="s1">-&gt;</span><span class="si">{j}</span><span class="s1">&lt;-</span><span class="si">{k2}</span><span class="s1">-</span><span class="si">{i}</span><span class="s1">&#39;</span>
                                 <span class="k">break</span>
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="n">flag</span> <span class="o">=</span> <span class="n">UNDECIDED</span>
-                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arc</span><span class="si">}</span><span class="s1"> marked </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> by (c)</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{arc}</span><span class="s1"> marked </span><span class="si">{flag}</span><span class="s1"> by (c)</span><span class="si">{s}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="n">arc_flags</span><span class="p">[</span><span class="n">arc</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag</span>
 
@@ -880,7 +886,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="kn">import</span> <span class="n">DAG</span>
+        <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">DAG</span>
 
         <span class="n">pdag2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">arcs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -1012,7 +1018,7 @@
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="kn">import</span> <span class="n">directed_erdos</span>
+    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="k">import</span> <span class="n">directed_erdos</span>
 
     <span class="n">g</span> <span class="o">=</span> <span class="n">directed_erdos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
@@ -1025,28 +1031,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Chandler Squires
+        &#169; Copyright 2019, Chandler Squires.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

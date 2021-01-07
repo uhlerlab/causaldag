@@ -1865,9 +1865,10 @@ class DAG:
         Examples
         --------
         >>> import causaldag as cd
-        >>> g = cd.DAG(arcs={(1, 3), (2, 3)})
-        >>> g.moral_graph()
-        TODO
+        >>> d = cd.DAG(arcs={(1, 3), (2, 3)})
+        >>> ug = d.moral_graph()
+        >>> ug.edges
+        {frozenset({1, 3}), frozenset({2, 3}), frozenset({1, 2})}
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -1881,14 +1882,27 @@ class DAG:
 
         Parameters
         ----------
-        latent_nodes: nodes to marginalize over.
-        relabel: if relabel='default', relabel the nodes to have labels 1,2,...,(#nodes).
-        new
+        latent_nodes:
+            nodes to marginalize over.
+        relabel:
+            if relabel='default', relabel the nodes to have labels 1,2,...,(#nodes).
+        new:
+            TODO - pick whether to use new or old implementation.
 
         Returns
         -------
         m:
             cd.AncestralGraph, the MAG resulting from marginalizing out `latent_nodes`.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(1, 3), (1, 2)})
+        >>> mag = d.marginal_mag(latent_nodes={1})
+        >>> mag
+        Directed edges: set(), Bidirected edges: {frozenset({2, 3})}, Undirected edges: set()
+        >>> mag = d.marginal_mag(latent_nodes={1}, relabel="default")
+        Directed edges: set(), Bidirected edges: {frozenset({0, 1})}, Undirected edges: set()
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -1984,8 +1998,11 @@ class DAG:
         --------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
-        >>> g.cpdag()
-
+        >>> cpdag = g.cpdag()
+        >>> cpdag.edges
+        {frozenset({1, 2})}
+        >>> cpdag.arcs
+        {(2, 4), (3, 4)}
         """
         from causaldag import PDAG
         pdag = PDAG(nodes=self._nodes, arcs=self._arcs, known_arcs=self.arcs_in_vstructures())
@@ -2002,11 +2019,30 @@ class DAG:
             pdag.to_complete_pdag()
         return pdag
 
-    def interventional_cpdag(self, interventions, cpdag=None):
+    def interventional_cpdag(self, interventions: List[set], cpdag=None):
         """
         Return the interventional essential graph (aka CPDAG) associated with this DAG.
 
-        TODO
+        Parameters
+        ----------
+        interventions:
+            A list of the intervention targets.
+        cpdag:
+            The original (non-interventional) CPDAG of the graph. Faster when provided.
+
+        Return
+        ------
+        causaldag.PDAG:
+            Interventional CPDAG representing the I-MEC of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.DAG(arcs={(1, 2), (2, 4), (3, 4)})
+        >>> cpdag = g.cpdag()
+        >>> icpdag = g.interventional_cpdag([{1}], cpdag=cpdag)
+        >>> icpdag.arcs
+        {(1, 2), (2, 4), (3, 4)}
         """
         warn_untested()  # TODO: ADD TEST
 
