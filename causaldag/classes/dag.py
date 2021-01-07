@@ -2333,9 +2333,10 @@ class DAG:
 
     def greedy_optimal_single_node_intervention(self, cpdag=None, num_interventions=1):
         """
-        Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy
-        strategy. By submodularity, this will orient at least (1 - 1/e) as many edges as the true optimal intervention
-        set.
+        Greedily pick ``num_interventions`` single node interventions based on how many edges they orient.
+
+        By submodularity, this will orient at least (1 - 1/e) as many edges as the optimal intervention set
+        of size ``num_interventions``.
 
         Parameters
         ----------
@@ -2351,7 +2352,13 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (0, 2)})
+        >>> ivs, icpdags = d.greedy_optimal_single_node_intervention()
+        >>> ivs
+        [1]
+        >>> icpdags[0].arcs
+        {(0, 1), (0, 2), (1, 2)}
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -2397,7 +2404,15 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (0, 2), (0, 3), (1, 3), (2, 3)})
+        >>> ivs, icpdags = d.greedy_optimal_fully_orienting_interventions()
+        >>> ivs
+        [1, 2]
+        >>> icpdags[0].edges
+        {frozenset({2, 3})}
+        >>> icpdags[1].edges
+        set()
         """
         warn_untested()  # TODO: ADD TEST
 
