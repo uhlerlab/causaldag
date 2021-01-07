@@ -96,12 +96,17 @@ class AncestralGraph:
     def copy(self):
         """
         Return a copy of the current ancestral graph.
+
+        Returns
+        -------
+        AncestralGraph:
+            A copy of the ancestral graph.
         """
         return AncestralGraph(self.nodes, self.directed, self.bidirected, self.undirected)
 
     def induced_subgraph(self, nodes: Set[Node]):
         """
-        Return the induced subgraph over only `nodes`
+        Return the induced subgraph over only ``nodes``
 
         Parameters
         ----------
@@ -110,14 +115,15 @@ class AncestralGraph:
 
         Returns
         -------
-        g:
-            Induced subgraph over `nodes`.
+        AncestralGraph:
+            Induced subgraph over ``nodes``.
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
-        >>> g.induced_subgraph()
-        TODO
+        >>> g.induced_subgraph({1, 2, 3})
+        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 2})}, Undirected edges: set()
         """
         new_directed = {(i, j) for i, j in self._directed if i in nodes and j in nodes}
         new_bidirected = {(i, j) for i, j in self._bidirected if i in nodes and j in nodes}
@@ -148,6 +154,7 @@ class AncestralGraph:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.AncestralGraph()
         >>> g.add_node(1)
         >>> g.add_node(2)
@@ -158,7 +165,7 @@ class AncestralGraph:
 
     def add_nodes_from(self, nodes: Iterable[Node]):
         """
-        Add a node to the ancestral graph.
+        Add nodes to the ancestral graph.
 
         Parameters
         ----------
@@ -171,6 +178,7 @@ class AncestralGraph:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.AncestralGraph()
         >>> g.add_nodes_from({1, 2})
         >>> len(g.nodes)
@@ -205,7 +213,10 @@ class AncestralGraph:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
+        >>> g.topological_sort()
+        [4, 2, 1, 3]
         """
         any_visited = {node: False for node in self._nodes}
         curr_path_visited = {node: False for node in self._nodes}
@@ -218,7 +229,7 @@ class AncestralGraph:
 
     def add_directed(self, i: Node, j: Node):
         """
-        Add a directed edge from node `i` to node `j`.
+        Add a directed edge from node ``i`` to node ``j``.
 
         Parameters
         ----------
@@ -229,7 +240,11 @@ class AncestralGraph:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph()
+        >>> g.add_directed(1, 2)
+        >>> g.directed
+        {(1, 2)}
         """
         self._add_directed(i, j)
         try:
@@ -240,7 +255,7 @@ class AncestralGraph:
 
     def add_bidirected(self, i: Node, j: Node):
         """
-        Add a bidirected edge between nodes `i` and `j`.
+        Add a bidirected edge between nodes ``i`` and ``j``.
 
         Parameters
         ----------
@@ -251,7 +266,11 @@ class AncestralGraph:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph()
+        >>> g.add_bidirected(1, 2)
+        >>> g.bidirected
+        {frozenset({i, j})}
         """
         self._add_bidirected(i, j)
         try:
@@ -273,7 +292,11 @@ class AncestralGraph:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph()
+        >>> g.add_undirected(1, 2)
+        >>> g.undirected
+        {frozenset({i, j})}
         """
         self._add_undirected(i, j)
 
@@ -374,15 +397,22 @@ class AncestralGraph:
 
     def remove_node(self, node: Node, ignore_error=False):
         """
-        Remove `node`.
+        Remove ``node``.
 
         Parameters
         ----------
         node
+            The node to be removed.
+        ignore_error:
+            If False, raises an error when the node does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
+        >>> g.remove_node(4)
+        >>> g
+        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 2})}, Undirected edges: set()
         """
         try:
             self._nodes.remove(node)
@@ -416,7 +446,7 @@ class AncestralGraph:
 
     def remove_directed(self, i: Node, j: Node, ignore_error=False):
         """
-        Remove the directed edge from `i` to `j`.
+        Remove the directed edge from ``i`` to ``j``.
 
         Parameters
         ----------
@@ -424,10 +454,16 @@ class AncestralGraph:
             source of directed edge.
         j:
             target of directed edge.
+        ignore_error:
+            If False, raises an error when the directed edge does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
+        >>> g.remove_directed(1, 3)
+        >>> g
+        Directed edges: {(2, 3)}, Bidirected edges: {frozenset({1, 4}), frozenset({1, 2})}, Undirected edges: set()
         """
         try:
             self._directed.remove((i, j))
@@ -443,7 +479,7 @@ class AncestralGraph:
 
     def remove_bidirected(self, i: Node, j: Node, ignore_error=False):
         """
-        Remove the bidirected edge between `i` and `j`.
+        Remove the bidirected edge between ``i`` and ``j``.
 
         Parameters
         ----------
@@ -451,10 +487,16 @@ class AncestralGraph:
             first endpoint of bidirected edge.
         j:
             second endpoint of bidirected edge.
+        ignore_error:
+            If False, raises an error when the bidirected edge does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(bidirected={(1, 2), (1, 4)}, directed={(1, 3), (2, 3)})
+        >>> g.remove_bidirected(1, 2)
+        >>> g
+        Directed edges: {(2, 3), (1, 3)}, Bidirected edges: {frozenset({1, 4})}, Undirected edges: set()
         """
         try:
             self._bidirected.remove(frozenset({i, j}))
@@ -470,7 +512,7 @@ class AncestralGraph:
 
     def remove_undirected(self, i: Node, j: Node, ignore_error=False):
         """
-        Remove the undirected edge between `i` and `j`.
+        Remove the undirected edge between ``i`` and ``j``.
 
         Parameters
         ----------
@@ -478,10 +520,16 @@ class AncestralGraph:
             first endpoint of undirected edge.
         j:
             second endpoint of undirected edge.
+        ignore_error:
+            If False, raises an error when the undirected edge does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})
+        >>> g.remove_undirected(1, 4)
+        >>> g
+        Directed edges: {(1, 2), (1, 3)}, Bidirected edges: set(), Undirected edges: set()
         """
         try:
             self._undirected.remove(frozenset({i, j}))
@@ -497,7 +545,7 @@ class AncestralGraph:
 
     def remove_edge(self, i: Node, j: Node, ignore_error=False):
         """
-        TODO
+        Remove the edge between ``i`` and ``j``, regardless of edge type.
 
         Parameters
         ----------
@@ -505,10 +553,16 @@ class AncestralGraph:
             first endpoint of edge.
         j:
             second endpoint of edge.
+        ignore_error:
+            If False, raises an error when the edge does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})
+        >>> g.remove_edge(1, 4)
+        >>> g
+        Directed edges: {(1, 2), (1, 3)}, Bidirected edges: set(), Undirected edges: set()
         """
         if self.has_bidirected(i, j):
             self.remove_bidirected(i, j)
@@ -521,21 +575,27 @@ class AncestralGraph:
         elif not ignore_error:
             raise KeyError
 
-    def remove_edges(self, edges: Iterable):
+    def remove_edges(self, edges: Iterable, ignore_error=False):
         """
-        TODO
+        Remove all edges in ``edges`` from the graph, regardless of edge type.
 
         Parameters
         ----------
         edges
-            TODO
+            The edges to be removed from the graph.
+        ignore_error:
+            If False, raises an error when any edge does not belong to the graph.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (1, 3)}, undirected={(1, 4)})
+        >>> g.remove_edges([(1, 4), (1, 2)])
+        >>> g
+        Directed edges: {(1, 3)}, Bidirected edges: set(), Undirected edges: set()
         """
         for i, j in edges:
-            self.remove_edge(i, j)
+            self.remove_edge(i, j, ignore_error=ignore_error)
 
     # === PROPERTIES
     @property
@@ -579,24 +639,92 @@ class AncestralGraph:
         return {frozenset({i, j}) for i, j in self._bidirected | self._undirected | self._directed}
 
     def children_of(self, i: NodeSet) -> Set[Node]:
+        """
+        Return the children of the node or set of nodes ``i``.
+
+        Parameters
+        ----------
+        i
+            Node.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, undirected={(1, 4)})
+        >>> g.children_of(1)
+        {2}
+        >>> g.children_of({1, 2})
+        {2, 3}
+        """
         if isinstance(i, set):
             return set.union(*(self._children[n] for n in i))
         else:
             return self._children[i].copy()
 
     def parents_of(self, i: NodeSet) -> Set[Node]:
+        """
+        Return the parents of the node or set of nodes ``i``.
+
+        Parameters
+        ----------
+        i
+            Node.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, undirected={(1, 4)})
+        >>> g.parents_of(2)
+        {1}
+        >>> g.parents_of({2, 3})
+        {1, 2}
+        """
         if isinstance(i, set):
             return set.union(*(self._parents[n] for n in i))
         else:
             return self._parents[i].copy()
 
     def spouses_of(self, i: NodeSet) -> Set[Node]:
+        """
+        Return the spouses of the node or set of nodes ``i``.
+
+        Parameters
+        ----------
+        i
+            Node.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 2), (2, 3)}, bidirected={(1, 4), (2, 5)})
+        >>> g.spouses_of(1)
+        {4}
+        >>> g.spouses_of({1, 2})
+        {4, 5}
+        """
         if isinstance(i, set):
             return set.union(*(self._spouses[n] for n in i))
         else:
             return self._spouses[i].copy()
 
     def neighbors_of(self, i: NodeSet) -> Set[Node]:
+        """
+        Return the neighbors of the node or set of nodes ``i``.
+
+        Parameters
+        ----------
+        i
+            Node.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> g = cd.AncestralGraph(directed={(1, 3), (2, 3)}, undirected={(1, 4), (2, 5)})
+        >>> g.neighbors_of(1)
+        {4}
+        >>> g.neighbors_of({1, 2})
+        {4, 5}
+        """
         if isinstance(i, set):
             return set.union(*(self._neighbors[n] for n in i))
         else:
@@ -616,7 +744,7 @@ class AncestralGraph:
 
     def ancestors_of(self, nodes, exclude_arcs=set()) -> Set[Node]:
         """
-        Return the nodes upstream of node
+        Return the nodes upstream of node.
 
         Parameters
         ----------
@@ -636,6 +764,7 @@ class AncestralGraph:
 
         Example
         -------
+        TODO
         """
         ancestors = set()
         if not isinstance(nodes, set):
@@ -659,6 +788,7 @@ class AncestralGraph:
 
         Example
         -------
+        TODO
         """
         top_sort = self.topological_sort()
 
@@ -688,6 +818,7 @@ class AncestralGraph:
 
         Example
         -------
+        TODO
         """
         top_sort = self.topological_sort()
 
@@ -722,6 +853,7 @@ class AncestralGraph:
 
         Example
         -------
+        TODO
         """
         descendants = set()
         self._add_descendants(descendants, node, exclude_arcs=exclude_arcs)
@@ -752,7 +884,7 @@ class AncestralGraph:
 
     def has_bidirected(self, i: Node, j: Node) -> bool:
         """
-        Check if this graph has a bidirected edge between `i` and `j`.
+        Check if this graph has a bidirected edge between ``i`` and ``j``.
 
         See Also
         --------
@@ -775,7 +907,7 @@ class AncestralGraph:
 
     def has_undirected(self, i: Node, j: Node) -> bool:
         """
-        Check if this graph has an undirected edge between `i` and `j`.
+        Check if this graph has an undirected edge between ``i`` and ``j``.
 
         See Also
         --------
@@ -798,7 +930,7 @@ class AncestralGraph:
 
     def has_any_edge(self, i: Node, j: Node) -> bool:
         """
-        Check if i and j are adjacent in this graph.
+        Check if ``i`` and ``j`` are adjacent in this graph.
 
         See Also
         --------
@@ -880,7 +1012,7 @@ class AncestralGraph:
 
     def district_of(self, node: Node, node_subset=None) -> Set[Node]:
         """
-        Return the district of a node, i.e., the set of nodes reachable by bidirected edges. If `node_subset` is
+        Return the district of a node, i.e., the set of nodes reachable by bidirected edges. If ``node_subset`` is
         provided, do this on the induced subgraph on that subset of nodes.
 
         Return
@@ -997,8 +1129,8 @@ class AncestralGraph:
 
     def is_imap(self, other, certify: bool = False) -> bool:
         """
-        Check if this graph is an IMAP of the `other` graph, i.e., all m-separation statements in this graph
-        are also m-separation statements in `other`.
+        Check if this graph is an IMAP of the graph ``other``, i.e., all m-separation statements in this graph
+        are also m-separation statements in ``other``.
 
         Parameters
         ----------
@@ -1013,6 +1145,7 @@ class AncestralGraph:
 
         Examples
         --------
+        >>> import causaldag as cd
         >>> g = cd.AncestralGraph(arcs={(1, 2), (3, 2)})
         TODO
         """
@@ -1197,8 +1330,10 @@ class AncestralGraph:
 
         Parameters
         ----------
-        node: The node whose Markov blanket to find.
-        flat: if True, return the Markov blanket as a set, otherwise return a dictionary mapping nodes in the district
+        node:
+            The node whose Markov blanket to find.
+        flat:
+            if ``True``, return the Markov blanket as a set, otherwise return a dictionary mapping nodes in the district
             of node to their parents.
 
         Returns
@@ -1309,7 +1444,13 @@ class AncestralGraph:
     # === CONVERTERS
     def to_amat(self) -> np.ndarray:
         """
-        TODO
+        Convert the graph into an adjacency matrix.
+        TODO: meaning of numbers
+
+        Returns
+        -------
+        amat
+            The adjacency matrix of this graph.
 
         Examples
         --------
@@ -1330,11 +1471,13 @@ class AncestralGraph:
     @staticmethod
     def from_amat(amat: np.ndarray):
         """
-        TODO
+        Create a graph from an adjacency matrix.
+        TODO: meaning of numbers
 
         Parameters
         ----------
         amat
+            The adjacency matrix
 
         Examples
         --------
@@ -1360,7 +1503,7 @@ class AncestralGraph:
     # === COMPARISON
     def markov_equivalent(self, other) -> bool:
         """
-        Check if this graph is Markov equivalent to the graph `other`. Two graphs are Markov equivalent iff.
+        Check if this graph is Markov equivalent to the graph ``other``. Two graphs are Markov equivalent iff.
         they have the same skeleton, same v-structures, and if whenever there is the same discriminating path for some
         node in both graphs, the node is a collider on that path in one graph iff. it is a collider on that path in
         the other graph.
@@ -1368,7 +1511,7 @@ class AncestralGraph:
         Parameters
         ----------
         other:
-            Another AncestralGraph.
+            another AncestralGraph.
 
         Examples
         --------
@@ -1526,7 +1669,7 @@ class AncestralGraph:
 
     def _no_other_path(self, i: Node, j: Node, ancestor_dict: dict) -> bool:
         """
-        Check if there is any path from i to j other than possibly the direct edge i->j.
+        Check if there is any path from ``i`` to ``j`` other than possibly the direct edge i->j.
         """
         other_ancestors_j = ancestor_dict[j] - {i}
         return (other_ancestors_j & self._children[i]) == set()
@@ -1551,6 +1694,7 @@ class AncestralGraph:
 
         Example
         -------
+        >>> import causaldag as cd
         >>> g = cd.AncestralGraph(directed={(0, 1)}, bidirected={(1, 2)})
         >>> g.legitimate_mark_changes()
         ({(0, 1)}, {(2, 1)})
@@ -1644,7 +1788,7 @@ class AncestralGraph:
 
     def msep(self, A: Set[Node], B: Set[Node], C: Set[Node]=set()) -> bool:
         """
-        Check whether A and B are m-separated given C, using the Bayes ball algorithm.
+        Check whether ``A`` and ``B`` are m-separated given ``C``, using the Bayes ball algorithm.
 
         Parameters
         ----------
@@ -1708,7 +1852,7 @@ class AncestralGraph:
 
     def msep_from_given(self, A: Set[Node], C: Set[Node]=set()) -> Set[Node]:
         """
-        Find all nodes m-separated from A given C.
+        Find all nodes m-separated from ``A`` given ``C``.
 
         Uses algorithm similar to that in Geiger, D., Verma, T., & Pearl, J. (1990).
         Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
