@@ -2069,20 +2069,34 @@ class DAG:
         return pdag
 
     # === CHICKERING SEQUENCE
+    def _is_resolved_sink(self, other, node, res_sinks):
+        no_children = not (self._children[node] - res_sinks)
+        no_children_other = not (other._children[node] - res_sinks)
+        same_parents = self._parents[node] == other._parents[node]
+        return no_children and no_children_other and same_parents
+
     def resolved_sinks(self, other) -> set:
         """
+        Return the nodes in this graph which are "resolved sinks" with respect to the graph ``other``.
+
+        A "resolved sink" is a node which has the same parents in both graphs, and no children which are
+        not themselves resolved sinks.
+
+        Parameters
+        ----------
+        other
+            TODO
+
+        Examples
+        --------
+        >>> import causaldag as cd
         TODO
         """
         warn_untested()  # TODO: ADD TEST
 
         res_sinks = set()
         while True:
-            new_resolved = {
-                node for node in self._nodes - res_sinks
-                if not (self._children[node] - res_sinks) and
-                                 not (other._children[node] - res_sinks) and
-                                 self._parents[node] == other._parents[node]
-            }
+            new_resolved = {node for node in self._nodes - res_sinks if self._is_resolved_sink(other, node, res_sinks)}
             res_sinks.update(new_resolved)
             if not new_resolved:
                 break
