@@ -191,7 +191,34 @@
 <dl class="method">
 <dt id="causaldag.classes.dag.DAG.apply_edge_operation">
 <code class="descclassname">DAG.</code><code class="descname">apply_edge_operation</code><span class="sig-paren">(</span><em>imap</em>, <em>seed_sink=None</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.apply_edge_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.apply_edge_operation" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO</p>
+<dd><p>Identify an edge operation (covered edge reversal or edge addition) which decreases the Chickering distance
+from this DAG to <code class="docutils literal notranslate"><span class="pre">imap</span></code>.</p>
+<p>See Chickering, David Maxwell. “Optimal structure identification with greedy search.” (2002), Fig. 2 for
+more details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>imap</strong> – The target I-MAP.</li>
+<li><strong>seed_sink</strong> – If the algorithm reaches step 3, pick this node (if it is indeed a valid sink).</li>
+<li><strong>verbose</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, print out the steps of the algorithm.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>The updated DAG</li>
+<li>The node picked for the operation</li>
+<li>The type of the edge operation (corresponding to the line of the algorithm in the above paper)</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(DAG, Node, int)</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

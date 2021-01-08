@@ -2118,7 +2118,7 @@ class DAG:
 
         Parameters
         ----------
-        imap
+        imap: DAG
             The I-MAP of this DAG at which the Chickering sequence will end.
 
         Examples
@@ -2149,7 +2149,27 @@ class DAG:
 
     def apply_edge_operation(self, imap, seed_sink=None, verbose=False):
         """
-        TODO
+        Identify an edge operation (covered edge reversal or edge addition) which decreases the Chickering distance
+        from this DAG to ``imap``.
+
+        See Chickering, David Maxwell. "Optimal structure identification with greedy search." (2002), Fig. 2 for
+        more details.
+
+        Parameters
+        ----------
+        imap:
+            The target I-MAP.
+        seed_sink:
+            If the algorithm reaches step 3, pick this node (if it is indeed a valid sink).
+        verbose:
+            If ``True``, print out the steps of the algorithm.
+
+        Returns
+        -------
+        (DAG, Node, int)
+            * The updated DAG
+            * The node picked for the operation
+            * The type of the edge operation (corresponding to the line of the algorithm in the above paper)
         """
         warn_untested()  # TODO: ADD TEST
 

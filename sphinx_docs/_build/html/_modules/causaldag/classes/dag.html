@@ -2274,7 +2274,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        imap</span>
+<span class="sd">        imap: DAG</span>
 <span class="sd">            The I-MAP of this DAG at which the Chickering sequence will end.</span>
 
 <span class="sd">        Examples</span>
@@ -2305,7 +2305,27 @@
 
 <div class="viewcode-block" id="DAG.apply_edge_operation"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.apply_edge_operation.html#causaldag.classes.dag.DAG.apply_edge_operation">[docs]</a>    <span class="k">def</span> <span class="nf">apply_edge_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imap</span><span class="p">,</span> <span class="n">seed_sink</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Identify an edge operation (covered edge reversal or edge addition) which decreases the Chickering distance</span>
+<span class="sd">        from this DAG to ``imap``.</span>
+
+<span class="sd">        See Chickering, David Maxwell. &quot;Optimal structure identification with greedy search.&quot; (2002), Fig. 2 for</span>
+<span class="sd">        more details.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        imap:</span>
+<span class="sd">            The target I-MAP.</span>
+<span class="sd">        seed_sink:</span>
+<span class="sd">            If the algorithm reaches step 3, pick this node (if it is indeed a valid sink).</span>
+<span class="sd">        verbose:</span>
+<span class="sd">            If ``True``, print out the steps of the algorithm.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (DAG, Node, int)</span>
+<span class="sd">            * The updated DAG</span>
+<span class="sd">            * The node picked for the operation</span>
+<span class="sd">            * The type of the edge operation (corresponding to the line of the algorithm in the above paper)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
