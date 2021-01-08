@@ -265,6 +265,23 @@ empty, defaults to 1.</dd>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d2</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">confusion_matrix_skeleton</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="p">[</span><span class="s2">&quot;tpr&quot;</span><span class="p">]</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d3</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">confusion_matrix_skeleton</span><span class="p">(</span><span class="n">d3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="p">[</span><span class="s2">&quot;true_positives&quot;</span><span class="p">]</span>
+<span class="go">{frozenset({0, 1})}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="p">[</span><span class="s2">&quot;false_positives&quot;</span><span class="p">]</span>
+<span class="go">{frozenset({0, 2})},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="p">[</span><span class="s2">&quot;false_negatives&quot;</span><span class="p">]</span>
+<span class="go">{frozenset({1, 2})}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

@@ -32,6 +32,7 @@ class DAG:
     """
     Base class for causal DAGs.
     """
+
     def __init__(self, nodes: Set = frozenset(), arcs: Set = frozenset(), dag=None):
         if dag is not None:
             self._nodes = set(dag._nodes)
@@ -1331,7 +1332,15 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        >>> d2 = cd.DAG(arcs={(0, 1), (2, 1)})
+        >>> cm = d1.confusion_matrix(d2)
+        >>> cm["mistaken_edges_for_arcs"]
+        {frozenset({0, 1}), frozenset({1, 2})},
+        >>> cm = d2.confusion_matrix(d1)
+        >>> cm["mistaken_arcs_for_edges"]
+        {(0, 1), (2, 1)}
         """
         self_cpdag = self.cpdag()
 
@@ -1451,7 +1460,20 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        >>> d2 = cd.DAG(arcs={(0, 1), (2, 1)})
+        >>> cm = d1.confusion_matrix_skeleton(d2)
+        >>> cm["tpr"]
+        1.0
+        >>> d3 = cd.DAG(arcs={(0, 1), (0, 2)})
+        >>> cm = d2.confusion_matrix_skeleton(d3)
+        >>> cm["true_positives"]
+        {frozenset({0, 1})}
+        >>> cm["false_positives"]
+        {frozenset({0, 2})},
+        >>> cm["false_negatives"]
+        {frozenset({1, 2})}
         """
         self_skeleton = self.skeleton
         other_skeleton = other.skeleton
@@ -1826,7 +1848,7 @@ class DAG:
 
         return True
 
-    def dsep_from_given(self, A, C=set()) -> Set[Node]:
+    def dsep_from_given(self, A, C: NodeSet = frozenset()) -> Set[Node]:
         """
         Find all nodes d-separated from ``A`` given ``C``.
 
@@ -1835,15 +1857,22 @@ class DAG:
 
         Parameters
         ----------
-        TODO
+        A:
+            set of nodes.
+        C:
+            set of conditioned nodes.
 
         Returns
         -------
-        TODO
+        set
+            Nodes which are d-separated from ``A`` given ``C``.
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (2, 3), (3, 4)})
+        >>> d.dsep_from_given(0, 1)
+        {2, 3, 4]
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -2328,7 +2357,7 @@ class DAG:
         # STEP 5: PICK A SPECIFIC CHILD OF Y IN G
         d = list(imap_subgraph.upstream_most(self_subgraph.descendants_of(sink)))[0]
         valid_children = self_subgraph.upstream_most(self_subgraph._children[sink]) & (
-                    self_subgraph.ancestors_of(d) | {d})
+                self_subgraph.ancestors_of(d) | {d})
         z = random.choice(list(valid_children))
         if verbose: print(f"Step 5: Picked z={z}")
 
