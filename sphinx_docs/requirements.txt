@@ -1,3 +1,4 @@
 dataclasses==0.6
 typing==3.6.6
 numpy==1.19.4
+scipy==1.4.1
