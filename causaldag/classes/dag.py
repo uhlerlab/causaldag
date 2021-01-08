@@ -1836,14 +1836,16 @@ class DAG:
 
         Returns
         -------
-        TODO
+        set
+            The set of tuples of the form (``i``, ``A``, ``C``) representing the local Markov statements of the DAG
+            via (``i`` independent of ``A`` given ``C``).
 
         Examples
         --------
         >>> import causaldag as cd
         >>> g = cd.DAG(arcs={(1, 2), (3, 2)})
         >>> g.local_markov_statements()
-        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}
+        {(1, frozenset({3}), frozenset()), (2, frozenset(), frozenset({1, 3})), (3, frozenset({1}), frozenset())}
         """
         statements = set()
         for node in self._nodes:
