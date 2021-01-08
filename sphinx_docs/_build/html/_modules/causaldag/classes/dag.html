@@ -1435,7 +1435,55 @@
 
 <div class="viewcode-block" id="DAG.confusion_matrix"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.confusion_matrix.html#causaldag.classes.dag.DAG.confusion_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">rates_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the &quot;confusion matrix&quot; associated with estimating the CPDAG of ``other`` instead of the CPDAG of this DAG.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other:</span>
+<span class="sd">            The DAG against which to compare.</span>
+<span class="sd">        rates_only:</span>
+<span class="sd">            if True, the dictionary of results only contains the false positive rate, true positive rate, and precision.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary of results</span>
+
+<span class="sd">            * false_positive_arcs:</span>
+<span class="sd">                the arcs in the CPDAG of ``other`` which are not arcs or edges in the CPDAG of this DAG.</span>
+<span class="sd">            * false_positive_edges:</span>
+<span class="sd">                the edges in the CPDAG of ``other`` which are not arcs or edges in the CPDAG of this DAG.</span>
+<span class="sd">            * false_negative_arcs:</span>
+<span class="sd">                the arcs in the CPDAG of this graph which are not arcs or edges in the CPDAG of ``other``.</span>
+<span class="sd">            * true_positive_arcs:</span>
+<span class="sd">                the arcs in the CPDAG of ``other`` which are arcs in the CPDAG of this DAG.</span>
+<span class="sd">            * reversed_arcs:</span>
+<span class="sd">                the arcs in the CPDAG of ``other`` whose reversals are arcs in the CPDAG of this DAG.</span>
+<span class="sd">            * mistaken_arcs_for_edges:</span>
+<span class="sd">                the arcs in the CPDAG of ``other`` whose reversals are arcs in the CPDAG of this DAG.</span>
+<span class="sd">            * false_negative_edges:</span>
+<span class="sd">                the edges in the CPDAG of this DAG which are not arcs or edges in the CPDAG of ``other``.</span>
+<span class="sd">            * true_positive_edges:</span>
+<span class="sd">                the edges in the CPDAG of ``other`` which are edges in the CPDAG of this DAG.</span>
+<span class="sd">            * mistaken_edges_for_arcs:</span>
+<span class="sd">                the edges in the CPDAG of ``other`` which are arcs in the CPDAG of this DAG.</span>
+<span class="sd">            * num_false_positives:</span>
+<span class="sd">                the total number of: false_positive_arcs, false_positive_edges</span>
+<span class="sd">            * num_false_negatives:</span>
+<span class="sd">                the total number of: false_negative_arcs, false_negative_edges, mistaken_arcs_for_edges, and reversed_arcs</span>
+<span class="sd">            * num_true_positives:</span>
+<span class="sd">                the total number of: true_positive_arcs, true_positive_edges, and mistaken_edges_for_arcs</span>
+<span class="sd">            * num_true_negatives:</span>
+<span class="sd">                the total number of missing arcs/edges in ``other`` which are actually missing in this DAG.</span>
+<span class="sd">            * fpr:</span>
+<span class="sd">                the false positive rate, i.e., num_false_positives/(num_false_positives+num_true_negatives). If this DAG</span>
+<span class="sd">                is fully connected, defaults to 0.</span>
+<span class="sd">            * tpr:</span>
+<span class="sd">                the true positive rate, i.e., num_true_positives/(num_true_positives+num_false_negatives). If this DAG</span>
+<span class="sd">                is empty, defaults to 1.</span>
+<span class="sd">            * precision:</span>
+<span class="sd">                the precision, i.e., num_true_positives/(num_true_positives+num_false_positives). If ``other`` is</span>
+<span class="sd">                empty, defaults to 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_cpdag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpdag</span><span class="p">()</span>
 
@@ -1508,14 +1556,50 @@
             <span class="n">num_true_positives</span><span class="o">=</span><span class="n">num_true_positives</span><span class="p">,</span>
             <span class="n">num_true_negatives</span><span class="o">=</span><span class="n">num_true_negatives</span><span class="p">,</span>
             <span class="n">fpr</span><span class="o">=</span><span class="n">fpr</span><span class="p">,</span>
-            <span class="n">tpr</span><span class="o">=</span><span class="n">tpr</span>
+            <span class="n">tpr</span><span class="o">=</span><span class="n">tpr</span><span class="p">,</span>
+            <span class="n">precision</span><span class="o">=</span><span class="n">precision</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">res</span></div>
 
 <div class="viewcode-block" id="DAG.confusion_matrix_skeleton"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.confusion_matrix_skeleton.html#causaldag.classes.dag.DAG.confusion_matrix_skeleton">[docs]</a>    <span class="k">def</span> <span class="nf">confusion_matrix_skeleton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the &quot;confusion matrix&quot; associated with estimating the skeleton of ``other`` instead of the skeleton of</span>
+<span class="sd">        this DAG.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other:</span>
+<span class="sd">            The DAG against which to compare.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary of results</span>
+
+<span class="sd">            * false_positives:</span>
+<span class="sd">                the edges in the skeleton of ``other`` which are not in the skeleton of this DAG.</span>
+<span class="sd">            * false_negatives:</span>
+<span class="sd">                the edges in the skeleton of this graph which are not in the skeleton of ``other``.</span>
+<span class="sd">            * true_positives:</span>
+<span class="sd">                the edges in the skeleton of ``other`` which are acutally in the skeleton of this DAG.</span>
+<span class="sd">            * num_false_positives:</span>
+<span class="sd">                the total number of false_positives</span>
+<span class="sd">            * num_false_negatives:</span>
+<span class="sd">                the total number of false_negatives</span>
+<span class="sd">            * num_true_positives:</span>
+<span class="sd">                the total number of true_positives</span>
+<span class="sd">            * num_true_negatives:</span>
+<span class="sd">                the total number of missing edges in the skeleton of ``other`` which are actually missing in this DAG.</span>
+<span class="sd">            * fpr:</span>
+<span class="sd">                the false positive rate, i.e., num_false_positives/(num_false_positives+num_true_negatives). If this DAG</span>
+<span class="sd">                is fully connected, defaults to 0.</span>
+<span class="sd">            * tpr:</span>
+<span class="sd">                the true positive rate, i.e., num_true_positives/(num_true_positives+num_false_negatives). If this DAG</span>
+<span class="sd">                is empty, defaults to 1.</span>
+<span class="sd">            * precision:</span>
+<span class="sd">                the precision, i.e., num_true_positives/(num_true_positives+num_false_positives). If ``other`` is</span>
+<span class="sd">                empty, defaults to 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_skeleton</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skeleton</span>
         <span class="n">other_skeleton</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">skeleton</span>

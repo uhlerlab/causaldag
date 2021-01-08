@@ -196,7 +196,111 @@
 <dl class="method">
 <dt id="causaldag.classes.dag.DAG.confusion_matrix">
 <code class="descclassname">DAG.</code><code class="descname">confusion_matrix</code><span class="sig-paren">(</span><em>other</em>, <em>rates_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.confusion_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.confusion_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO</p>
+<dd><p>Return the “confusion matrix” associated with estimating the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> instead of the CPDAG of this DAG.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>other</strong> – The DAG against which to compare.</li>
+<li><strong>rates_only</strong> – if True, the dictionary of results only contains the false positive rate, true positive rate, and precision.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>Dictionary of results</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>false_positive_arcs:</dt>
+<dd>the arcs in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> which are not arcs or edges in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>false_positive_edges:</dt>
+<dd>the edges in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> which are not arcs or edges in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>false_negative_arcs:</dt>
+<dd>the arcs in the CPDAG of this graph which are not arcs or edges in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>true_positive_arcs:</dt>
+<dd>the arcs in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> which are arcs in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>reversed_arcs:</dt>
+<dd>the arcs in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> whose reversals are arcs in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>mistaken_arcs_for_edges:</dt>
+<dd>the arcs in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> whose reversals are arcs in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>false_negative_edges:</dt>
+<dd>the edges in the CPDAG of this DAG which are not arcs or edges in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>true_positive_edges:</dt>
+<dd>the edges in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> which are edges in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>mistaken_edges_for_arcs:</dt>
+<dd>the edges in the CPDAG of <code class="docutils literal notranslate"><span class="pre">other</span></code> which are arcs in the CPDAG of this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>num_false_positives:</dt>
+<dd>the total number of: false_positive_arcs, false_positive_edges</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>num_false_negatives:</dt>
+<dd>the total number of: false_negative_arcs, false_negative_edges, mistaken_arcs_for_edges, and reversed_arcs</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>num_true_positives:</dt>
+<dd>the total number of: true_positive_arcs, true_positive_edges, and mistaken_edges_for_arcs</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>num_true_negatives:</dt>
+<dd>the total number of missing arcs/edges in <code class="docutils literal notranslate"><span class="pre">other</span></code> which are actually missing in this DAG.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>fpr:</dt>
+<dd>the false positive rate, i.e., num_false_positives/(num_false_positives+num_true_negatives). If this DAG
+is fully connected, defaults to 0.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>tpr:</dt>
+<dd>the true positive rate, i.e., num_true_positives/(num_true_positives+num_false_negatives). If this DAG
+is empty, defaults to 1.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>precision:</dt>
+<dd>the precision, i.e., num_true_positives/(num_true_positives+num_false_positives). If <code class="docutils literal notranslate"><span class="pre">other</span></code> is
+empty, defaults to 1.</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

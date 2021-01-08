@@ -1279,6 +1279,58 @@ class DAG:
 
     def confusion_matrix(self, other, rates_only=False):
         """
+        Return the "confusion matrix" associated with estimating the CPDAG of ``other`` instead of the CPDAG of this DAG.
+
+        Parameters
+        ----------
+        other:
+            The DAG against which to compare.
+        rates_only:
+            if True, the dictionary of results only contains the false positive rate, true positive rate, and precision.
+
+        Returns
+        -------
+        dict
+            Dictionary of results
+
+            * false_positive_arcs:
+                the arcs in the CPDAG of ``other`` which are not arcs or edges in the CPDAG of this DAG.
+            * false_positive_edges:
+                the edges in the CPDAG of ``other`` which are not arcs or edges in the CPDAG of this DAG.
+            * false_negative_arcs:
+                the arcs in the CPDAG of this graph which are not arcs or edges in the CPDAG of ``other``.
+            * true_positive_arcs:
+                the arcs in the CPDAG of ``other`` which are arcs in the CPDAG of this DAG.
+            * reversed_arcs:
+                the arcs in the CPDAG of ``other`` whose reversals are arcs in the CPDAG of this DAG.
+            * mistaken_arcs_for_edges:
+                the arcs in the CPDAG of ``other`` whose reversals are arcs in the CPDAG of this DAG.
+            * false_negative_edges:
+                the edges in the CPDAG of this DAG which are not arcs or edges in the CPDAG of ``other``.
+            * true_positive_edges:
+                the edges in the CPDAG of ``other`` which are edges in the CPDAG of this DAG.
+            * mistaken_edges_for_arcs:
+                the edges in the CPDAG of ``other`` which are arcs in the CPDAG of this DAG.
+            * num_false_positives:
+                the total number of: false_positive_arcs, false_positive_edges
+            * num_false_negatives:
+                the total number of: false_negative_arcs, false_negative_edges, mistaken_arcs_for_edges, and reversed_arcs
+            * num_true_positives:
+                the total number of: true_positive_arcs, true_positive_edges, and mistaken_edges_for_arcs
+            * num_true_negatives:
+                the total number of missing arcs/edges in ``other`` which are actually missing in this DAG.
+            * fpr:
+                the false positive rate, i.e., num_false_positives/(num_false_positives+num_true_negatives). If this DAG
+                is fully connected, defaults to 0.
+            * tpr:
+                the true positive rate, i.e., num_true_positives/(num_true_positives+num_false_negatives). If this DAG
+                is empty, defaults to 1.
+            * precision:
+                the precision, i.e., num_true_positives/(num_true_positives+num_false_positives). If ``other`` is
+                empty, defaults to 1.
+
+        Examples
+        --------
         TODO
         """
         self_cpdag = self.cpdag()
@@ -1352,13 +1404,53 @@ class DAG:
             num_true_positives=num_true_positives,
             num_true_negatives=num_true_negatives,
             fpr=fpr,
-            tpr=tpr
+            tpr=tpr,
+            precision=precision
         )
 
         return res
 
     def confusion_matrix_skeleton(self, other):
         """
+        Return the "confusion matrix" associated with estimating the skeleton of ``other`` instead of the skeleton of
+        this DAG.
+
+        Parameters
+        ----------
+        other:
+            The DAG against which to compare.
+
+        Returns
+        -------
+        dict
+            Dictionary of results
+
+            * false_positives:
+                the edges in the skeleton of ``other`` which are not in the skeleton of this DAG.
+            * false_negatives:
+                the edges in the skeleton of this graph which are not in the skeleton of ``other``.
+            * true_positives:
+                the edges in the skeleton of ``other`` which are acutally in the skeleton of this DAG.
+            * num_false_positives:
+                the total number of false_positives
+            * num_false_negatives:
+                the total number of false_negatives
+            * num_true_positives:
+                the total number of true_positives
+            * num_true_negatives:
+                the total number of missing edges in the skeleton of ``other`` which are actually missing in this DAG.
+            * fpr:
+                the false positive rate, i.e., num_false_positives/(num_false_positives+num_true_negatives). If this DAG
+                is fully connected, defaults to 0.
+            * tpr:
+                the true positive rate, i.e., num_true_positives/(num_true_positives+num_false_negatives). If this DAG
+                is empty, defaults to 1.
+            * precision:
+                the precision, i.e., num_true_positives/(num_true_positives+num_false_positives). If ``other`` is
+                empty, defaults to 1.
+
+        Examples
+        --------
         TODO
         """
         self_skeleton = self.skeleton
