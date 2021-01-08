@@ -2250,9 +2250,27 @@ class DAG:
 
         return ct
 
-    def simplified_directed_clique_tree(self):
+    def contracted_directed_clique_tree(self):
         """
-        TODO
+        Return the contracted directed clique tree associated with this DAG.
+
+        See the following for the definition of the contracted directed clique tree:
+        Squires, Chandler, et al. "Active Structure Learning of Causal DAGs via Directed Clique Tree." (2020)
+
+        Returns
+        -------
+        networkx.MultiDiGraph
+            The directed clique tree of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})
+        >>> cdct = d.contracted_directed_clique_tree()
+        >>> cdct.nodes
+        NodeView((frozenset({frozenset({1, 2, 3}), frozenset({1, 3, 4})}), frozenset({frozenset({0, 1})})))
+        >>> cdct.edges
+        OutEdgeView([(frozenset({frozenset({0, 1})}), frozenset({frozenset({1, 2, 3}), frozenset({1, 3, 4})}))])
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -2278,11 +2296,27 @@ class DAG:
 
     def residuals(self):
         """
-        TODO
+        Return the residuals associated with this DAG.
+
+        See the following for the definition of residuals:
+        Squires, Chandler, et al. "Active Structure Learning of Causal DAGs via Directed Clique Tree." (2020)
+
+        Returns
+        -------
+        networkx.MultiDiGraph
+            The directed clique tree of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})
+        >>> residuals = d.residuals()
+        >>> residuals
+        [frozenset({2, 3, 4}), frozenset({0, 1})]
         """
         warn_untested()  # TODO: ADD TEST
 
-        sdct = self.simplified_directed_clique_tree()
+        sdct = self.contracted_directed_clique_tree()
         sdct_nodes = list(sdct.nodes)
         sdct_components = [frozenset.union(*component) for component in sdct_nodes]
         sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
@@ -2291,13 +2325,29 @@ class DAG:
 
     def residual_essential_graph(self):
         """
-        TODO
+        Return the residual essential graph associated with this DAG.
+
+        See the following for the definition of the residual essential graph:
+        Squires, Chandler, et al. "Active Structure Learning of Causal DAGs via Directed Clique Tree." (2020)
+
+        Returns
+        -------
+        networkx.MultiDiGraph
+            The directed clique tree of this DAG.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})
+        >>> r_eg = d.residual_essential_graph()
+        >>> r_eg.arcs
+        {(1, 2), (1, 3), (1, 4)}
         """
         warn_untested()  # TODO: ADD TEST
 
         from causaldag import PDAG
 
-        sdct = self.simplified_directed_clique_tree()
+        sdct = self.contracted_directed_clique_tree()
         sdct_nodes = list(sdct.nodes)
         sdct_components = [frozenset.union(*component) for component in sdct_nodes]
         sdct_parents = [list(sdct.predecessors(component)) for component in sdct_nodes]
@@ -2340,7 +2390,7 @@ class DAG:
         {1, 3}
         """
         if new:
-            sdct = self.simplified_directed_clique_tree()
+            sdct = self.contracted_directed_clique_tree()
             top_sort = nx.topological_sort(sdct)
 
             intervened_nodes = set()

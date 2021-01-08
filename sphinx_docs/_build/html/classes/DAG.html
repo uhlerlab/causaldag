@@ -185,7 +185,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#intervention-design">Intervention Design</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html">causaldag.classes.dag.DAG.optimal_fully_orienting_interventions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_single_node_interventions.html">causaldag.classes.dag.DAG.optimal_fully_orienting_single_node_interventions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html">causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html">causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions</a></li>
 </ul>
@@ -563,7 +563,7 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.directed_clique_tree.html#causaldag.classes.dag.DAG.directed_clique_tree" title="causaldag.classes.dag.DAG.directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.directed_clique_tree</span></code></a>([verbose])</td>
-<td>TODO</td>
+<td>Return the directed clique tree associated with this DAG.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.simplified_directed_clique_tree.html#causaldag.classes.dag.DAG.simplified_directed_clique_tree" title="causaldag.classes.dag.DAG.simplified_directed_clique_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.simplified_directed_clique_tree</span></code></a>()</td>
 <td>TODO</td>
@@ -585,11 +585,11 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.optimal_fully_orienting_interventions</span></code></a>([…])</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.optimal_fully_orienting_single_node_interventions.html#causaldag.classes.dag.DAG.optimal_fully_orienting_single_node_interventions" title="causaldag.classes.dag.DAG.optimal_fully_orienting_single_node_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.optimal_fully_orienting_single_node_interventions</span></code></a>([…])</td>
 <td>Find the smallest set of interventions which fully orients the CPDAG into this DAG.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html#causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_single_node_intervention</span></code></a>([…])</td>
-<td>Find the num_interventions single-node interventions which orient the most edges in this graph, using a greedy strategy.</td>
+<td>Greedily pick <code class="docutils literal notranslate"><span class="pre">num_interventions</span></code> single node interventions based on how many edges they orient.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html#causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions" title="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DAG.greedy_optimal_fully_orienting_interventions</span></code></a>([cpdag])</td>
 <td>Find a set of interventions which fully orients a CPDAG into this DAG, using greedy selection of the interventions.</td>

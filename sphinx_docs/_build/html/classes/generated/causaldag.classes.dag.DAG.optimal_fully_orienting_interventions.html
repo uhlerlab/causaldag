@@ -38,9 +38,7 @@
 
     
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html" />
-    <link rel="prev" title="causaldag.classes.dag.DAG.residual_essential_graph" href="causaldag.classes.dag.DAG.residual_essential_graph.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,33 +83,8 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Classes</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../AncestralGraph.html">AncestralGraph</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../DAG.html">DAG</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#copying">Copying</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#information-about-nodes">Information about nodes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-modification">Graph modification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#graph-properties">Graph properties</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#ordering">Ordering</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#comparison-to-other-dags">Comparison to other DAGs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#separation-statements">Separation statements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-formats">Conversion to other formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#conversion-to-other-graphs">Conversion to other graphs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#chickering-sequences">Chickering Sequences</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../DAG.html#directed-clique-trees">Directed Clique Trees</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../DAG.html#intervention-design">Intervention Design</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">causaldag.classes.dag.DAG.optimal_fully_orienting_interventions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html">causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention</a></li>
-<li class="toctree-l4"><a class="reference internal" href="causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions.html">causaldag.classes.dag.DAG.greedy_optimal_fully_orienting_interventions</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../PDAG.html">PDAG</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../GaussDAG.html">GaussDAG</a></li>
-</ul>
-</li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utils/index.html">Utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../structure_learning/index.html">Structure Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../rand/index.html">Random Graphs</a></li>
@@ -163,10 +136,6 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../index.html">Classes</a> &raquo;</li>
-        
-          <li><a href="../DAG.html">DAG</a> &raquo;</li>
-        
       <li>causaldag.classes.dag.DAG.optimal_fully_orienting_interventions</li>
     
     
@@ -188,24 +157,6 @@
             
   <div class="section" id="causaldag-classes-dag-dag-optimal-fully-orienting-interventions">
 <h1>causaldag.classes.dag.DAG.optimal_fully_orienting_interventions<a class="headerlink" href="#causaldag-classes-dag-dag-optimal-fully-orienting-interventions" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
-<dt id="causaldag.classes.dag.DAG.optimal_fully_orienting_interventions">
-<code class="descclassname">DAG.</code><code class="descname">optimal_fully_orienting_interventions</code><span class="sig-paren">(</span><em>cpdag=None</em>, <em>new=False</em>, <em>verbose=False</em><span class="sig-paren">)</span> &#x2192; Set[Hashable]<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.optimal_fully_orienting_interventions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.optimal_fully_orienting_interventions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find the smallest set of interventions which fully orients the CPDAG into this DAG.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cpdag</strong> – the starting CPDAG containing known orientations. If None, use the observational essential graph.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A minimum-size set of interventions which fully orients the DAG.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">interventions</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 
@@ -213,10 +164,6 @@
            
           </div>
           <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention.html" class="btn btn-neutral float-right" title="causaldag.classes.dag.DAG.greedy_optimal_single_node_intervention" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="causaldag.classes.dag.DAG.residual_essential_graph.html" class="btn btn-neutral float-left" title="causaldag.classes.dag.DAG.residual_essential_graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-    </div>
 
   <hr/>
 
