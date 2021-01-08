@@ -191,7 +191,25 @@
 <dl class="method">
 <dt id="causaldag.classes.dag.DAG.resolved_sinks">
 <code class="descclassname">DAG.</code><code class="descname">resolved_sinks</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; set<a class="reference internal" href="../../_modules/causaldag/classes/dag.html#DAG.resolved_sinks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.classes.dag.DAG.resolved_sinks" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO</p>
+<dd><p>Return the nodes in this graph which are “resolved sinks” with respect to the graph <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
+<p>A “resolved sink” is a node which has the same parents in both graphs, and no children which are
+not themselves resolved sinks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – TODO</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">causaldag</span> <span class="k">as</span> <span class="nn">cd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d2</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">DAG</span><span class="p">(</span><span class="n">arcs</span><span class="o">=</span><span class="p">{(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res_sinks</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">resolved_sinks</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+<span class="go">{0}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

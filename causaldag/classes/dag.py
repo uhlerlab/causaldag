@@ -2090,7 +2090,10 @@ class DAG:
         Examples
         --------
         >>> import causaldag as cd
-        TODO
+        >>> d1 = cd.DAG(arcs={(1, 0), (1, 2), (2, 0)})
+        >>> d2 = cd.DAG(arcs={(2, 0), (2, 1), (1, 0)})
+        >>> res_sinks = d1.resolved_sinks(d2)
+        {0}
         """
         warn_untested()  # TODO: ADD TEST
 
@@ -2107,7 +2110,11 @@ class DAG:
         """
         Return a *Chickering sequence* from this DAG to an I-MAP ``imap``.
 
-        TODO: add reference
+        A Chickering sequence from DAG ``D1`` to a DAG ``D2`` is a sequence of DAGs starting at ``D1`` and ending at
+        ``D2``, with consecutive DAGs differing by a single edge reversal or edge deletion, such that each DAG is an
+        IMAP of ``D1``.
+
+        See Chickering, David Maxwell. "Optimal structure identification with greedy search." (2002) for more details.
 
         Parameters
         ----------
@@ -2116,7 +2123,14 @@ class DAG:
 
         Examples
         --------
-        TODO
+        >>> import causaldag as cd
+        >>> d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        >>> d2 = cd.DAG(arcs={(2, 0), (2, 1), (1, 0)})
+        >>> sequence, moves = d1.chickering_sequence(d2)
+        >>> sequence[1].arcs
+        {(1, 0), (1, 2)}
+        >>> sequence[2].arcs
+        {(1, 0), (1, 2), (2, 0)}
         """
         warn_untested()  # TODO: ADD TEST
 

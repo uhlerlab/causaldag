@@ -2225,20 +2225,37 @@
         <span class="k">return</span> <span class="n">pdag</span></div>
 
     <span class="c1"># === CHICKERING SEQUENCE</span>
+    <span class="k">def</span> <span class="nf">_is_resolved_sink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">res_sinks</span><span class="p">):</span>
+        <span class="n">no_children</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span>
+        <span class="n">no_children_other</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span>
+        <span class="n">same_parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">no_children</span> <span class="ow">and</span> <span class="n">no_children_other</span> <span class="ow">and</span> <span class="n">same_parents</span>
+
 <div class="viewcode-block" id="DAG.resolved_sinks"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.resolved_sinks.html#causaldag.classes.dag.DAG.resolved_sinks">[docs]</a>    <span class="k">def</span> <span class="nf">resolved_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the nodes in this graph which are &quot;resolved sinks&quot; with respect to the graph ``other``.</span>
+
+<span class="sd">        A &quot;resolved sink&quot; is a node which has the same parents in both graphs, and no children which are</span>
+<span class="sd">        not themselves resolved sinks.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other</span>
+<span class="sd">            TODO</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d1 = cd.DAG(arcs={(1, 0), (1, 2), (2, 0)})</span>
+<span class="sd">        &gt;&gt;&gt; d2 = cd.DAG(arcs={(2, 0), (2, 1), (1, 0)})</span>
+<span class="sd">        &gt;&gt;&gt; res_sinks = d1.resolved_sinks(d2)</span>
+<span class="sd">        {0}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
         <span class="n">res_sinks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">new_resolved</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="n">res_sinks</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span> <span class="ow">and</span>
-                                 <span class="ow">not</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-</span> <span class="n">res_sinks</span><span class="p">)</span> <span class="ow">and</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_parents</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-            <span class="p">}</span>
+            <span class="n">new_resolved</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">-</span> <span class="n">res_sinks</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_resolved_sink</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">res_sinks</span><span class="p">)}</span>
             <span class="n">res_sinks</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_resolved</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">new_resolved</span><span class="p">:</span>
                 <span class="k">break</span>
@@ -2249,7 +2266,11 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a *Chickering sequence* from this DAG to an I-MAP ``imap``.</span>
 
-<span class="sd">        TODO: add reference</span>
+<span class="sd">        A Chickering sequence from DAG ``D1`` to a DAG ``D2`` is a sequence of DAGs starting at ``D1`` and ending at</span>
+<span class="sd">        ``D2``, with consecutive DAGs differing by a single edge reversal or edge deletion, such that each DAG is an</span>
+<span class="sd">        IMAP of ``D1``.</span>
+
+<span class="sd">        See Chickering, David Maxwell. &quot;Optimal structure identification with greedy search.&quot; (2002) for more details.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2258,7 +2279,14 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d1 = cd.DAG(arcs={(0, 1), (1, 2)})</span>
+<span class="sd">        &gt;&gt;&gt; d2 = cd.DAG(arcs={(2, 0), (2, 1), (1, 0)})</span>
+<span class="sd">        &gt;&gt;&gt; sequence, moves = d1.chickering_sequence(d2)</span>
+<span class="sd">        &gt;&gt;&gt; sequence[1].arcs</span>
+<span class="sd">        {(1, 0), (1, 2)}</span>
+<span class="sd">        &gt;&gt;&gt; sequence[2].arcs</span>
+<span class="sd">        {(1, 0), (1, 2), (2, 0)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
