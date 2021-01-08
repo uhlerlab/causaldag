@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.is\_invariant
+causaldag.classes.dag.DAG.is\_invariant
 =======================================
 
 .. currentmodule:: causaldag.classes.dag

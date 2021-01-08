@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.marginal\_mag
+causaldag.classes.dag.DAG.marginal\_mag
 =======================================
 
 .. currentmodule:: causaldag.classes.dag

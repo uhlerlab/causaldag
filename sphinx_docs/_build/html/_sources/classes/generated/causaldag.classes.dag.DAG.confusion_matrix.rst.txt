@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.confusion\_matrix
+causaldag.classes.dag.DAG.confusion\_matrix
 ===========================================
 
 .. currentmodule:: causaldag.classes.dag

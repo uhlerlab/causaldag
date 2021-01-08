@@ -2406,9 +2406,27 @@
 
         <span class="k">return</span> <span class="n">ct</span></div>
 
-<div class="viewcode-block" id="DAG.simplified_directed_clique_tree"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.simplified_directed_clique_tree.html#causaldag.classes.dag.DAG.simplified_directed_clique_tree">[docs]</a>    <span class="k">def</span> <span class="nf">simplified_directed_clique_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DAG.contracted_directed_clique_tree"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.contracted_directed_clique_tree.html#causaldag.classes.dag.DAG.contracted_directed_clique_tree">[docs]</a>    <span class="k">def</span> <span class="nf">contracted_directed_clique_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the contracted directed clique tree associated with this DAG.</span>
+
+<span class="sd">        See the following for the definition of the contracted directed clique tree:</span>
+<span class="sd">        Squires, Chandler, et al. &quot;Active Structure Learning of Causal DAGs via Directed Clique Tree.&quot; (2020)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        networkx.MultiDiGraph</span>
+<span class="sd">            The directed clique tree of this DAG.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; cdct = d.contracted_directed_clique_tree()</span>
+<span class="sd">        &gt;&gt;&gt; cdct.nodes</span>
+<span class="sd">        NodeView((frozenset({frozenset({1, 2, 3}), frozenset({1, 3, 4})}), frozenset({frozenset({0, 1})})))</span>
+<span class="sd">        &gt;&gt;&gt; cdct.edges</span>
+<span class="sd">        OutEdgeView([(frozenset({frozenset({0, 1})}), frozenset({frozenset({1, 2, 3}), frozenset({1, 3, 4})}))])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
@@ -2434,11 +2452,27 @@
 
 <div class="viewcode-block" id="DAG.residuals"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.residuals.html#causaldag.classes.dag.DAG.residuals">[docs]</a>    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the residuals associated with this DAG.</span>
+
+<span class="sd">        See the following for the definition of residuals:</span>
+<span class="sd">        Squires, Chandler, et al. &quot;Active Structure Learning of Causal DAGs via Directed Clique Tree.&quot; (2020)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        networkx.MultiDiGraph</span>
+<span class="sd">            The directed clique tree of this DAG.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; residuals = d.residuals()</span>
+<span class="sd">        &gt;&gt;&gt; residuals</span>
+<span class="sd">        [frozenset({2, 3, 4}), frozenset({0, 1})]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
-        <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
+        <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contracted_directed_clique_tree</span><span class="p">()</span>
         <span class="n">sdct_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
         <span class="n">sdct_components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">)</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">sdct_nodes</span><span class="p">]</span>
         <span class="n">sdct_parents</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">component</span><span class="p">))</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">sdct_nodes</span><span class="p">]</span>
@@ -2447,13 +2481,29 @@
 
 <div class="viewcode-block" id="DAG.residual_essential_graph"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.residual_essential_graph.html#causaldag.classes.dag.DAG.residual_essential_graph">[docs]</a>    <span class="k">def</span> <span class="nf">residual_essential_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the residual essential graph associated with this DAG.</span>
+
+<span class="sd">        See the following for the definition of the residual essential graph:</span>
+<span class="sd">        Squires, Chandler, et al. &quot;Active Structure Learning of Causal DAGs via Directed Clique Tree.&quot; (2020)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        networkx.MultiDiGraph</span>
+<span class="sd">            The directed clique tree of this DAG.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d = cd.DAG(arcs={(0, 1), (1, 2), (1, 3), (1, 4), (3, 2), (3, 4)})</span>
+<span class="sd">        &gt;&gt;&gt; r_eg = d.residual_essential_graph()</span>
+<span class="sd">        &gt;&gt;&gt; r_eg.arcs</span>
+<span class="sd">        {(1, 2), (1, 3), (1, 4)}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
 
         <span class="kn">from</span> <span class="nn">causaldag</span> <span class="k">import</span> <span class="n">PDAG</span>
 
-        <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
+        <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contracted_directed_clique_tree</span><span class="p">()</span>
         <span class="n">sdct_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
         <span class="n">sdct_components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">)</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">sdct_nodes</span><span class="p">]</span>
         <span class="n">sdct_parents</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">sdct</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">component</span><span class="p">))</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">sdct_nodes</span><span class="p">]</span>
@@ -2496,7 +2546,7 @@
 <span class="sd">        {1, 3}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
-            <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplified_directed_clique_tree</span><span class="p">()</span>
+            <span class="n">sdct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contracted_directed_clique_tree</span><span class="p">()</span>
             <span class="n">top_sort</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">sdct</span><span class="p">)</span>
 
             <span class="n">intervened_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>

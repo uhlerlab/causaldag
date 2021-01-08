@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.local\_markov\_statements
+causaldag.classes.dag.DAG.local\_markov\_statements
 ===================================================
 
 .. currentmodule:: causaldag.classes.dag

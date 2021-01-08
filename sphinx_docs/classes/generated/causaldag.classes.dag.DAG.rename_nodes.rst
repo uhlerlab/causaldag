@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.rename\_nodes
+causaldag.classes.dag.DAG.rename\_nodes
 =======================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.ancestral\_graph.AncestralGraph.remove\_undirected
+causaldag.classes.ancestral\_graph.AncestralGraph.remove\_undirected
 ====================================================================
 
 .. currentmodule:: causaldag.classes.ancestral_graph

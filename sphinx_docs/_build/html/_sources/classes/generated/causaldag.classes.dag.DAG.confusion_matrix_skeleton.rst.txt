@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.confusion\_matrix\_skeleton
+causaldag.classes.dag.DAG.confusion\_matrix\_skeleton
 =====================================================
 
 .. currentmodule:: causaldag.classes.dag

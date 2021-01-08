@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.to\_dataframe
+causaldag.classes.dag.DAG.to\_dataframe
 =======================================
 
 .. currentmodule:: causaldag.classes.dag

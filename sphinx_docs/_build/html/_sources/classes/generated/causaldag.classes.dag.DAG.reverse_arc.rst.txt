@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.reverse\_arc
+causaldag.classes.dag.DAG.reverse\_arc
 ======================================
 
 .. currentmodule:: causaldag.classes.dag

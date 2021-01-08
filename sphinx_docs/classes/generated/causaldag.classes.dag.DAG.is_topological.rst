@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.is\_topological
+causaldag.classes.dag.DAG.is\_topological
 =========================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.directed\_clique\_tree
+causaldag.classes.dag.DAG.directed\_clique\_tree
 ================================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.indegree\_of
+causaldag.classes.dag.DAG.indegree\_of
 ======================================
 
 .. currentmodule:: causaldag.classes.dag

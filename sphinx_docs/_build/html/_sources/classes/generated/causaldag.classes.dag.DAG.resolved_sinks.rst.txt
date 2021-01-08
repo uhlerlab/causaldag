@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.resolved\_sinks
+causaldag.classes.dag.DAG.resolved\_sinks
 =========================================
 
 .. currentmodule:: causaldag.classes.dag

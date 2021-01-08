@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.triples
+causaldag.classes.dag.DAG.triples
 =================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.interventional\_cpdag
+causaldag.classes.dag.DAG.interventional\_cpdag
 ===============================================
 
 .. currentmodule:: causaldag.classes.dag

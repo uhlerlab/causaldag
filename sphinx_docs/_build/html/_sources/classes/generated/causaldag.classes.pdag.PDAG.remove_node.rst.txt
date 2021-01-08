@@ -1,4 +1,4 @@
-﻿causaldag.classes.pdag.PDAG.remove\_node
+causaldag.classes.pdag.PDAG.remove\_node
 ========================================
 
 .. currentmodule:: causaldag.classes.pdag

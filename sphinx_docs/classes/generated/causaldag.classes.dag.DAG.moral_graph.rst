@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.moral\_graph
+causaldag.classes.dag.DAG.moral\_graph
 ======================================
 
 .. currentmodule:: causaldag.classes.dag

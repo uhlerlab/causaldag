@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.permutation\_score
+causaldag.classes.dag.DAG.permutation\_score
 ============================================
 
 .. currentmodule:: causaldag.classes.dag

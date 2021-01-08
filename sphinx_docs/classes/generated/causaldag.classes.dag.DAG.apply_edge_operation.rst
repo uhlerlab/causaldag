@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.apply\_edge\_operation
+causaldag.classes.dag.DAG.apply\_edge\_operation
 ================================================
 
 .. currentmodule:: causaldag.classes.dag

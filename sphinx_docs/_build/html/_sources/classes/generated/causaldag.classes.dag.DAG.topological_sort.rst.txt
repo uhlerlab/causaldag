@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.topological\_sort
+causaldag.classes.dag.DAG.topological\_sort
 ===========================================
 
 .. currentmodule:: causaldag.classes.dag

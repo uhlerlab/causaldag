@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.chickering\_distance
+causaldag.classes.dag.DAG.chickering\_distance
 ==============================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.markov\_blanket\_of
+causaldag.classes.dag.DAG.markov\_blanket\_of
 =============================================
 
 .. currentmodule:: causaldag.classes.dag

@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.greedy\_optimal\_fully\_orienting\_interventions
+causaldag.classes.dag.DAG.greedy\_optimal\_fully\_orienting\_interventions
 ==========================================================================
 
 .. currentmodule:: causaldag.classes.dag

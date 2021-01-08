@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.incident\_arcs
+causaldag.classes.dag.DAG.incident\_arcs
 ========================================
 
 .. currentmodule:: causaldag.classes.dag

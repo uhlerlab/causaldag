@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.induced\_subgraph
+causaldag.classes.dag.DAG.induced\_subgraph
 ===========================================
 
 .. currentmodule:: causaldag.classes.dag

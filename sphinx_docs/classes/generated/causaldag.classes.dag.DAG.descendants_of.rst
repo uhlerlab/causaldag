@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.descendants\_of
+causaldag.classes.dag.DAG.descendants\_of
 =========================================
 
 .. currentmodule:: causaldag.classes.dag

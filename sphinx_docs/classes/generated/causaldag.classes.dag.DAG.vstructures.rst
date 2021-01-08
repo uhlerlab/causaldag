@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.vstructures
+causaldag.classes.dag.DAG.vstructures
 =====================================
 
 .. currentmodule:: causaldag.classes.dag

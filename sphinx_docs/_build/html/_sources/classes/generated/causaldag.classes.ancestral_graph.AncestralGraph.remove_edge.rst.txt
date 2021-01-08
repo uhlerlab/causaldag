@@ -1,4 +1,4 @@
-﻿causaldag.classes.ancestral\_graph.AncestralGraph.remove\_edge
+causaldag.classes.ancestral\_graph.AncestralGraph.remove\_edge
 ==============================================================
 
 .. currentmodule:: causaldag.classes.ancestral_graph

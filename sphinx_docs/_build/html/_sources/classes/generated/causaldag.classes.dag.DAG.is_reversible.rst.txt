@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.is\_reversible
+causaldag.classes.dag.DAG.is\_reversible
 ========================================
 
 .. currentmodule:: causaldag.classes.dag

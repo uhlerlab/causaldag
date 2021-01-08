@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.sources
+causaldag.classes.dag.DAG.sources
 =================================
 
 .. currentmodule:: causaldag.classes.dag

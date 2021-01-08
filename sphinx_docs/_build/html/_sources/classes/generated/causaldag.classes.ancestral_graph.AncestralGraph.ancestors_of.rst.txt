@@ -1,4 +1,4 @@
-﻿causaldag.classes.ancestral\_graph.AncestralGraph.ancestors\_of
+causaldag.classes.ancestral\_graph.AncestralGraph.ancestors\_of
 ===============================================================
 
 .. currentmodule:: causaldag.classes.ancestral_graph

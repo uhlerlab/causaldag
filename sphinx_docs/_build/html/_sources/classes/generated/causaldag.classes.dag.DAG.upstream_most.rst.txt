@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.upstream\_most
+causaldag.classes.dag.DAG.upstream\_most
 ========================================
 
 .. currentmodule:: causaldag.classes.dag

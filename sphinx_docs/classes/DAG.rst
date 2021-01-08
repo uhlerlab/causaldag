@@ -130,7 +130,7 @@ Directed Clique Trees
    :toctree: generated
 
    DAG.directed_clique_tree
-   DAG.simplified_directed_clique_tree
+   DAG.contracted_directed_clique_tree
    DAG.residuals
    DAG.residual_essential_graph
 

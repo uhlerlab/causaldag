@@ -1,4 +1,4 @@
-﻿causaldag.classes.pdag.PDAG.add\_known\_arc
+causaldag.classes.pdag.PDAG.add\_known\_arc
 ===========================================
 
 .. currentmodule:: causaldag.classes.pdag

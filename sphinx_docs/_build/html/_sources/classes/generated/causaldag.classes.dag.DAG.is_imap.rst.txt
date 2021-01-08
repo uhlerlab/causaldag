@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.is\_imap
+causaldag.classes.dag.DAG.is\_imap
 ==================================
 
 .. currentmodule:: causaldag.classes.dag

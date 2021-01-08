@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.residual\_essential\_graph
+causaldag.classes.dag.DAG.residual\_essential\_graph
 ====================================================
 
 .. currentmodule:: causaldag.classes.dag

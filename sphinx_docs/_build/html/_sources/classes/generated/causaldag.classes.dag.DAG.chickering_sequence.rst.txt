@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.chickering\_sequence
+causaldag.classes.dag.DAG.chickering\_sequence
 ==============================================
 
 .. currentmodule:: causaldag.classes.dag

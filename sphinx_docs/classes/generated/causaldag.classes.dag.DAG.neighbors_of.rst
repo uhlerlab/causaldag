@@ -1,4 +1,4 @@
-﻿causaldag.classes.dag.DAG.neighbors\_of
+causaldag.classes.dag.DAG.neighbors\_of
 =======================================
 
 .. currentmodule:: causaldag.classes.dag
