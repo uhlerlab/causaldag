@@ -1486,10 +1486,19 @@ class DAG:
         return res
 
     # === WRITING TO FILES
+    @classmethod
+    def from_gml(cls, filename):
+        raise NotImplementedError
+
+    @classmethod
+    def from_csv(cls, filename):
+        raise NotImplementedError
+
     def save_gml(self, filename):
         """
         TODO
         """
+        raise NotImplementedError
         warn_untested()  # TODO: ADD TEST
 
         tab = '  '
@@ -1530,6 +1539,7 @@ class DAG:
         """
         TODO
         """
+        raise NotImplementedError
         warn_untested()  # TODO: ADD TEST
 
         with open(filename, 'w', newline='\n') as file:
