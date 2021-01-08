@@ -1409,7 +1409,26 @@
 
 <div class="viewcode-block" id="DAG.chickering_distance"><a class="viewcode-back" href="../../../classes/generated/causaldag.classes.dag.DAG.chickering_distance.html#causaldag.classes.dag.DAG.chickering_distance">[docs]</a>    <span class="k">def</span> <span class="nf">chickering_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO</span>
+<span class="sd">        Return the total number of edge reversals plus twice the number of edge additions/deletions required</span>
+<span class="sd">        to turn this DAG into the DAG ``other``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other:</span>
+<span class="sd">            the DAG against which to compare the Chickering distance.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The Chickering distance between this DAG and the DAG ``other``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
+<span class="sd">        &gt;&gt;&gt; d1 = cd.DAG(arcs={(0, 1), (1, 2)})</span>
+<span class="sd">        &gt;&gt;&gt; d2 = cd.DAG(arcs={(0, 1), (2, 1), (3, 1)})</span>
+<span class="sd">        &gt;&gt;&gt; d1.chickering_distance(d2)</span>
+<span class="sd">        3</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">reversals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arcs</span> <span class="o">&amp;</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">arc</span><span class="p">))</span> <span class="k">for</span> <span class="n">arc</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_arcs</span><span class="p">}</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">reversals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">shd_skeleton</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
@@ -1868,6 +1887,16 @@
 <span class="sd">        Uses algorithm in Geiger, D., Verma, T., &amp; Pearl, J. (1990).</span>
 <span class="sd">        Identifying independence in Bayesian networks. Networks, 20(5), 507-534.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
 <span class="sd">        TODO</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">warn_untested</span><span class="p">()</span>  <span class="c1"># TODO: ADD TEST</span>
@@ -1992,14 +2021,16 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        TODO</span>
+<span class="sd">        set</span>
+<span class="sd">            The set of tuples of the form (``i``, ``A``, ``C``) representing the local Markov statements of the DAG</span>
+<span class="sd">            via (``i`` independent of ``A`` given ``C``).</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import causaldag as cd</span>
 <span class="sd">        &gt;&gt;&gt; g = cd.DAG(arcs={(1, 2), (3, 2)})</span>
 <span class="sd">        &gt;&gt;&gt; g.local_markov_statements()</span>
-<span class="sd">        {(1, {3}, set()), (2, set(), {2, 3}), (3, {1}, set())}</span>
+<span class="sd">        {(1, frozenset({3}), frozenset()), (2, frozenset(), frozenset({1, 3})), (3, frozenset({1}), frozenset())}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">statements</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>

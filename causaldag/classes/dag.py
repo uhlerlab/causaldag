@@ -1253,7 +1253,26 @@ class DAG:
 
     def chickering_distance(self, other) -> int:
         """
-        TODO
+        Return the total number of edge reversals plus twice the number of edge additions/deletions required
+        to turn this DAG into the DAG ``other``.
+
+        Parameters
+        ----------
+        other:
+            the DAG against which to compare the Chickering distance.
+
+        Returns
+        -------
+        int
+            The Chickering distance between this DAG and the DAG ``other``.
+
+        Examples
+        --------
+        >>> import causaldag as cd
+        >>> d1 = cd.DAG(arcs={(0, 1), (1, 2)})
+        >>> d2 = cd.DAG(arcs={(0, 1), (2, 1), (3, 1)})
+        >>> d1.chickering_distance(d2)
+        3
         """
         reversals = self._arcs & {tuple(reversed(arc)) for arc in other._arcs}
         return len(reversals) + 2 * self.shd_skeleton(other)
@@ -1712,6 +1731,16 @@ class DAG:
         Uses algorithm in Geiger, D., Verma, T., & Pearl, J. (1990).
         Identifying independence in Bayesian networks. Networks, 20(5), 507-534.
 
+        Parameters
+        ----------
+        TODO
+
+        Returns
+        -------
+        TODO
+
+        Examples
+        --------
         TODO
         """
         warn_untested()  # TODO: ADD TEST
