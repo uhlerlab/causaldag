@@ -21,6 +21,8 @@ def perm2dag_precision(perm, precision, alpha=.01, num_samples=None):
     current_precision[:, :] = current_precision[:, perm]
     nnodes = precision.shape[0]
     arcs = set()
+
+    # iterate through the permutation in reverse order
     for node in range(nnodes-1, -1, -1):
         if num_samples is not None:
             current_precision_thresholded = partial_correlation_threshold(current_precision, n=num_samples, alpha=alpha)
@@ -30,6 +32,8 @@ def perm2dag_precision(perm, precision, alpha=.01, num_samples=None):
         label = perm[node]
         new_arcs = set(itr.product(perm[parents], [label])) - {(label, label)}
         arcs.update(new_arcs)
+
+        # marginalize out the last node
         current_precision = current_precision[:-1, :-1] - current_precision[-1, -1]**-1 * np.outer(current_precision[:-1, -1], current_precision[:-1, -1])
 
     return DAG(nodes=set(perm), arcs=arcs)

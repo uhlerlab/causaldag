@@ -4,6 +4,7 @@ from scipy.special import loggamma
 import math
 import ipdb
 
+
 @numba.jit
 def numba_inv(A):
     return np.linalg.inv(A)
