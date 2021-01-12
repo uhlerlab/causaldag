@@ -47,7 +47,15 @@ extensions = [
 ]
 
 autosummary_generate = True
-# autodoc_mock_imports = ['numpy', 'pandas', 'scipy', 'matplotlib', 'dataclasses', 'sklearn']
+autodoc_mock_imports = [
+    'numpy',
+    'pandas',
+    'scipy',
+    'matplotlib',
+    'dataclasses',
+    'sklearn',
+    'numba'
+]
 latex_paper_size = 'letter'
 
 # Add any paths that contain templates here, relative to this directory.
