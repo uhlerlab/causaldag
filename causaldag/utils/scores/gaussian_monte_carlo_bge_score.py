@@ -5,6 +5,8 @@ from scipy import stats
 from scipy.special import loggamma
 import math
 import ipdb
+import sys
+sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag")
 
 @numba.jit
 def numba_inv(A):
@@ -41,6 +43,7 @@ def var_set_monte_carlo_bge_score(
     _, p = np.shape(samples)
     num_vars_monte_carlo = len(variables)
     V = list(variables)
+    print(V)
     I = np.eye(num_vars_monte_carlo)
 
     if alpha_mu is None:
@@ -63,8 +66,8 @@ def var_set_monte_carlo_bge_score(
     vfunc_standard_normal = np.vectorize(standard_normal)
     c_squared = np.zeros((num_iterations, num_vars_monte_carlo))
     
-    for var in range(num_vars_monte_carlo):
-        c_squared[:, var] = stats.chi2.rvs(df - p + var + 1, size = num_iterations)
+    for i in range(num_vars_monte_carlo):
+        c_squared[:, i] = stats.chi2.rvs(df - p + i + 1, size = num_iterations)
         
     c = np.sqrt(c_squared)
     indices = np.where(incidence == 1)
@@ -77,26 +80,35 @@ def var_set_monte_carlo_bge_score(
             B[indices] = vfunc_standard_normal(B[indices])
         
         B = np.multiply(-np.array(B), inverse_c[iteration])
+        # print(inverse_c[iteration])
         d = np.zeros((num_vars_monte_carlo, num_vars_monte_carlo))
         np.fill_diagonal(d, scale_matrix_monte_carlo @ c_squared[iteration])
+        # print(d)
         # Compute from formula
         A = I - B.T
         inverse_sigma = A.T @ d @ A
         sigma = faster_inverse(inverse_sigma)
         mu_covariance = (1/alpha_mu) * sigma
         mu = chol_sample(parameter_mean_monte_carlo, mu_covariance) 
-        log_likelihood_sum = 0
         dist = stats.multivariate_normal(parameter_mean_monte_carlo, faster_inverse(d))
-        monte_carlo_samples = samples[:, V]
+        # log_likelihood_sum = 0
+        # monte_carlo_samples = samples[:, V]
     
-        for data_point in monte_carlo_samples:
-            x_epsilon = (data_point - mu) - np.dot(B, data_point - mu)
-            prob_x = dist.logpdf(x_epsilon)
-            log_likelihood_sum += prob_x
+        # for data_point in monte_carlo_samples:
+        #     x_epsilon = (data_point - mu) - np.dot(B, data_point - mu)
+        #     prob_x = dist.logpdf(x_epsilon)
+        #     log_likelihood_sum += prob_x
         
-        return log_likelihood_sum
+        # return log_likelihood_sum
+        # print(B)
+        monte_carlo_samples = samples[:, V]
+        monte_carlo_sample_margins = monte_carlo_samples - mu
+        x_epsilons = (monte_carlo_sample_margins.T - np.dot(B, monte_carlo_sample_margins.T)).T
+        prob_x = dist.logpdf(np.array(x_epsilons))
 
-    log_marginal_likes = list(map(monte_carlo_iteration, range(num_iterations)))
+        return np.sum(prob_x)
+
+    log_marginal_likes = [monte_carlo_iteration(i) for i in range(num_iterations)]
     log_marginal_likes_logsumexp = (sp.special.logsumexp(log_marginal_likes) - np.log(num_iterations)) 
 
     return log_marginal_likes_logsumexp
@@ -104,13 +116,13 @@ def var_set_monte_carlo_bge_score(
 def local_gaussian_monte_carlo_bge_score(
         node,
         parents,
-        samples,
+        suffstat,
         alpha_mu=None,
         alpha_w=None,
         inverse_scale_matrix=None,
         parameter_mean=None,
         is_diagonal=True,
-        num_iterations=100
+        num_iterations=1000
 ):
     """
     Compute the BGE score of a node given its parents.
@@ -121,7 +133,7 @@ def local_gaussian_monte_carlo_bge_score(
         TODO - describe.
     parents:
         TODO - describe.
-    samples:
+    suffstat:
         TODO - describe.
     alpha_mu:
         TODO - describe. Default is the number of variables.
@@ -141,7 +153,9 @@ def local_gaussian_monte_carlo_bge_score(
     """
     if not is_diagonal:
         raise NotImplementedError("BGE score not implemented for non-diagonal matrix.")
-
+    
+    samples = suffstat['samples']
+    samples = np.array(samples)
     k = len(parents)
     _, p = np.shape(samples)
 
@@ -156,6 +170,7 @@ def local_gaussian_monte_carlo_bge_score(
 
     ### First, compute for numerator p(d^{Pa_i U {X_i}} | m^h) ###
     list_parents_and_node = [*parents, node]
+    print("list_parents_and_node", list_parents_and_node)
     marginal_likelihood_parents_and_node = var_set_monte_carlo_bge_score(list_parents_and_node, get_complete_dag(k+1), samples, alpha_mu, alpha_w, inverse_scale_matrix, parameter_mean, is_diagonal, num_iterations)
     # print("marginal_likelihood_parents_and_node", marginal_likelihood_parents_and_node)
     
@@ -166,12 +181,32 @@ def local_gaussian_monte_carlo_bge_score(
     return (marginal_likelihood_parents_and_node - marginal_likelihood_parents)
 
 if __name__ == '__main__':
-    gaussian_data = np.array([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
-    s1 = local_gaussian_monte_carlo_bge_score(0, set(), gaussian_data)
-    s2 = local_gaussian_monte_carlo_bge_score(1, {0}, gaussian_data)
-    s3 = local_gaussian_monte_carlo_bge_score(2, {0, 1}, gaussian_data)
-    print("new result node 0", s1)
-    print("new result node 1", s2)
-    print("new result node 2", s3)
-    print("total:", s1+s2+s3)
+    import causaldag
+    from causaldag.rand import rand_weights, directed_erdos
+    from causaldag.utils.ci_tests import partial_monte_carlo_correlation_suffstat
+    from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
+    import time
+
+    d = directed_erdos(10, .5)
+    g = rand_weights(d)
+    ordering = g.topological_sort()
+    samples = g.sample(100)
+    print(np.shape(samples))
+    # Topologically sort data
+    samples = samples[:, ordering]
+    print(ordering)
+    suffstat = partial_monte_carlo_correlation_suffstat(samples)
+    node = 7
+    # Reorder query and other nodes
+    topological_ordering_map = {ordering[i] : i for i in range(len(ordering))}
+    ordered_node = topological_ordering_map[node]
+    ordered_node_parents = sorted([topological_ordering_map[i] for i in d.parents_of(node)])
+    print(d.parents_of(node))
+    t = time.process_time()
+    score = local_gaussian_monte_carlo_bge_score(ordered_node, ordered_node_parents, suffstat)
+    elapsed_time = time.process_time() - t
+    score_original = local_gaussian_bge_score(ordered_node, ordered_node_parents, suffstat)
+    print("Elapsed Time: ", elapsed_time)
+    print("Monte Carlo BGe Score: ", score)
+    print("Formula BGe Score: ", score_original)
 

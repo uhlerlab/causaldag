@@ -4,7 +4,8 @@ import scipy as sp
 from scipy.special import loggamma
 import math
 import ipdb
-
+import sys
+sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag")
 
 @numba.jit
 def numba_inv(A):
@@ -122,11 +123,12 @@ def partial_correlation_suffstat(samples, invert=True):
     return dict(S=S, C=C, n=n, mu=mu)
 
 if __name__ == '__main__':
-    # import causaldag
-    # from causaldag.rand import rand_weights, directed_erdos
-    # from causaldag.utils.ci_tests import partial_correlation_suffstat
+    import causaldag
+    from causaldag.rand import rand_weights, directed_erdos
+    from causaldag.utils.ci_tests import partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat
     from sympy import gamma
     from scipy import stats
+    from causaldag.utils.scores.gaussian_monte_carlo_bge_score import local_gaussian_monte_carlo_bge_score
 
     # d = directed_erdos(10, .5)
     # g = rand_weights(d)
@@ -177,10 +179,10 @@ if __name__ == '__main__':
 
     gaussian_data = np.array([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
     print("old result", integral_marginal_gaussian_bge(gaussian_data))
-    suffstat = partial_correlation_suffstat(gaussian_data, invert=False)
-    s1 = local_gaussian_bge_score(0, set(), suffstat)
-    s2 = local_gaussian_bge_score(1, {0}, suffstat)
-    s3 = local_gaussian_bge_score(2, {0, 1}, suffstat)
+    suffstat = partial_monte_carlo_correlation_suffstat(gaussian_data, invert=False)
+    s1 = local_gaussian_monte_carlo_bge_score(0, set(), suffstat)
+    s2 = local_gaussian_monte_carlo_bge_score(1, {0}, suffstat)
+    s3 = local_gaussian_monte_carlo_bge_score(2, {0, 1}, suffstat)
     print("new result node 0", s1)
     print("new result node 1", s2)
     print("new result node 2", s3)

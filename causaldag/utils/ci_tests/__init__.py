@@ -1,5 +1,5 @@
 from .ci_tester import MemoizedCI_Tester, PlainCI_Tester, CI_Tester, PooledCI_Tester
-from .partial_correlation_test import partial_correlation_test, partial_correlation_suffstat, compute_partial_correlation
+from .partial_correlation_test import partial_correlation_test, partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat, compute_partial_correlation
 from .hsic import hsic_test_vector, hsic_test
 from .fadcor import fadcor_test_vector, fadcor_test
 from .kci import kci_test_vector, ki_test_vector, kci_test

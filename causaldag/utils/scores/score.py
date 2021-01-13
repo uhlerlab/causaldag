@@ -25,14 +25,14 @@ class MemoizedDecomposableScore:
 
 if __name__ == '__main__':
     from causaldag.rand import rand_weights, directed_erdos
-    from causaldag.utils.ci_tests import partial_correlation_suffstat
-    from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
+    from causaldag.utils.ci_tests import partial_monte_carlo_correlation_suffstat
+    from causaldag.utils.scores.gaussian_monte_carlo_bge_score import local_gaussian_monte_carlo_bge_score
 
     d = directed_erdos(10, .5)
     g = rand_weights(d)
     samples = g.sample(100)
-    suffstat = partial_correlation_suffstat(samples)
-    scorer = MemoizedDecomposableScore(local_gaussian_bic_score, suffstat)
+    suffstat = partial_monte_carlo_correlation_suffstat(samples)
+    scorer = MemoizedDecomposableScore(local_gaussian_monte_carlo_bge_score, suffstat)
     score = scorer.get_score(d)
 
 

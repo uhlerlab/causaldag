@@ -104,6 +104,36 @@ def compute_partial_correlation(suffstat, i, j, cond_set=None):
     return r
 
 
+def partial_monte_carlo_correlation_suffstat(samples, invert=True) -> Dict:
+    """
+    Return the sufficient statistics for partial correlation testing.
+
+    Parameters
+    ----------
+    samples:
+        (n x p) matrix, where n is the number of samples and p is the number of variables.
+    invert:
+        if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This
+        will generally speed up the gauss_ci_test if large conditioning sets are used.
+
+    Returns
+    -------
+    dict
+        dictionary of sufficient statistics
+    """
+    n, p = samples.shape
+    S = cov(samples, rowvar=False)  # sample covariance matrix
+    mu = mean(samples, axis=0)
+    # TODO: NaN when variable is deterministic. Replace w/ 1 and 0?
+    C = corrcoef(samples, rowvar=False)  # sample correlation matrix
+    if invert:
+        K = pinv(C)
+        P = pinv(S)  # sample precision (inverse covariance) matrix
+        rho = K/sqrt(diag(K))/sqrt(diag(K))[:, None]  # sample partial correlation matrix
+        return dict(P=P, S=S, C=C, n=n, K=K, rho=rho, mu=mu, samples=samples)
+    return dict(S=S, C=C, n=n, mu=mu, samples=samples)
+
+
 def partial_correlation_test(suffstat: Dict, i, j, cond_set=None, alpha=None):
     """
     Test the null hypothesis that i and j are conditionally independent given ``cond_set``.
