@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+import scipy as sp
 from scipy.special import loggamma
 import math
 import ipdb
@@ -59,15 +60,14 @@ def local_gaussian_bge_score(
     sample_mean = suffstat["mu"]
     p = S.shape[0]  # number of variables
 
-    if inverse_scale_matrix is None:
-        inverse_scale_matrix = np.eye(p)
-    if parameter_mean is None:
-        parameter_mean = np.zeros(p)
     if alpha_mu is None:
         alpha_mu = p
     if alpha_w is None:
         alpha_w = p + alpha_mu + 1
-    print("alpha_w new", alpha_w)
+    if inverse_scale_matrix is None:
+        inverse_scale_matrix = np.eye(p) * alpha_mu * (alpha_w - p - 1) / (alpha_mu + 1)
+    if parameter_mean is None:
+        parameter_mean = np.zeros(p)
 
     # === first term
     first_term = .5 * np.log(alpha_mu / (n + alpha_mu))
@@ -81,6 +81,7 @@ def local_gaussian_bge_score(
     mean_diff = parameter_mean - sample_mean
     # R = inverse_scale_matrix + (n-1) * S + (n * alpha_w) / (n + alpha_w) * np.outer(mean_diff, mean_diff)
     R = inverse_scale_matrix + (n-1) * S + (n * alpha_mu) / (n + alpha_mu) * np.outer(mean_diff, mean_diff)
+    # print(R)
     Q = [node, *parents]
     P = list(parents)
     third_term = (alpha_w - p + k + 1)/2 * np.sum(np.log(np.diagonal(inverse_scale_matrix)[Q]))
@@ -90,26 +91,53 @@ def local_gaussian_bge_score(
 
     return first_term + second_term + third_term
 
+def partial_correlation_suffstat(samples, invert=True):
+    """
+    Return the sufficient statistics for partial correlation testing.
+
+    Parameters
+    ----------
+    samples:
+        (n x p) matrix, where n is the number of samples and p is the number of variables.
+    invert:
+        if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This
+        will generally speed up the gauss_ci_test if large conditioning sets are used.
+
+    Returns
+    -------
+    dict
+        dictionary of sufficient statistics
+    """
+    n, p = samples.shape
+    S = np.cov(samples, rowvar=False)  # sample covariance matrix
+    mu = np.mean(samples, axis=0)
+    # TODO: NaN when variable is deterministic. Replace w/ 1 and 0?
+    C = np.corrcoef(samples, rowvar=False)  # sample correlation matrix
+    if invert:
+        K = np.linalg.pinv(C)
+        P = np.linalg.pinv(S)  # sample precision (inverse covariance) matrix
+        rho = K/np.sqrt(np.diag(K))/np.sqrt(np.diag(K))[:, None]  # sample partial correlation matrix
+        return dict(P=P, S=S, C=C, n=n, K=K, rho=rho, mu=mu)
+    return dict(S=S, C=C, n=n, mu=mu)
 
 if __name__ == '__main__':
-    from causaldag.rand import rand_weights, directed_erdos
-    from causaldag.utils.ci_tests import partial_correlation_suffstat
+    # import causaldag
+    # from causaldag.rand import rand_weights, directed_erdos
+    # from causaldag.utils.ci_tests import partial_correlation_suffstat
     from sympy import gamma
-    import scipy as sp
     from scipy import stats
-    from scipy.linalg import ldl
 
-    d = directed_erdos(10, .5)
-    g = rand_weights(d)
-    samples = g.sample(100)
-    suffstat = partial_correlation_suffstat(samples)
-    score = local_gaussian_bge_score(5, d.parents_of(5), suffstat)
+    # d = directed_erdos(10, .5)
+    # g = rand_weights(d)
+    # samples = g.sample(100)
+    # suffstat = partial_correlation_suffstat(samples)
+    # score = local_gaussian_bge_score(5, d.parents_of(5), suffstat)
 
     def integral_marginal_gaussian_bge(data):
         def log_c(a, b):
             c_value = 0
             for i in range(a):
-                c_value += np.log(float(gamma((b - i)/2)))
+                c_value += loggamma((b - i)/2)
 
             return c_value
 
@@ -117,12 +145,12 @@ if __name__ == '__main__':
         n = 3
         m = len(data)
         mu_0 = [0, 0, 0]
-        T_0 = np.eye(3)
+        T_0 = np.eye(3) * 2.25
         N_w = 7
         # T_0 = np.array([[2.25,-0.512,-0.512], [-0.512,2.25,0.512], [0.512,0.512,2.25]])
         sample_variance = np.sum([np.dot(np.transpose([x - np.average(data, 0)]), [x - np.average(data, 0)]) for x in data], 0)
         print("sample variance", sample_variance)
-        T_m = T_0 + sample_variance + ((N_w*m)/(N_w + m)) * np.outer((np.array(mu_0) - np.average(data, 0)), (np.array(mu_0) - np.average(data, 0)))
+        T_m = T_0 + sample_variance + ((N_mu*m)/(N_mu + m)) * np.outer((np.array(mu_0) - np.average(data, 0)), (np.array(mu_0) - np.average(data, 0)))
         d_x1 = [0]
         d_x2 = [0, 1]
         d_x3 = [0, 1, 2]
