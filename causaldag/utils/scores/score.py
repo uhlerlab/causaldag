@@ -18,7 +18,8 @@ class MemoizedDecomposableScore:
     def get_score(self, dag):
         total_score = 0
         for node in dag.nodes:
-            total_score += self.get_local_score(node, dag.parents_of(node))
+            local_score = self.get_local_score(node, dag.parents_of(node))
+            total_score += local_score
         return total_score
 
 
