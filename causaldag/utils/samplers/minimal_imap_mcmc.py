@@ -73,9 +73,10 @@ if __name__ == '__main__':
     from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
     from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
     from causaldag.utils.scores.gaussian_monte_carlo_bge_score import local_gaussian_monte_carlo_bge_score
-
+    from causaldag import GaussIntervention
     d = DAG(arcs={(0, 1), (2, 1)})
     g = rand_weights(d)
+    iv_samples = g.sample_interventional({0 : GaussIntervention(mean=100)})
     samples = g.sample(1000)
     suffstat = partial_monte_carlo_correlation_suffstat(samples)
 
