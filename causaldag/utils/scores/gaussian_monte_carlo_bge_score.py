@@ -26,6 +26,32 @@ def get_complete_dag(n):
     dag_incidence = np.ones((n, n))
     return np.triu(dag_incidence, 1)
 
+def bge_prior(total_num_vars, variables, incidence, inverse_scale_matrix, degrees_freedom):
+    p = total_num_vars
+    k = len(variables)
+    B = np.zeros((k, k))
+    indices = np.where(incidence == 1)
+
+    # Normal distribution vectorized function
+    standard_normal = lambda t: np.random.normal(0, 1)
+    vfunc_standard_normal = np.vectorize(standard_normal)
+    if len(B[indices]) > 0:
+        B[indices] = vfunc_standard_normal(B[indices])
+
+    c_squared = np.zeros(k)
+    for i in range(k):
+        c_squared[i] = stats.chi2.rvs(df=degrees_freedom - p + i + 1)
+
+    c = np.sqrt(c_squared)
+    inverse_c = 1/c
+    B = np.multiply(-np.array(B), inverse_c)
+    scale_matrix = faster_inverse(inverse_scale_matrix)
+    scale_matrix_sub_matrix = scale_matrix[variables, variables]
+    d = np.zeros((k, k))
+    np.fill_diagonal(d, np.multiply(scale_matrix_sub_matrix, c_squared))
+    
+    return B, d
+
 def var_set_monte_carlo_bge_score(
         variables,
         incidence,
@@ -55,35 +81,14 @@ def var_set_monte_carlo_bge_score(
     if parameter_mean is None:
         parameter_mean = np.zeros(p)
 
-    scale_matrix = faster_inverse(inverse_scale_matrix)
     df = alpha_w
     parameter_mean_monte_carlo = parameter_mean[V]
-    scale_matrix_monte_carlo = scale_matrix[V, :][:, V]
-    if num_iterations == 0 or len(variables) == 0:
-        return 0
-    
-    standard_normal = lambda t: np.random.normal(0, 1)
-    vfunc_standard_normal = np.vectorize(standard_normal)
-    c_squared = np.zeros((num_iterations, num_vars_monte_carlo))
-    
-    for i in range(num_vars_monte_carlo):
-        c_squared[:, i] = stats.chi2.rvs(df - p + i + 1, size = num_iterations)
-        
-    c = np.sqrt(c_squared)
-    indices = np.where(incidence == 1)
-    inverse_c = 1/np.array(c)
 
     def monte_carlo_iteration(iteration):
+        if len(V) == 0:
+            return 0
+        B, d = bge_prior(p, variables, incidence, inverse_scale_matrix, df)
         B = np.zeros((num_vars_monte_carlo, num_vars_monte_carlo))
-        
-        if len(B[indices]) > 0:
-            B[indices] = vfunc_standard_normal(B[indices])
-        
-        B = np.multiply(-np.array(B), inverse_c[iteration])
-        # print(inverse_c[iteration])
-        d = np.zeros((num_vars_monte_carlo, num_vars_monte_carlo))
-        np.fill_diagonal(d, scale_matrix_monte_carlo @ c_squared[iteration])
-        # print(d)
         # Compute from formula
         A = I - B.T
         inverse_sigma = A.T @ d @ A
@@ -91,16 +96,6 @@ def var_set_monte_carlo_bge_score(
         mu_covariance = (1/alpha_mu) * sigma
         mu = chol_sample(parameter_mean_monte_carlo, mu_covariance) 
         dist = stats.multivariate_normal(parameter_mean_monte_carlo, faster_inverse(d))
-        # log_likelihood_sum = 0
-        # monte_carlo_samples = samples[:, V]
-    
-        # for data_point in monte_carlo_samples:
-        #     x_epsilon = (data_point - mu) - np.dot(B, data_point - mu)
-        #     prob_x = dist.logpdf(x_epsilon)
-        #     log_likelihood_sum += prob_x
-        
-        # return log_likelihood_sum
-        # print(B)
         monte_carlo_samples = samples[:, V]
         monte_carlo_sample_margins = monte_carlo_samples - mu
         x_epsilons = (monte_carlo_sample_margins.T - np.dot(B, monte_carlo_sample_margins.T)).T
