@@ -31,6 +31,31 @@ def get_complete_dag(n):
     dag_incidence = np.ones((n, n))
     return np.triu(dag_incidence, 1)
 
+def bge_prior(total_num_vars, variables, incidence, inverse_scale_matrix, degrees_freedom):	
+    p = total_num_vars	
+    k = len(variables)	
+    B = np.zeros((k, k))	
+    indices = np.where(incidence == 1)	
+
+    # Normal distribution vectorized function	
+    standard_normal = lambda t: np.random.normal(0, 1)	
+    vfunc_standard_normal = np.vectorize(standard_normal)	
+    if len(B[indices]) > 0:	
+        B[indices] = vfunc_standard_normal(B[indices])	
+
+    c_squared = np.zeros(k)	
+    for i in range(k):	
+        c_squared[i] = stats.chi2.rvs(df=degrees_freedom - p + i + 1)	
+
+    c = np.sqrt(c_squared)	
+    inverse_c = 1/c	
+    B = np.multiply(-np.array(B), inverse_c)	
+    scale_matrix = faster_inverse(inverse_scale_matrix)	
+    scale_matrix_sub_matrix = scale_matrix[variables, variables]	
+    d = np.zeros((k, k))	
+    np.fill_diagonal(d, np.multiply(scale_matrix_sub_matrix, c_squared))	
+
+    return B, d
 
 def var_set_monte_carlo_bge_score(
         variables,
@@ -174,25 +199,29 @@ if __name__ == '__main__':
     from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
     import time
 
-    # d = directed_erdos(10, .5)
-    # g = rand_weights(d)
-    # ordering = g.topological_sort()
-    # samples = g.sample(100)
-    # print(np.shape(samples))
-    # # Topologically sort data
-    # samples = samples[:, ordering]
-    # print(ordering)
-    # suffstat = partial_monte_carlo_correlation_suffstat(samples)
-    # node = 7
-    # # Reorder query and other nodes
-    # topological_ordering_map = {ordering[i]: i for i in range(len(ordering))}
-    # ordered_node = topological_ordering_map[node]
-    # ordered_node_parents = sorted([topological_ordering_map[i] for i in d.parents_of(node)])
-    # print(d.parents_of(node))
-    # t = time.process_time()
-    # score = local_gaussian_monte_carlo_bge_score(ordered_node, ordered_node_parents, suffstat)
-    # elapsed_time = time.process_time() - t
-    # print("Elapsed Time: ", elapsed_time)
-    # print("Monte Carlo BGe Score: ", score)
-    # print("Formula BGe Score: ", score_original)
+    d = directed_erdos(10, .5)
+    g = rand_weights(d)
+    ordering = g.topological_sort()
+    samples = g.sample(100)
+    print(np.shape(samples))
+    # Topologically sort data
+    samples = samples[:, ordering]
+    print(ordering)
+    suffstat = partial_monte_carlo_correlation_suffstat(samples)
+    node = 7
+    # Reorder query and other nodes
+    topological_ordering_map = {ordering[i]: i for i in range(len(ordering))}
+    ordered_node = topological_ordering_map[node]
+    ordered_node_parents = sorted([topological_ordering_map[i] for i in d.parents_of(node)])
+    print(d.parents_of(node))
+    t = time.process_time()
+    score = local_gaussian_monte_carlo_bge_score(ordered_node, ordered_node_parents, suffstat)
+    elapsed_time = time.process_time() - t
+    print("Elapsed Time: ", elapsed_time)
+    score_original = local_gaussian_bge_score(
+            ordered_node,
+            ordered_node_parents,
+            suffstat)
+    print("Monte Carlo BGe Score: ", score)
+    print("Formula BGe Score: ", score_original)
 

@@ -23,6 +23,7 @@ def monte_carlo_global_marginal_likelihood(
     def score(graph, suffstat):
         parameters_list = prior(graph, size=num_monte_carlo)
         lls = log_likelihood(graph, suffstat, parameters_list)
+        # print(len(lls))
         return logsumexp(lls) - np.log(num_monte_carlo)
 
     return score

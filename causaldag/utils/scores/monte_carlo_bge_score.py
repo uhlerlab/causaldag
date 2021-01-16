@@ -1,3 +1,7 @@
+import sys
+
+sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag")
+
 from causaldag.utils.scores.monte_carlo_marginal_likelihood import monte_carlo_local_marginal_likelihood, monte_carlo_global_marginal_likelihood
 from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
 from functools import partial
@@ -8,9 +12,8 @@ from scipy import stats
 from scipy.special import loggamma
 import math
 import ipdb
-import sys
 from scipy import stats
-
+from scipy.linalg import ldl
 
 @numba.jit
 def numba_inv(A):
@@ -169,43 +172,23 @@ def global_bge_prior(
     p = total_num_variables
     variables = graph.nodes
     k = len(variables)
-    incidence = get_complete_dag(k)
     B = np.zeros((k, k))
-    indices = np.where(incidence == 1)
     V = list(variables)
-    scale_matrix = faster_inverse(inverse_scale_matrix)
-
-    # # Normal distribution vectorized function
-    # standard_normal = lambda t: np.random.normal(0, 1)
-    # vfunc_standard_normal = np.vectorize(standard_normal)
-    # if len(B[indices]) > 0:
-    #     B[indices] = vfunc_standard_normal(B[indices])
-    #
-    # c_squared = np.zeros(k)
-    # for i in range(k):
-    #     c_squared[i] = stats.chi2.rvs(df=degrees_freedom - p + i + 1)
-    #
-    # c = np.sqrt(c_squared)
-    # inverse_c = 1 / c
-    # B = np.multiply(-np.array(B), inverse_c)
-    # d = np.multiply(scale_matrix, c_squared)
-    #
-    # I = np.eye(len(variables))
-    # A = I - B.T
-    # inverse_sigma = A.T @ d @ A
-
-    # TODO pull directly from wishart, compare to other way
+    scale_matrix = np.linalg.inv(inverse_scale_matrix)
+    # # TODO pull directly from wishart, compare to other way
+    # print(scale_matrix, degrees_freedom)
     inverse_sigma = stats.wishart(df=degrees_freedom, scale=scale_matrix).rvs()
-    sigma = faster_inverse(inverse_sigma)
+    sigma = np.linalg.inv(inverse_sigma)
+    # print(sigma @ inverse_sigma)
     # ipdb.set_trace()
     mu_covariance = (1 / alpha_mu) * sigma
-    # mu = stats.multivariate_normal(mean=mu0[V], cov=mu_covariance).rvs()
-    mu = chol_sample(mu0[V], mu_covariance)
-
+    mu = stats.multivariate_normal(mean=mu0[V], cov=mu_covariance).rvs()
+    # mu = chol_sample(mu0[V], mu_covariance)
+    # print(mu_covariance)
     if size == 1:
         return inverse_sigma, B, mu
     else:
-        return [
+        output = [
             global_bge_prior(
                 graph,
                 total_num_variables=total_num_variables,
@@ -216,6 +199,7 @@ def global_bge_prior(
             )
             for _ in range(size)
         ]
+        return output
 
 
 def global_monte_carlo_bge_score(
@@ -269,9 +253,17 @@ def global_gaussian_likelihood(graph, suffstat: dict, parameters_list):
         # log_prec_term = .5 * np.log(np.linalg.det(precision))
         # data_term = -.5 * nsamples * np.sum(sample_cov * precision)  # TODO might be wrong
         # ll = constant_term + log_prec_term + data_term
-
+        # lu, d, perm = ldl(precision, lower=False)
+        # B = np.eye(len(mu)) - lu[perm, :]
+        # x_epsilons = (suffstat["samples"].T - np.dot(B, suffstat["samples"].T)).T
+        # a = np.dot((np.eye(len(mu)) - B.T), mu)
+        # # print(np.shape(suffstat["samples"]))
+        # # print(d)
+        # a = np.sum(stats.multivariate_normal(mean=np.zeros(len(mu)), cov=faster_inverse(d)).logpdf(np.array(x_epsilons - a)))
         ll_scipy = np.sum(stats.multivariate_normal(mean=mu, cov=np.linalg.inv(precision)).logpdf(suffstat["samples"]))
         lls[j] = ll_scipy
+        # print(a,  ll_scipy)
+        # print(ll_scipy)
     return lls
 
 
@@ -281,38 +273,21 @@ if __name__ == '__main__':
     from causaldag.utils.ci_tests import partial_monte_carlo_correlation_suffstat, partial_correlation_suffstat
     from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
     import time
-
-    # d = directed_erdos(10, .5)
-    # g = rand_weights(d)
-    # ordering = g.topological_sort()
-    # samples = g.sample(100)
-    # print(np.shape(samples))
-    # # Topologically sort data
-    # samples = samples[:, ordering]
-    # print(ordering)
-    # suffstat = partial_monte_carlo_correlation_suffstat(samples)
-    # node = 7
-    # # Reorder query and other nodes
-    # topological_ordering_map = {ordering[i]: i for i in range(len(ordering))}
-    # ordered_node = topological_ordering_map[node]
-    # ordered_node_parents = sorted([topological_ordering_map[i] for i in d.parents_of(node)])
-    # print(d.parents_of(node))
-    # t = time.process_time()
-    # score = local_gaussian_monte_carlo_bge_score(ordered_node, ordered_node_parents, suffstat)
-    # elapsed_time = time.process_time() - t
-    # print("Elapsed Time: ", elapsed_time)
-    # print("Monte Carlo BGe Score: ", score)
-    # print("Formula BGe Score: ", score_original)
-
-    d = causaldag.DAG(arcs={(0, 1), (1, 2), (0, 2)})
+    # d = causaldag.DAG(arcs={(0, 1)})
+    # d = causaldag.DAG(arcs={(0, 1), (1, 2), (0, 2)})
+    d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)})
     g = rand_weights(d)
-    samples = g.sample(1000)
+    samples = g.sample(100)
     print(np.shape(samples))
     # Topologically sort data
+    print(d.to_amat()[0])
     suffstat = partial_correlation_suffstat(samples)
     suffstat["samples"] = samples
-
-    p = 3
+    with open("tests/data/bge_data/samples.npy", 'wb') as f:
+        np.save(f, samples)
+    with open("tests/data/bge_data/dag_amat", 'wb') as f:
+        np.save(f, d.to_amat()[0])
+    p = np.shape(samples)[1]
     alpha_mu = p
     alpha_w = p + alpha_mu + 1
     inverse_scale_matrix = np.eye(p) * alpha_mu * (alpha_w - p - 1) / (alpha_mu + 1)
@@ -329,7 +304,7 @@ if __name__ == '__main__':
     print(s)
 
     total_score_original = 0
-    for node in range(3):
+    for node in range(p):
         total_score_original += local_gaussian_bge_score(
             node,
             d.parents_of(node),
