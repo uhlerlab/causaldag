@@ -24,13 +24,16 @@ def sample_bge_prior(graph,
         size = 1
 ):
     p = total_num_variables
-    scale_matrix = np.linalg.inv(inverse_scale_matrix)
-    inverse_sigma = stats.wishart.rvs(df = degrees_freedom, scale = scale_matrix)
-    sigma = np.linalg.inv(inverse_sigma)
+    # scale_matrix = np.copy(inverse_scale_matrix)
+    # np.fill_diagonal(scale_matrix, 1/np.diagonal(inverse_scale_matrix))
+    sigma = stats.invwishart(df = degrees_freedom, scale = inverse_scale_matrix).rvs(size=1, random_state=np.random.default_rng())
+    # sigma = np.linalg.inv(inverse_sigma)
+    # print(inverse_sigma)
     # print(sigma)
-    mu_covariance = (1/alpha_w) * sigma
+    mu_covariance = (1/alpha_mu) * sigma
     mu = np.random.multivariate_normal(mean = mu0, cov = mu_covariance)
     # print(mu)
+    # print(degrees_freedom)
     if size == 1:
         return sigma, mu
 
@@ -54,8 +57,8 @@ if __name__ == '__main__':
     import time
     # d = causaldag.DAG(arcs={(0, 1)})
     # # d = causaldag.DAG(arcs={(0, 1), (1, 2), (0, 2)})
-    d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)})
-    # d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)})
+    # d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)})
+    d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)})
     g = rand_weights(d)
     samples = g.sample(100)
     # with open("tests/data/bge_data/samples.npy", 'wb') as f:
