@@ -93,7 +93,7 @@ def dci(
     verbose: int, default = 0
         The verbosity level of logging messages.
     lam: float, default = 0
-        Amount of regularization for regression (becomes ridge regression if nonzero).
+        Amount of regularization for regression (becomes ridge regression if nonzero). Do not use deprecated.
     progress: bool, default = False
         Whether to show DCI progress bar.
     order_independent: bool = True
@@ -190,6 +190,8 @@ def dci_skeleton_multiple(
         progress: bool = False,
         true_diff: Optional[Set] = None
 ):
+    """Helper method for running DCI skeleton phase over multiple alpha levels quick.
+       Returns a dicionary mapping given alpha level to set of edges defining the difference skeleton for that alpha level."""
     if verbose > 0:
         print("DCI skeleton estimation...")
 
@@ -360,6 +362,7 @@ def dci_skeletons_bootstrap_multiple(
         X1,
         X2,
         alpha_skeleton_grid: list = [0.1, 0.5],
+        difference_ug_method = 'constraint',
         max_set_size: int = 3,
         difference_ug: list = None,
         nodes_cond_set: set = None,
@@ -374,6 +377,62 @@ def dci_skeletons_bootstrap_multiple(
         lam: float = 0,
         true_diff: Optional[Set] = None
 ):
+    """
+    Runs the skeleton phase (with stability selection) of the Difference Causal Inference (DCI) algorithm.
+    Bootstrap samples are generated from two input datasets and DCI skeleton phase is run across bootstrap samples and across different 
+    hyperparameters. Edges that reliably appear across different runs are considered stable.
+    If the difference undirected graph or conditioning set is missing the undirected difference algorithm will be run first.
+
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    alpha_skeleton_grid: array-like, default = [0.1, 0.5]
+        Grid of values to iterate over representing significance level parameter for determining presence of edges in the skeleton of the difference graph. 
+        Lower alpha_skeleton results in sparser difference graph.
+    difference_ug_method: str, default = 'constraint'
+        Method for computing the undirected difference graph. Must be 'constraint' for constraint-based
+        method or 'kliep' for KLIEP.
+    max_set_size: int, default = 3
+        Maximum conditioning set size used to test regression invariance.
+        Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    difference_ug: list, default = None
+        List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
+        KLIEP algorithm for estimating the difference undirected graph will be run. 
+        If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    max_iter: int, default = 1000
+        Maximum number of iterations for gradient descent in KLIEP algorithm.
+    edge_threshold: float, default = 0.05
+        Edge weight cutoff for keeping an edge for KLIEP algorithm (all edges above or equal to this threshold are kept).
+    sample_fraction: float, default = 0.7
+        The fraction of samples to be used in each bootstrap sample.
+        Should be between 0 and 1. If 1, all samples are used.
+    n_bootstrap_iterations: int, default = 50
+        Number of bootstrap samples to create.
+    n_jobs: int, default = 1
+        Number of jobs to run in parallel.
+    random_state: int, default = None
+        Seed used by the random number generator.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+    lam: float, default = 0
+        Amount of regularization for regression (becomes ridge regression if nonzero). Do not use deprecated.
+    true_diff: set, default = None
+        Set of edges that are known to be in the true difference skeleton.
+
+    Returns
+    -------
+    bootstrap_results: list
+        List containing results for each bootstrap sample. Each "result" is a dictionary mapping an alpha level to a skeleton.
+    alpha2adjacency: dict
+        A dictionary mapping each alpha level to a [n_features, n_features] matrix, which contains values in [0,1] range
+        representing the probability of selection of that edge over the bootstrap samples.
+
+    """
     if difference_ug is None or nodes_cond_set is None:
         difference_ug, nodes_cond_set = dci_undirected_graph(
             X1,
@@ -423,7 +482,50 @@ def dci_orient_bootstrap_multiple(
         random_state: int = None,
         verbose: int = 0
 ):
+    """
+    Runs the orientation phase (with stability selection) of the Difference Causal Inference (DCI) algorithm.
+    Bootstrap samples are generated from two input datasets and DCI orientation phase is run across bootstrap samples and across different 
+    hyperparameters. Edges that reliably appear across different runs are considered stable.
 
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    skeletons: Union[Dict[float, set], set]
+        Set of edges in the skeleton or for multiple skeletons a dictionary mapping alpha level to a skeleton.
+        See output of dci_skeletons_bootstrap_multiple.
+    alpha_orient_grid: array-like, default = [0.001, 0.1]
+        Grid of values to iterate over representing significance level parameter for determining orientation of an edge. 
+        Lower alpha_orient results in more directed edges in the difference-DAG.
+    max_set_size: int, default = 3
+        Maximum conditioning set size used to test regression invariance.
+        Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    sample_fraction: float, default = 0.7
+        The fraction of samples to be used in each bootstrap sample.
+        Should be between 0 and 1. If 1, all samples are used.
+    n_bootstrap_iterations: int, default = 50
+        Number of bootstrap samples to create.
+    n_jobs: int, default = 1
+        Number of jobs to run in parallel.
+    random_state: int, default = None
+        Seed used by the random number generator.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+
+    Returns
+    -------
+    adjacency_matrix: array, shape  = [n_features, n_features]
+        Estimated difference-DAG. Edges that were found to be different between two settings but the orientation
+        could not be determined, are represented by assigning 1 in both directions, i.e. adjacency_matrix[i,j] = 1
+        and adjacency_matrix[j,i] = 1. Otherwise for oriented edges, only adjacency_matrix[i,j] = 1 is assigned. 
+        Assignment of 0 in the adjacency matrix represents no edge.
+    stability_scores: array, shape = [n_params, n_features, n_features]
+        Stability score of each edge for for each combination of hyperparameters.
+    """
     bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state)
     bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X2, random_state=random_state)
 
@@ -455,11 +557,12 @@ def dci_stability_selection(
         alpha_ug_grid: list = [0.1, 1, 10],
         alpha_skeleton_grid: list = [0.1, 0.5],
         alpha_orient_grid: list = [0.001, 0.1],
-        max_set_size: int = 3,
+        max_set_size: Optional[int] = 3,
+        difference_ug_method = 'constraint',
         difference_ug: list = None,
         nodes_cond_set: set = None,
         max_iter: int = 1000,
-        edge_threshold: float = 0.05,
+        edge_threshold: float = 0,
         sample_fraction: float = 0.7,
         n_bootstrap_iterations: int = 50,
         bootstrap_threshold: float = 0.5,
