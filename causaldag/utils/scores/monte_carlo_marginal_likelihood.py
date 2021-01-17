@@ -18,11 +18,12 @@ def monte_carlo_local_marginal_likelihood(
 def monte_carlo_global_marginal_likelihood(
         prior,
         log_likelihood,
-        num_monte_carlo=1000
+        num_monte_carlo=1000,
+        progress=False
 ):
     def score(graph, suffstat):
-        parameters_list = prior(graph, size=num_monte_carlo)
-        lls = log_likelihood(graph, suffstat, parameters_list)
+        parameters_list = prior(graph, size=num_monte_carlo, progress=progress)
+        lls = log_likelihood(graph, suffstat, parameters_list, progress=progress)
         return logsumexp(lls) - np.log(num_monte_carlo)
 
     return score

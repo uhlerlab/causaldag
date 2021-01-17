@@ -1,5 +1,5 @@
 from causaldag.utils.scores.monte_carlo_marginal_likelihood import monte_carlo_local_marginal_likelihood, monte_carlo_global_marginal_likelihood
-from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
+from causaldag.utils.scores import gaussian_log_likelihood
 from functools import partial
 import numpy as np
 import numba
@@ -10,6 +10,7 @@ import math
 import ipdb
 import sys
 from scipy import stats
+from tqdm import tqdm
 
 
 @numba.jit
@@ -164,7 +165,8 @@ def global_bge_prior(
         degrees_freedom=None,
         alpha_mu=None,
         mu0=None,
-        size=1
+        size=1,
+        progress=False
 ):
     p = total_num_variables
     variables = graph.nodes
@@ -195,27 +197,14 @@ def global_bge_prior(
     # inverse_sigma = A.T @ d @ A
 
     # TODO pull directly from wishart, compare to other way
-    inverse_sigma = stats.wishart(df=degrees_freedom, scale=scale_matrix).rvs()
-    sigma = faster_inverse(inverse_sigma)
+    inverse_sigmas = stats.wishart(df=degrees_freedom, scale=scale_matrix).rvs(size=size)
+    sigmas = [faster_inverse(inverse_sigma) for inverse_sigma in inverse_sigmas]
     # ipdb.set_trace()
-    mu_covariance = (1 / alpha_mu) * sigma
+    mu_covariances = [(1 / alpha_mu) * sigma for sigma in sigmas]
     # mu = stats.multivariate_normal(mean=mu0[V], cov=mu_covariance).rvs()
-    mu = chol_sample(mu0[V], mu_covariance)
+    mus = [chol_sample(mu0[V], mu_covariance) for mu_covariance in mu_covariances]
 
-    if size == 1:
-        return inverse_sigma, B, mu
-    else:
-        return [
-            global_bge_prior(
-                graph,
-                total_num_variables=total_num_variables,
-                inverse_scale_matrix=inverse_scale_matrix,
-                degrees_freedom=degrees_freedom,
-                alpha_mu=alpha_mu,
-                mu0=mu0
-            )
-            for _ in range(size)
-        ]
+    return list(zip(inverse_sigmas, mus))
 
 
 def global_monte_carlo_bge_score(
@@ -225,7 +214,8 @@ def global_monte_carlo_bge_score(
         alpha_w=None,
         inverse_scale_matrix=None,
         parameter_mean=None,
-        num_iterations=1000
+        num_iterations=1000,
+        progress=False
 ):
     p = suffstat["C"].shape[0]
 
@@ -249,7 +239,8 @@ def global_monte_carlo_bge_score(
     score = monte_carlo_global_marginal_likelihood(
         bge_prior_partial,
         global_gaussian_likelihood,
-        num_monte_carlo=num_iterations
+        num_monte_carlo=num_iterations,
+        progress=progress
     )
 
     return score(
@@ -258,21 +249,23 @@ def global_monte_carlo_bge_score(
     )
 
 
-def global_gaussian_likelihood(graph, suffstat: dict, parameters_list):
-    sample_cov = suffstat["C"]
-    sample_mean = suffstat["mu"]
-    nsamples = suffstat["n"]
-
-    lls = np.empty(len(parameters_list))
-    for j, (precision, _, mu) in enumerate(parameters_list):
-        # constant_term = - .5 * nsamples * np.log(2 * np.pi)
-        # log_prec_term = .5 * np.log(np.linalg.det(precision))
-        # data_term = -.5 * nsamples * np.sum(sample_cov * precision)  # TODO might be wrong
-        # ll = constant_term + log_prec_term + data_term
-
-        ll_scipy = np.sum(stats.multivariate_normal(mean=mu, cov=np.linalg.inv(precision)).logpdf(suffstat["samples"]))
-        lls[j] = ll_scipy
-    return lls
+def global_gaussian_likelihood(
+        graph,
+        suffstat: dict,
+        parameters_list,
+        progress=False
+):
+    if progress:
+        lls = list(tqdm((
+            gaussian_log_likelihood(suffstat, mu, precision)
+            for precision, mu in parameters_list
+        ), total=len(parameters_list)))
+    else:
+        lls = [
+            gaussian_log_likelihood(suffstat, mu, precision)
+            for precision, mu in parameters_list
+        ]
+    return np.array(lls)
 
 
 if __name__ == '__main__':
@@ -306,7 +299,7 @@ if __name__ == '__main__':
 
     d = causaldag.DAG(arcs={(0, 1), (1, 2), (0, 2)})
     g = rand_weights(d)
-    samples = g.sample(1000)
+    samples = g.sample(10)
     print(np.shape(samples))
     # Topologically sort data
     suffstat = partial_correlation_suffstat(samples)
@@ -325,6 +318,8 @@ if __name__ == '__main__':
         alpha_w=alpha_w,
         inverse_scale_matrix=inverse_scale_matrix,
         parameter_mean=parameter_mean,
+        num_iterations=100000,
+        progress=True
     )
     print(s)
 
