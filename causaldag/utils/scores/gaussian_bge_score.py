@@ -115,12 +115,13 @@ def partial_correlation_suffstat(samples, invert=True):
     mu = np.mean(samples, axis=0)
     # TODO: NaN when variable is deterministic. Replace w/ 1 and 0?
     C = np.corrcoef(samples, rowvar=False)  # sample correlation matrix
+    V = samples.T @ samples
     if invert:
         K = np.linalg.pinv(C)
         P = np.linalg.pinv(S)  # sample precision (inverse covariance) matrix
         rho = K/np.sqrt(np.diag(K))/np.sqrt(np.diag(K))[:, None]  # sample partial correlation matrix
         return dict(P=P, S=S, C=C, n=n, K=K, rho=rho, mu=mu)
-    return dict(S=S, C=C, n=n, mu=mu)
+    return dict(S=S, C=C, n=n, mu=mu, V=V)
 
 if __name__ == '__main__':
     import causaldag

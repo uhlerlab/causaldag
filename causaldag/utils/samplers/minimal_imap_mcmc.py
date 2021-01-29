@@ -1,8 +1,19 @@
 import random
 from math import exp
 from tqdm import trange
+import numpy as np
 import sys
 sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag")
+
+from causaldag import DAG
+from causaldag.rand.graphs import directed_erdos, rand_weights
+from causaldag import permutation2dag
+from causaldag.utils.ci_tests import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat
+from causaldag.utils.samplers.proposals.transposition_proposers import adjacent_transposition_proposer
+from causaldag.utils.scores import MemoizedDecomposableScore
+from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
+from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
+from causaldag.utils.scores.gaussian_ibge_score import local_bayesian_regression_bge_score
 
 def minimal_imap_mcmc(
         initial_perm,
@@ -62,43 +73,79 @@ def minimal_imap_mcmc(
 
     return samples
 
-
-if __name__ == '__main__':
-    from causaldag import DAG
-    from causaldag.rand.graphs import directed_erdos, rand_weights
-    from causaldag import permutation2dag
-    from causaldag.utils.ci_tests import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat
-    from causaldag.utils.samplers.proposals.transposition_proposers import adjacent_transposition_proposer
-    from causaldag.utils.scores import MemoizedDecomposableScore
-    from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
-    from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
-    from causaldag.utils.scores.gaussian_monte_carlo_bge_score import local_gaussian_monte_carlo_bge_score
-    from causaldag import GaussIntervention
-    d = DAG(arcs={(0, 1), (2, 1)})
-    g = rand_weights(d)
-    iv_samples = g.sample_interventional({0 : GaussIntervention(mean=100)})
-    samples = g.sample(1000)
-    suffstat = partial_monte_carlo_correlation_suffstat(samples)
-
-    initial_perm = [1, 2, 0]
-    ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat, alpha=.05)
-    initial_dag = permutation2dag(initial_perm, ci_tester)
-    print(initial_dag)
-    # scorer = MemoizedDecomposableScore(local_gaussian_bge_score, suffstat)
-    scorer = MemoizedDecomposableScore(local_gaussian_monte_carlo_bge_score, suffstat)
-
+def collect_stats_mcmc(
+        true_dag,
+        initial_perm,
+        initial_dag,
+        ci_tester,
+        proposer,
+        scorer,
+        num_steps=100,
+        burn=1,
+        progress=False,
+        verbose=True):
+    
     samples = minimal_imap_mcmc(
         initial_perm,
         initial_dag,
         ci_tester,
-        adjacent_transposition_proposer,
+        proposer,
         scorer,
         num_steps=100,
-        burn=1,
-        progress=True,
-        verbose=True
+        burn=1
     )
 
-    print([sample[0].num_arcs for sample in samples])
+    desired_arcs = true_dag.arcs
+    total_samples = len(samples)
+    correct_samples = np.sum([samples[i][0].arcs == desired_arcs for i in range(total_samples)])
+    stats = {'samples': samples, 'fraction_correct': correct_samples/total_samples}
+    return stats
+
+if __name__ == '__main__':
+    d = DAG(arcs={(0, 1), (2, 1)})
+    # d = DAG(arcs={(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)})
+    g = rand_weights(d)
+    samples = g.sample(1000)
+    suffstat = partial_correlation_suffstat(samples)
+    suffstat['samples'] = samples
+    initial_perm = [1, 2, 0]
+    ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat, alpha=.05)
+    initial_dag = permutation2dag(initial_perm, ci_tester)
+    # scorer = MemoizedDecomposableScore(local_gaussian_bge_score, suffstat)
+    scorer_bge = MemoizedDecomposableScore(local_gaussian_bge_score, suffstat)
+    num_meta_iterations = 30
+    stats_bges = [collect_stats_mcmc(
+        d,
+        initial_perm,
+        initial_dag,
+        ci_tester,
+        adjacent_transposition_proposer,
+        scorer_bge,
+        num_steps=100,
+        burn=1,
+        progress=False,
+        verbose=False
+    ) for i in range(num_meta_iterations)]
+
+    bge_fraction_correct = np.mean([stats_bge["fraction_correct"] for stats_bge in stats_bges])
+    print("BGe fraction correct:   ", bge_fraction_correct)
+
+    scorer_ibge = MemoizedDecomposableScore(local_bayesian_regression_bge_score, suffstat)
+
+    stats_ibges = [collect_stats_mcmc(
+        d,
+        initial_perm,
+        initial_dag,
+        ci_tester,
+        adjacent_transposition_proposer,
+        scorer_ibge,
+        num_steps=100,
+        burn=1,
+        progress=False,
+        verbose=False
+    ) for i in range(num_meta_iterations)]
+
+    ibge_fraction_correct = np.mean([stats_ibge["fraction_correct"] for stats_ibge in stats_ibges])
+    print("I-BGe fraction correct: ", ibge_fraction_correct)
 
 

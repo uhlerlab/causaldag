@@ -280,7 +280,7 @@ if __name__ == '__main__':
     # d = causaldag.DAG(arcs={(0, 1), (1, 2), (0, 2)})
     d = causaldag.DAG(arcs={(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)})
     g = rand_weights(d)
-    samples = g.sample(10)
+    samples = g.sample(100)
     print(np.shape(samples))
     # Topologically sort data
     print(d.to_amat()[0])
