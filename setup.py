@@ -31,7 +31,8 @@ setuptools.setup(
         'networkx',
         'joblib',
         'ipdb',
-        'frozendict'
+        'frozendict',
+        'conditional_independence'
     ]
 )
 

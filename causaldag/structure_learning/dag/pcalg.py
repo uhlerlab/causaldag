@@ -1,6 +1,6 @@
 from causaldag import PDAG
 from causaldag import UndirectedGraph
-from causaldag.utils.ci_tests import CI_Tester
+from conditional_independence import CI_Tester
 import itertools as itr
 
 
@@ -111,7 +111,7 @@ def pcalg(
 
 if __name__ == '__main__':
     import causaldag as cd
-    from causaldag.utils.ci_tests import MemoizedCI_Tester, dsep_test
+    from conditional_independence import MemoizedCI_Tester, dsep_test
 
     import numpy as np
     import random

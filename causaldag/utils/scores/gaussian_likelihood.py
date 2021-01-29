@@ -26,7 +26,7 @@ def gaussian_log_likelihood(suffstat, mean, precision):
 
 
 if __name__ == '__main__':
-    from causaldag.utils.ci_tests import partial_correlation_suffstat
+    from conditional_independence import partial_correlation_suffstat
     from line_profiler import LineProfiler
 
     mean = np.zeros(10)

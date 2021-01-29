@@ -8,7 +8,7 @@ sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causa
 from causaldag import DAG
 from causaldag.rand.graphs import directed_erdos, rand_weights
 from causaldag import permutation2dag
-from causaldag.utils.ci_tests import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat
+from conditional_independence import MemoizedCI_Tester, partial_correlation_test, partial_correlation_suffstat
 from causaldag.utils.samplers.proposals.transposition_proposers import adjacent_transposition_proposer
 from causaldag.utils.scores import MemoizedDecomposableScore
 from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score

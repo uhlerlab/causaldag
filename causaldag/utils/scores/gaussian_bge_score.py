@@ -127,6 +127,7 @@ if __name__ == '__main__':
     import causaldag
     from causaldag.rand import rand_weights, directed_erdos
     from causaldag.utils.ci_tests import partial_correlation_suffstat, partial_monte_carlo_correlation_suffstat
+    from conditional_independence import partial_correlation_suffstat
     from sympy import gamma
     from scipy import stats
     from causaldag.utils.scores.gaussian_monte_carlo_bge_score import local_gaussian_monte_carlo_bge_score

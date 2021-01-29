@@ -1,6 +1,6 @@
 import itertools as itr
 from causaldag.classes import UndirectedGraph
-from causaldag.utils.ci_tests import CI_Tester, partial_correlation_test
+from conditional_independence import CI_Tester, partial_correlation_test
 from numpy import sqrt, log1p, ndenumerate, errstate, diagonal, fill_diagonal
 from scipy.special import erf
 

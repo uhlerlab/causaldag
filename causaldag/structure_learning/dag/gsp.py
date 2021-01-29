@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester, partial_correlation_test
+from conditional_independence import CI_Tester, partial_correlation_test
 from causaldag.classes.custom_types import UndirectedEdge
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset, iszero
@@ -970,8 +970,7 @@ def unknown_target_igsp(
 
 if __name__ == '__main__':
     import causaldag as cd
-    from causaldag.utils.ci_tests.ci_tester import MemoizedCI_Tester
-    from causaldag.utils.ci_tests.oracle import dsep_test
+    from conditional_independence import MemoizedCI_Tester, dsep_test
 
     p = 10
     d = cd.rand.directed_erdos(p, .2)

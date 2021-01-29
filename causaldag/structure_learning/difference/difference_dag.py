@@ -15,7 +15,7 @@ References
 
 from causaldag.structure_learning.difference.difference_ug import dci_undirected_graph
 from causaldag.structure_learning.difference._utils import bootstrap_generator, edges2adjacency
-from causaldag.utils.ci_tests import partial_correlation_suffstat
+from conditional_independence import partial_correlation_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
 from scipy.special import ncfdtr

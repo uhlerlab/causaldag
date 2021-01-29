@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Any, List, Set, Union
 from causaldag import DAG
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester, gauss_ci_test
+from conditional_independence import CI_Tester
 from causaldag.classes.custom_types import UndirectedEdge
 from causaldag.utils.invariance_tests import InvarianceTester
 from causaldag.utils.core_utils import powerset, iszero
@@ -12,7 +12,7 @@ import numpy as np
 from tqdm import trange, tqdm
 from causaldag.utils.core_utils import powerset
 from math import factorial
-from causaldag.utils.ci_tests import MemoizedCI_Tester, get_ci_tester
+from conditional_independence import MemoizedCI_Tester, get_ci_tester
 
 
 from causaldag.structure_learning.dag import permutation2dag, sparsest_permutation, gsp

@@ -51,7 +51,8 @@ class RegressionHelper:
 
 if __name__ == '__main__':
     from causaldag.rand.graphs import directed_erdos, rand_weights
-    from causaldag.utils.ci_tests import gauss_ci_suffstat
+
+    from conditional_independence import partial_correlation_suffstat
     from causaldag.utils.core_utils import powerset
     from sklearn.linear_model import LinearRegression
     import numpy as np
@@ -64,7 +65,7 @@ if __name__ == '__main__':
     dag = directed_erdos(nnodes, exp_nbrs/(nnodes-1))
     gdag = rand_weights(dag)
     samples = gdag.sample(nsamples)
-    suff = gauss_ci_suffstat(samples)
+    suff = partial_correlation_suffstat(samples)
     reg_helper = RegressionHelper(suff)
     lr = LinearRegression()
 

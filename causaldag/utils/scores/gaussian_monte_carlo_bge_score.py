@@ -195,6 +195,7 @@ def local_gaussian_monte_carlo_bge_score(
 if __name__ == '__main__':
     import causaldag
     from causaldag.rand import rand_weights, directed_erdos
+    from conditional_independence import partial_correlation_suffstat
     from causaldag.utils.ci_tests import partial_monte_carlo_correlation_suffstat, partial_correlation_suffstat
     from causaldag.utils.scores.gaussian_bge_score import local_gaussian_bge_score
     import time

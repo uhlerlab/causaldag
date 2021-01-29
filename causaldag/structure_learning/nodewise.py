@@ -1,5 +1,5 @@
 import itertools as itr
-from causaldag.utils.ci_tests import CI_Tester
+from conditional_independence import CI_Tester
 
 
 def estimate_adjacent(nodes: set, target_node, ci_tester: CI_Tester):
@@ -18,7 +18,7 @@ def estimate_adjacent(nodes: set, target_node, ci_tester: CI_Tester):
 
 if __name__ == '__main__':
     import causaldag as cd
-    from causaldag.utils.ci_tests import MemoizedCI_Tester, dsep_test
+    from conditional_independence import MemoizedCI_Tester, dsep_test
     import numpy as np
     import random
     random.seed(129318290)
