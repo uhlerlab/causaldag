@@ -1,12 +1,10 @@
 import numpy as np
-# import numba
 import scipy as sp
 from scipy import stats
 from scipy.special import loggamma
 import math
 # import ipdb
 
-# @numba.jit
 def numba_inv(A):
     return np.linalg.inv(A)
 

@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>causaldag.utils.scores.gaussian_bge_score &mdash; causaldag  documentation</title>
   
@@ -16,10 +16,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -29,10 +26,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
 
@@ -52,7 +48,7 @@
           
 
           
-            <a href="../../../../index.html" class="icon icon-home"> causaldag
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -128,8 +124,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -156,9 +150,12 @@
   <h1>Source code for causaldag.utils.scores.gaussian_bge_score</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numba</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">loggamma</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">loggamma</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">ipdb</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag&quot;</span><span class="p">)</span>
 
 <span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span>
 <span class="k">def</span> <span class="nf">numba_inv</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
@@ -215,15 +212,14 @@
     <span class="n">sample_mean</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s2">&quot;mu&quot;</span><span class="p">]</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># number of variables</span>
 
-    <span class="k">if</span> <span class="n">inverse_scale_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">inverse_scale_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">parameter_mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">parameter_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">alpha_mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">alpha_mu</span> <span class="o">=</span> <span class="n">p</span>
     <span class="k">if</span> <span class="n">alpha_w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">alpha_w</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="n">alpha_mu</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;alpha_w new&quot;</span><span class="p">,</span> <span class="n">alpha_w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">inverse_scale_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inverse_scale_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha_mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">alpha_w</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">alpha_mu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parameter_mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parameter_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 
     <span class="c1"># === first term</span>
     <span class="n">first_term</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">alpha_mu</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">alpha_mu</span><span class="p">))</span>
@@ -237,6 +233,7 @@
     <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">parameter_mean</span> <span class="o">-</span> <span class="n">sample_mean</span>
     <span class="c1"># R = inverse_scale_matrix + (n-1) * S + (n * alpha_w) / (n + alpha_w) * np.outer(mean_diff, mean_diff)</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">inverse_scale_matrix</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">S</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">alpha_mu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">alpha_mu</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">mean_diff</span><span class="p">,</span> <span class="n">mean_diff</span><span class="p">)</span>
+    <span class="c1"># print(R)</span>
     <span class="n">Q</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="n">parents</span><span class="p">]</span>
     <span class="n">P</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
     <span class="n">third_term</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha_w</span> <span class="o">-</span> <span class="n">p</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">inverse_scale_matrix</span><span class="p">)[</span><span class="n">Q</span><span class="p">]))</span>
@@ -246,26 +243,56 @@
 
     <span class="k">return</span> <span class="n">first_term</span> <span class="o">+</span> <span class="n">second_term</span> <span class="o">+</span> <span class="n">third_term</span></div>
 
+<span class="k">def</span> <span class="nf">partial_correlation_suffstat</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the sufficient statistics for partial correlation testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    samples:</span>
+<span class="sd">        (n x p) matrix, where n is the number of samples and p is the number of variables.</span>
+<span class="sd">    invert:</span>
+<span class="sd">        if True, compute the inverse correlation matrix, and normalize it into the partial correlation matrix. This</span>
+<span class="sd">        will generally speed up the gauss_ci_test if large conditioning sets are used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        dictionary of sufficient statistics</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># sample covariance matrix</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># TODO: NaN when variable is deterministic. Replace w/ 1 and 0?</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># sample correlation matrix</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">samples</span>
+    <span class="k">if</span> <span class="n">invert</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>  <span class="c1"># sample precision (inverse covariance) matrix</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">K</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">K</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">K</span><span class="p">))[:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># sample partial correlation matrix</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">V</span><span class="o">=</span><span class="n">V</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="k">import</span> <span class="n">rand_weights</span><span class="p">,</span> <span class="n">directed_erdos</span>
-    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="k">import</span> <span class="n">partial_correlation_suffstat</span>
-    <span class="kn">from</span> <span class="nn">sympy</span> <span class="k">import</span> <span class="n">gamma</span>
-    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-    <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span>
-    <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">ldl</span>
+    <span class="kn">import</span> <span class="nn">causaldag</span>
+    <span class="kn">from</span> <span class="nn">causaldag.rand</span> <span class="kn">import</span> <span class="n">rand_weights</span><span class="p">,</span> <span class="n">directed_erdos</span>
+    <span class="kn">from</span> <span class="nn">causaldag.utils.ci_tests</span> <span class="kn">import</span> <span class="n">partial_correlation_suffstat</span><span class="p">,</span> <span class="n">partial_monte_carlo_correlation_suffstat</span>
+    <span class="kn">from</span> <span class="nn">conditional_independence</span> <span class="kn">import</span> <span class="n">partial_correlation_suffstat</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">gamma</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+    <span class="kn">from</span> <span class="nn">causaldag.utils.scores.gaussian_monte_carlo_bge_score</span> <span class="kn">import</span> <span class="n">local_gaussian_monte_carlo_bge_score</span>
 
-    <span class="n">d</span> <span class="o">=</span> <span class="n">directed_erdos</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">g</span> <span class="o">=</span> <span class="n">rand_weights</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-    <span class="n">samples</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-    <span class="n">suffstat</span> <span class="o">=</span> <span class="n">partial_correlation_suffstat</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-    <span class="n">score</span> <span class="o">=</span> <span class="n">local_gaussian_bge_score</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">parents_of</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">suffstat</span><span class="p">)</span>
+    <span class="c1"># d = directed_erdos(10, .5)</span>
+    <span class="c1"># g = rand_weights(d)</span>
+    <span class="c1"># samples = g.sample(100)</span>
+    <span class="c1"># suffstat = partial_correlation_suffstat(samples)</span>
+    <span class="c1"># score = local_gaussian_bge_score(5, d.parents_of(5), suffstat)</span>
 
     <span class="k">def</span> <span class="nf">integral_marginal_gaussian_bge</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">log_c</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
             <span class="n">c_value</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
-                <span class="n">c_value</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">gamma</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+                <span class="n">c_value</span> <span class="o">+=</span> <span class="n">loggamma</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="n">c_value</span>
 
@@ -273,12 +300,12 @@
         <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
         <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="n">mu_0</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">T_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">T_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.25</span>
         <span class="n">N_w</span> <span class="o">=</span> <span class="mi">7</span>
         <span class="c1"># T_0 = np.array([[2.25,-0.512,-0.512], [-0.512,2.25,0.512], [0.512,0.512,2.25]])</span>
         <span class="n">sample_variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]),</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sample variance&quot;</span><span class="p">,</span> <span class="n">sample_variance</span><span class="p">)</span>
-        <span class="n">T_m</span> <span class="o">=</span> <span class="n">T_0</span> <span class="o">+</span> <span class="n">sample_variance</span> <span class="o">+</span> <span class="p">((</span><span class="n">N_w</span><span class="o">*</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">N_w</span> <span class="o">+</span> <span class="n">m</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mu_0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mu_0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="n">T_m</span> <span class="o">=</span> <span class="n">T_0</span> <span class="o">+</span> <span class="n">sample_variance</span> <span class="o">+</span> <span class="p">((</span><span class="n">N_mu</span><span class="o">*</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">N_mu</span> <span class="o">+</span> <span class="n">m</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mu_0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mu_0</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
         <span class="n">d_x1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">d_x2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
         <span class="n">d_x3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
@@ -304,10 +331,10 @@
 
     <span class="n">gaussian_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]])</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;old result&quot;</span><span class="p">,</span> <span class="n">integral_marginal_gaussian_bge</span><span class="p">(</span><span class="n">gaussian_data</span><span class="p">))</span>
-    <span class="n">suffstat</span> <span class="o">=</span> <span class="n">partial_correlation_suffstat</span><span class="p">(</span><span class="n">gaussian_data</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">s1</span> <span class="o">=</span> <span class="n">local_gaussian_bge_score</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">set</span><span class="p">(),</span> <span class="n">suffstat</span><span class="p">)</span>
-    <span class="n">s2</span> <span class="o">=</span> <span class="n">local_gaussian_bge_score</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">},</span> <span class="n">suffstat</span><span class="p">)</span>
-    <span class="n">s3</span> <span class="o">=</span> <span class="n">local_gaussian_bge_score</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">},</span> <span class="n">suffstat</span><span class="p">)</span>
+    <span class="n">suffstat</span> <span class="o">=</span> <span class="n">partial_monte_carlo_correlation_suffstat</span><span class="p">(</span><span class="n">gaussian_data</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">local_gaussian_monte_carlo_bge_score</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">set</span><span class="p">(),</span> <span class="n">suffstat</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">local_gaussian_monte_carlo_bge_score</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">},</span> <span class="n">suffstat</span><span class="p">)</span>
+    <span class="n">s3</span> <span class="o">=</span> <span class="n">local_gaussian_monte_carlo_bge_score</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">},</span> <span class="n">suffstat</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;new result node 0&quot;</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;new result node 1&quot;</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;new result node 2&quot;</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
@@ -319,25 +346,28 @@
            
           </div>
           <footer>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Chandler Squires.
+        
+        &copy; Copyright 2021, Chandler Squires
 
     </p>
   </div>
     
     
     
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 

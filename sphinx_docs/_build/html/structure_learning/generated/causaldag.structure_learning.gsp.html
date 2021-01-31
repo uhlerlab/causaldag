@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>causaldag.structure_learning.gsp &mdash; causaldag  documentation</title>
   
@@ -16,10 +16,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -29,18 +26,15 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Random Graphs" href="../../rand/index.html" />
-    <link rel="prev" title="causaldag.structure_learning.sparsest_permutation" href="causaldag.structure_learning.sparsest_permutation.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -54,7 +48,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> causaldag
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -85,20 +79,10 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../classes/index.html">Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utils/index.html">Utils</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Structure Learning</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../index.html#undirected-structure-learning">Undirected Structure Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../index.html#covariance-structure-learning">Covariance Structure Learning</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../index.html#dag-structure-learning">DAG Structure Learning</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="causaldag.structure_learning.permutation2dag.html">causaldag.structure_learning.permutation2dag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="causaldag.structure_learning.sparsest_permutation.html">causaldag.structure_learning.sparsest_permutation</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">causaldag.structure_learning.gsp</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Structure Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../rand/index.html">Random Graphs</a></li>
 </ul>
 
@@ -140,22 +124,18 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../index.html">Structure Learning</a> &raquo;</li>
-        
       <li>causaldag.structure_learning.gsp</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/structure_learning/generated/causaldag.structure_learning.gsp.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -171,51 +151,6 @@
             
   <div class="section" id="causaldag-structure-learning-gsp">
 <h1>causaldag.structure_learning.gsp<a class="headerlink" href="#causaldag-structure-learning-gsp" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="causaldag.structure_learning.gsp">
-<code class="descclassname">causaldag.structure_learning.</code><code class="descname">gsp</code><span class="sig-paren">(</span><em>nodes: set, ci_tester: causaldag.utils.ci_tests.ci_tester.CI_Tester, depth: Optional[int] = 4, nruns: int = 5, verbose: bool = False, initial_undirected: Union[str, causaldag.classes.undirected_graph.UndirectedGraph, None] = 'threshold', initial_permutations: Optional[List[T]] = None, fixed_orders={}, fixed_adjacencies={}, fixed_gaps={}, use_lowest=True, max_iters=inf, factor=2, progress_bar=False, summarize=False) -&gt; (&lt;class 'causaldag.classes.dag.DAG'&gt;, typing.List[typing.List[typing.Dict]]</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causaldag/structure_learning/dag/gsp.html#gsp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.structure_learning.gsp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate the Markov equivalence class of a DAG using the Greedy Sparsest Permutations (GSP) algorithm.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>nodes</strong> – Labels of nodes in the graph.</li>
-<li><strong>ci_tester</strong> – A conditional independence tester, which has a method is_ci taking two sets A and B, and a conditioning set C,
-and returns True/False.</li>
-<li><strong>depth</strong> – Maximum depth in depth-first search. Use None for infinite search depth.</li>
-<li><strong>nruns</strong> – Number of runs of the algorithm. Each run starts at a random permutation and the sparsest DAG from all
-runs is returned.</li>
-<li><strong>verbose</strong> – TODO</li>
-<li><strong>initial_undirected</strong> – Option to find the starting permutation by using the minimum degree algorithm on an undirected graph that is
-Markov to the data. You can provide the undirected graph yourself, use the default ‘threshold’ to do simple
-thresholding on the partial correlation matrix, or select ‘None’ to start at a random permutation.</li>
-<li><strong>initial_permutations</strong> – A list of initial permutations with which to start the algorithm. This option is helpful when there is
-background knowledge on orders. This option is mutually exclusive with initial_undirected.</li>
-<li><strong>fixed_orders</strong> – Tuples (i, j) where i is known to come before j.</li>
-<li><strong>fixed_adjacencies</strong> – Tuples (i, j) where i and j are known to be adjacent.</li>
-<li><strong>fixed_gaps</strong> – Tuples (i, j) where i and j are known to be non-adjacent.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-func docutils literal notranslate"><span class="pre">pcalg()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">igsp()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">unknown_target_igsp()</span></code></p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(est_dag, summaries)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 
@@ -223,29 +158,28 @@ background knowledge on orders. This option is mutually exclusive with initial_u
            
           </div>
           <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../../rand/index.html" class="btn btn-neutral float-right" title="Random Graphs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="causaldag.structure_learning.sparsest_permutation.html" class="btn btn-neutral float-left" title="causaldag.structure_learning.sparsest_permutation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-    </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Chandler Squires.
+        
+        &copy; Copyright 2021, Chandler Squires
 
     </p>
   </div>
     
     
     
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 

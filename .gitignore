@@ -10,7 +10,6 @@ build/
 
 .DS_Store
 .idea/
-release.sh
 
 .mypy_cache/
 

@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Conditional Independence Tests &mdash; causaldag  documentation</title>
   
@@ -16,10 +16,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -29,17 +26,16 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat" href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.html" />
+    <link rel="next" title="Conditional Invariance Tests" href="../invariance_tests/index.html" />
     <link rel="prev" title="Core Utils" href="../core_utils.html" /> 
 </head>
 
@@ -54,7 +50,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> causaldag
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -89,12 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../classes/index.html">Classes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Utils</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../core_utils.html">Core Utils</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Conditional Independence Tests</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.html">causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test.html">causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation.html">causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Conditional Independence Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../invariance_tests/index.html">Conditional Invariance Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../scores/index.html">Scores</a></li>
 </ul>
@@ -141,8 +132,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -156,7 +145,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../_sources/utils/ci_tests/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -172,21 +161,12 @@
             
   <div class="section" id="conditional-independence-tests">
 <span id="ci-tests"></span><h1>Conditional Independence Tests<a class="headerlink" href="#conditional-independence-tests" title="Permalink to this headline">¶</a></h1>
-<table border="1" class="longtable docutils">
+<table class="longtable docutils align-default">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col style="width: 10%" />
+<col style="width: 90%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.html#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat" title="causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_correlation_suffstat</span></code></a>(samples[,&nbsp;invert])</td>
-<td>Return the sufficient statistics for partial correlation testing.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test.html#causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test" title="causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_correlation_test</span></code></a>(suffstat,&nbsp;VT],&nbsp;i,&nbsp;j)</td>
-<td>Test the null hypothesis that i and j are conditionally independent given <code class="docutils literal notranslate"><span class="pre">cond_set</span></code>.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation.html#causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation" title="causaldag.utils.ci_tests.partial_correlation_test.compute_partial_correlation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_partial_correlation</span></code></a>(suffstat,&nbsp;i,&nbsp;j)</td>
-<td>Compute the partial correlation between i and j given <code class="docutils literal notranslate"><span class="pre">cond_set</span></code>.</td>
-</tr>
+<tbody>
 </tbody>
 </table>
 </div>
@@ -196,29 +176,37 @@
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="generated/causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat.html" class="btn btn-neutral float-right" title="causaldag.utils.ci_tests.partial_correlation_test.partial_correlation_suffstat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../core_utils.html" class="btn btn-neutral float-left" title="Core Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+        <a href="../invariance_tests/index.html" class="btn btn-neutral float-right" title="Conditional Invariance Tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../core_utils.html" class="btn btn-neutral float-left" title="Core Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Chandler Squires.
+        
+        &copy; Copyright 2021, Chandler Squires
 
     </p>
   </div>
     
     
     
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 

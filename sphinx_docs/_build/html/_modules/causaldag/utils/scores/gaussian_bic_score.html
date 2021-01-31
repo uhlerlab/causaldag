@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>causaldag.utils.scores.gaussian_bic_score &mdash; causaldag  documentation</title>
   
@@ -16,10 +16,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -29,10 +26,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
 
@@ -52,7 +48,7 @@
           
 
           
-            <a href="../../../../index.html" class="icon icon-home"> causaldag
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -128,8 +124,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -164,15 +158,41 @@
 
 <div class="viewcode-block" id="local_gaussian_bic_score"><a class="viewcode-back" href="../../../../utils/scores/generated/causaldag.utils.scores.local_gaussian_bic_score.html#causaldag.utils.scores.local_gaussian_bic_score">[docs]</a><span class="k">def</span> <span class="nf">local_gaussian_bic_score</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">suffstat</span><span class="p">,</span> <span class="n">lambda_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span>
-    <span class="n">lambda_</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="k">if</span> <span class="n">lambda_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="n">C</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">],</span> <span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
-
+    <span class="n">lambda_</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="k">if</span> <span class="n">lambda_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">],</span> <span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">*=</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">n</span>
     <span class="n">var</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span> <span class="k">else</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">]</span> <span class="o">@</span> <span class="n">numba_inv</span><span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">)])</span> <span class="o">@</span> <span class="n">C</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
-    <span class="n">log_prob</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">var</span><span class="o">/</span><span class="n">n</span><span class="p">))</span>
-    <span class="n">penalty_term</span> <span class="o">=</span> <span class="n">lambda_</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">))</span>
+    <span class="n">log_prob</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">var</span><span class="p">))</span>
+    <span class="n">penalty_term</span> <span class="o">=</span> <span class="n">lambda_</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">))</span>
+    <span class="c1"># print(&quot;log_prob: &quot;, log_prob)</span>
+    <span class="c1"># print(&quot;penalty_term&quot;, penalty_term)</span>
 
-    <span class="k">return</span> <span class="n">log_prob</span> <span class="o">-</span> <span class="n">penalty_term</span></div>
+    <span class="k">return</span> <span class="n">log_prob</span> <span class="o">+</span> <span class="n">penalty_term</span></div>
 
+<span class="k">def</span> <span class="nf">local_gaussian_interventional_bic_score</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">parents</span><span class="p">,</span> <span class="n">suffstat_dict</span><span class="p">,</span> <span class="n">lambda_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># TODO: Account for bias and sample means, maybe replace /N-1 with /N</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="n">parents_and_node</span> <span class="o">=</span> <span class="n">parents</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">total_num_samples</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">intervened_nodes</span><span class="p">,</span> <span class="n">suffstat</span> <span class="ow">in</span> <span class="n">suffstat_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">intervened_nodes</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">+=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">parents_and_node</span><span class="p">,</span> <span class="n">parents_and_node</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">total_num_samples</span> <span class="o">+=</span> <span class="n">suffstat</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">total_num_samples</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">total_num_samples</span>
+    <span class="n">C</span> <span class="o">/=</span> <span class="n">n</span> <span class="c1"># TODO: fix</span>
+    <span class="n">lambda_</span> <span class="o">=</span> <span class="n">lambda_</span> <span class="k">if</span> <span class="n">lambda_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span> <span class="k">else</span> <span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">@</span> <span class="n">numba_inv</span><span class="p">(</span><span class="n">C</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">@</span> <span class="n">C</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">log_prob</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">var</span><span class="p">))</span>
+    <span class="n">penalty_term</span> <span class="o">=</span> <span class="n">lambda_</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">log_prob</span> <span class="o">+</span> <span class="n">penalty_term</span>
 
 
 </pre></div>
@@ -181,25 +201,28 @@
            
           </div>
           <footer>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Chandler Squires.
+        
+        &copy; Copyright 2021, Chandler Squires
 
     </p>
   </div>
     
     
     
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 

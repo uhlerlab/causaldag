@@ -6,7 +6,6 @@ from causaldag.utils.scores.monte_carlo_marginal_likelihood import monte_carlo_l
 from causaldag.utils.scores import gaussian_log_likelihood
 from functools import partial
 import numpy as np
-import numba
 import scipy as sp
 from scipy import stats
 from scipy.special import loggamma

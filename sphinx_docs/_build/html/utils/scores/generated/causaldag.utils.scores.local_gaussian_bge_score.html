@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>causaldag.utils.scores.local_gaussian_bge_score &mdash; causaldag  documentation</title>
   
@@ -16,10 +16,7 @@
 
   
   
-
   
-  
-
   
 
   
@@ -29,10 +26,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -54,7 +50,7 @@
           
 
           
-            <a href="../../../index.html" class="icon icon-home"> causaldag
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> causaldag
           
 
           
@@ -140,8 +136,6 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -157,7 +151,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../../../_sources/utils/scores/generated/causaldag.utils.scores.local_gaussian_bge_score.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -173,40 +167,36 @@
             
   <div class="section" id="causaldag-utils-scores-local-gaussian-bge-score">
 <h1>causaldag.utils.scores.local_gaussian_bge_score<a class="headerlink" href="#causaldag-utils-scores-local-gaussian-bge-score" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="causaldag.utils.scores.local_gaussian_bge_score">
-<code class="descclassname">causaldag.utils.scores.</code><code class="descname">local_gaussian_bge_score</code><span class="sig-paren">(</span><em>node</em>, <em>parents</em>, <em>suffstat</em>, <em>alpha_mu=None</em>, <em>alpha_w=None</em>, <em>inverse_scale_matrix=None</em>, <em>parameter_mean=None</em>, <em>is_diagonal=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bge_score.html#local_gaussian_bge_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.local_gaussian_bge_score" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">causaldag.utils.scores.</code><code class="sig-name descname">local_gaussian_bge_score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">parents</span></em>, <em class="sig-param"><span class="n">suffstat</span></em>, <em class="sig-param"><span class="n">alpha_mu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">alpha_w</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inverse_scale_matrix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parameter_mean</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_diagonal</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/causaldag/utils/scores/gaussian_bge_score.html#local_gaussian_bge_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#causaldag.utils.scores.local_gaussian_bge_score" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the BGE score of a node given its parents.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>node</strong> – TODO - describe.</li>
-<li><strong>parents</strong> – TODO - describe.</li>
-<li><strong>suffstat</strong> – <p>dictionary containing:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> – TODO - describe.</p></li>
+<li><p><strong>parents</strong> – TODO - describe.</p></li>
+<li><p><strong>suffstat</strong> – <p>dictionary containing:</p>
 <ul>
-<li><code class="docutils literal notranslate"><span class="pre">n</span></code> – number of samples</li>
-<li><code class="docutils literal notranslate"><span class="pre">S</span></code> – sample covariance matrix</li>
-<li><code class="docutils literal notranslate"><span class="pre">mu</span></code> – sample mean</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> – number of samples</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> – sample covariance matrix</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code> – sample mean</p></li>
 </ul>
-</li>
-<li><strong>alpha_mu</strong> – TODO - describe. Default is the number of variables.</li>
-<li><strong>alpha_w</strong> – TODO - describe. Default is the (number of variables) + alpha_mu + 1</li>
-<li><strong>inverse_scale_matrix</strong> – TODO - describe. Default is the identity matrix.</li>
-<li><strong>parameter_mean</strong> – TODO - describe. Default is the zero vector.</li>
-<li><strong>is_diagonal</strong> – TODO - describe.</li>
+</p></li>
+<li><p><strong>alpha_mu</strong> – TODO - describe. Default is the number of variables.</p></li>
+<li><p><strong>alpha_w</strong> – TODO - describe. Default is the (number of variables) + alpha_mu + 1</p></li>
+<li><p><strong>inverse_scale_matrix</strong> – TODO - describe. Default is the identity matrix.</p></li>
+<li><p><strong>parameter_mean</strong> – TODO - describe. Default is the zero vector.</p></li>
+<li><p><strong>is_diagonal</strong> – TODO - describe.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">BGE score.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>BGE score.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -216,29 +206,37 @@
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../../../structure_learning/index.html" class="btn btn-neutral float-right" title="Structure Learning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="causaldag.utils.scores.local_gaussian_bic_score.html" class="btn btn-neutral float-left" title="causaldag.utils.scores.local_gaussian_bic_score" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+        <a href="../../../structure_learning/index.html" class="btn btn-neutral float-right" title="Structure Learning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="causaldag.utils.scores.local_gaussian_bic_score.html" class="btn btn-neutral float-left" title="causaldag.utils.scores.local_gaussian_bic_score" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Chandler Squires.
+        
+        &copy; Copyright 2021, Chandler Squires
 
     </p>
   </div>
     
     
     
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 

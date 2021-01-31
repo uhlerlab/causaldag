@@ -1,11 +1,9 @@
 import numpy as np
 from scipy import stats
-import numba
 from numpy import log, outer, pi
 from numpy.linalg import det
 
 
-@numba.jit
 def numba_inv(A):
     return np.linalg.inv(A)
 

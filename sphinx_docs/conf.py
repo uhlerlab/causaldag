@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath(os.path.join('..')))
 # -- Project information -----------------------------------------------------
 
 project = 'causaldag'
-copyright = '2019, Chandler Squires'
+copyright = '2021, Chandler Squires'
 author = 'Chandler Squires'
 
 # The short X.Y version

@@ -1,12 +1,10 @@
 import sys
 
-sys.path.insert(1, "C:/Users/skarn/OneDrive/Documents/MIT/year_3/SuperUROP/causaldag")
 
 from causaldag.utils.scores.monte_carlo_marginal_likelihood import monte_carlo_local_marginal_likelihood, monte_carlo_global_marginal_likelihood
 from causaldag.utils.scores.gaussian_bic_score import local_gaussian_bic_score
 from functools import partial
 import numpy as np
-import numba
 import scipy as sp
 from scipy import stats
 from scipy.special import logsumexp
@@ -14,6 +12,7 @@ import math
 import ipdb
 from scipy import stats
 from scipy.linalg import ldl
+
 
 def sample_bge_prior(graph,
         total_num_variables=None,
