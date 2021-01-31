@@ -19,7 +19,7 @@ from conditional_independence import partial_correlation_suffstat
 from causaldag.utils.core_utils import powerset
 from causaldag.utils.regression import RegressionHelper
 from scipy.special import ncfdtr
-from numpy.linalg import inv
+from numpy.linalg import inv, pinv
 import numpy as np
 import itertools
 from joblib import Parallel, delayed
@@ -31,6 +31,7 @@ import operator as op
 import random
 import ipdb
 import matplotlib.pyplot as plt
+import copy
 
 
 def dci(
@@ -93,14 +94,14 @@ def dci(
     verbose: int, default = 0
         The verbosity level of logging messages.
     lam: float, default = 0
-        Amount of regularization for regression (becomes ridge regression if nonzero).
+        Amount of regularization for regression (becomes ridge regression if nonzero). Do not use deprecated.
     progress: bool, default = False
         Whether to show DCI progress bar.
     order_independent: bool = True
         For orientation phase of DCI, whether to use DCI where all nodes are considered at each level of
         the conditioning set size, making the output pf DCI independent of node order (recommended) or 
         whether to use the original DCI algorithm that iterates over nodes and thus may depend 
-        on the order of the nodes (this may lead to incosistent or biased results).
+        on the order of the nodes (this may lead to incosistent or biased results) but is currently faster.
 
     See Also
     --------
@@ -164,12 +165,13 @@ def dci(
     adjacency_matrix = orient_algorithm(
         X1,
         X2,
-        skeleton,
-        nodes_cond_set,
+        skeleton=skeleton,
+        nodes_cond_set=nodes_cond_set,
         rh1=rh1,
         rh2=rh2,
         alpha=alpha_orient,
         max_set_size=max_set_size,
+        progress=progress,
         verbose=verbose
     )
 
@@ -190,6 +192,8 @@ def dci_skeleton_multiple(
         progress: bool = False,
         true_diff: Optional[Set] = None
 ):
+    """Helper method for running DCI skeleton phase over multiple alpha levels quick.
+       Returns a dicionary mapping given alpha level to set of edges defining the difference skeleton for that alpha level."""
     if verbose > 0:
         print("DCI skeleton estimation...")
 
@@ -221,7 +225,7 @@ def dci_skeleton_multiple(
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
             stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
-                     inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
+                     pinv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
             pval_i = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
 
             #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
@@ -249,7 +253,7 @@ def dci_skeleton_multiple(
             # compute statistic and p-value
             i_ix = cond_set_j.index(i)
             stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
-                     inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
+                     pinv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
             pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
 
             #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
@@ -344,6 +348,7 @@ def dci_multiple(
                 nodes_cond_set=nodes_cond_set,
                 alpha=alpha_orient,
                 max_set_size=max_set_size,
+                progress=progress,
                 verbose=verbose)
             for subsample1, subsample2, skeleton in zip(bootstrap_samples1, bootstrap_samples2, skeleton_results)
         )
@@ -360,6 +365,7 @@ def dci_skeletons_bootstrap_multiple(
         X1,
         X2,
         alpha_skeleton_grid: list = [0.1, 0.5],
+        difference_ug_method = 'constraint',
         max_set_size: int = 3,
         difference_ug: list = None,
         nodes_cond_set: set = None,
@@ -374,6 +380,62 @@ def dci_skeletons_bootstrap_multiple(
         lam: float = 0,
         true_diff: Optional[Set] = None
 ):
+    """
+    Runs the skeleton phase (with stability selection) of the Difference Causal Inference (DCI) algorithm.
+    Bootstrap samples are generated from two input datasets and DCI skeleton phase is run across bootstrap samples and across different 
+    hyperparameters. Edges that reliably appear across different runs are considered stable.
+    If the difference undirected graph or conditioning set is missing the undirected difference algorithm will be run first.
+
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    alpha_skeleton_grid: array-like, default = [0.1, 0.5]
+        Grid of values to iterate over representing significance level parameter for determining presence of edges in the skeleton of the difference graph. 
+        Lower alpha_skeleton results in sparser difference graph.
+    difference_ug_method: str, default = 'constraint'
+        Method for computing the undirected difference graph. Must be 'constraint' for constraint-based
+        method or 'kliep' for KLIEP.
+    max_set_size: int, default = 3
+        Maximum conditioning set size used to test regression invariance.
+        Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    difference_ug: list, default = None
+        List of tuples that represents edges in the difference undirected graph. If difference_ug is None, 
+        KLIEP algorithm for estimating the difference undirected graph will be run. 
+        If the number of nodes is small, difference_ug could be taken to be the complete graph between all the nodes.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    max_iter: int, default = 1000
+        Maximum number of iterations for gradient descent in KLIEP algorithm.
+    edge_threshold: float, default = 0.05
+        Edge weight cutoff for keeping an edge for KLIEP algorithm (all edges above or equal to this threshold are kept).
+    sample_fraction: float, default = 0.7
+        The fraction of samples to be used in each bootstrap sample.
+        Should be between 0 and 1. If 1, all samples are used.
+    n_bootstrap_iterations: int, default = 50
+        Number of bootstrap samples to create.
+    n_jobs: int, default = 1
+        Number of jobs to run in parallel.
+    random_state: int, default = None
+        Seed used by the random number generator.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+    lam: float, default = 0
+        Amount of regularization for regression (becomes ridge regression if nonzero). Do not use deprecated.
+    true_diff: set, default = None
+        Set of edges that are known to be in the true difference skeleton.
+
+    Returns
+    -------
+    bootstrap_results: list
+        List containing results for each bootstrap sample. Each "result" is a dictionary mapping an alpha level to a skeleton.
+    alpha2adjacency: dict
+        A dictionary mapping each alpha level to a [n_features, n_features] matrix, which contains values in [0,1] range
+        representing the probability of selection of that edge over the bootstrap samples.
+
+    """
     if difference_ug is None or nodes_cond_set is None:
         difference_ug, nodes_cond_set = dci_undirected_graph(
             X1,
@@ -412,7 +474,7 @@ def dci_skeletons_bootstrap_multiple(
 def dci_orient_bootstrap_multiple(
         X1,
         X2,
-        skeletons: Union[Dict[float, set], set],
+        skeleton: Union[Dict[float, set], set],
         alpha_orient_grid: list = [0.001, 0.1],
         max_set_size: int = 3,
         nodes_cond_set: set = None,
@@ -421,26 +483,78 @@ def dci_orient_bootstrap_multiple(
         bootstrap_threshold: float = 0.5,
         n_jobs: int = 1,
         random_state: int = None,
-        verbose: int = 0
+        progress: bool = False,
+        verbose: int = 0,
+        order_independent: bool = True
 ):
+    """
+    Runs the orientation phase (with stability selection) of the Difference Causal Inference (DCI) algorithm.
+    Bootstrap samples are generated from two input datasets and DCI orientation phase is run across bootstrap samples and across different 
+    hyperparameters. Edges that reliably appear across different runs are considered stable.
 
+    Parameters
+    ----------
+    X1: array, shape = [n_samples, n_features]
+        First dataset.    
+    X2: array, shape = [n_samples, n_features]
+        Second dataset.
+    skeleton: Union[Dict[float, set], set]
+        Set of edges in the skeleton or for multiple skeletons a dictionary mapping alpha level to a skeleton.
+        See output of dci_skeletons_bootstrap_multiple.
+    alpha_orient_grid: array-like, default = [0.001, 0.1]
+        Grid of values to iterate over representing significance level parameter for determining orientation of an edge. 
+        Lower alpha_orient results in more directed edges in the difference-DAG.
+    max_set_size: int, default = 3
+        Maximum conditioning set size used to test regression invariance.
+        Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    nodes_cond_set: set
+        Nodes to be considered as conditioning sets.
+    sample_fraction: float, default = 0.7
+        The fraction of samples to be used in each bootstrap sample.
+        Should be between 0 and 1. If 1, all samples are used.
+    n_bootstrap_iterations: int, default = 50
+        Number of bootstrap samples to create.
+    n_jobs: int, default = 1
+        Number of jobs to run in parallel.
+    random_state: int, default = None
+        Seed used by the random number generator.
+    verbose: int, default = 0
+        The verbosity level of logging messages.
+    order_independent: bool = True
+        For orientation phase of DCI, whether to use DCI where all nodes are considered at each level of
+        the conditioning set size, making the output pf DCI independent of node order (recommended) or 
+        whether to use the original DCI algorithm that iterates over nodes and thus may depend 
+        on the order of the nodes (this may lead to incosistent or biased results) but is currently faster.
+
+    Returns
+    -------
+    adjacency_matrix: array, shape  = [n_features, n_features]
+        Estimated difference-DAG. Edges that were found to be different between two settings but the orientation
+        could not be determined, are represented by assigning 1 in both directions, i.e. adjacency_matrix[i,j] = 1
+        and adjacency_matrix[j,i] = 1. Otherwise for oriented edges, only adjacency_matrix[i,j] = 1 is assigned. 
+        Assignment of 0 in the adjacency matrix represents no edge.
+    stability_scores: array, shape = [n_params, n_features, n_features]
+        Stability score of each edge for for each combination of hyperparameters.
+    """
     bootstrap_samples1 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X1, random_state=random_state)
     bootstrap_samples2 = bootstrap_generator(n_bootstrap_iterations, sample_fraction, X2, random_state=random_state)
 
     _, n_variables = X1.shape
     n_params = len(alpha_orient_grid)    
     stability_scores = np.zeros((n_params, n_variables, n_variables))
+    orient_algorithm = dci_orient_order_dependent if not order_independent else dci_orient
 
     alpha2adjacency_oriented = dict()
     for idx, alpha_orient in enumerate(alpha_orient_grid):
         orientation_results = Parallel(n_jobs=n_jobs, verbose=verbose)(
-            delayed(dci_orient)(
+            delayed(orient_algorithm)(
                 X1[safe_mask(X1, subsample1), :],
                 X2[safe_mask(X1, subsample2), :],
-                skeletons=skeletons,
+                skeleton=skeleton,
                 nodes_cond_set=nodes_cond_set,
                 alpha=alpha_orient,
                 max_set_size=max_set_size,
+                progress=progress,
                 verbose=verbose)
             for subsample1, subsample2 in zip(bootstrap_samples1, bootstrap_samples2)
         )
@@ -455,11 +569,12 @@ def dci_stability_selection(
         alpha_ug_grid: list = [0.1, 1, 10],
         alpha_skeleton_grid: list = [0.1, 0.5],
         alpha_orient_grid: list = [0.001, 0.1],
-        max_set_size: int = 3,
+        max_set_size: Optional[int] = 3,
+        difference_ug_method = 'constraint',
         difference_ug: list = None,
         nodes_cond_set: set = None,
         max_iter: int = 1000,
-        edge_threshold: float = 0.05,
+        edge_threshold: float = 0,
         sample_fraction: float = 0.7,
         n_bootstrap_iterations: int = 50,
         bootstrap_threshold: float = 0.5,
@@ -664,7 +779,7 @@ def dci_skeleton(
             # compute statistic and p-value
             j_ix = cond_set_i.index(j)
             stat_i = (beta1_i[j_ix] - beta2_i[j_ix]) ** 2 * \
-                     inv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
+                     pinv(var1_i * precision1 / (n1 - 1) + var2_i * precision2 / (n2 - 1))[j_ix, j_ix]
             pval_i = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_i)
 
             #  remove i-j from skeleton if i regressed on (j, cond_set) is invariant
@@ -686,7 +801,7 @@ def dci_skeleton(
             # compute statistic and p-value
             i_ix = cond_set_j.index(i)
             stat_j = (beta1_j[i_ix] - beta2_j[i_ix]) ** 2 * \
-                     inv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
+                     pinv(var1_j * precision1 / (n1 - 1) + var2_j * precision2 / (n2 - 1))[i_ix, i_ix]
             pval_j = 1 - ncfdtr(1, n1 + n2 - len(cond_set_i) - len(cond_set_j), 0, stat_j)
 
             #  remove i-j from skeleton if j regressed on (i, cond_set) is invariant
@@ -707,12 +822,13 @@ def dci_skeleton(
 def dci_orient(
         X1,
         X2,
-        skeletons: Union[Dict[float, set], set],
+        skeleton: Union[Dict[float, set], set],
         nodes_cond_set: set,
         rh1: RegressionHelper = None,
         rh2: RegressionHelper = None,
         alpha: float = 0.1,
         max_set_size: int = 3,
+        progress: bool = False,
         verbose: int = 0
 ):
     """
@@ -724,7 +840,7 @@ def dci_orient(
         First dataset.    
     X2: array, shape = [n_samples, n_features]
         Second dataset.
-    skeletons: set or dictionary of float-set pairs
+    skeleton: set or dictionary of float-set pairs
         Set of edges in the skeleton of the difference-DAG or a dictionary mapping hyperparamters (of the skeleton phase) to the set of edges corresponding to the skeleton.
     nodes_cond_set: set
         Nodes to be considered as conditioning sets.
@@ -738,6 +854,8 @@ def dci_orient(
     max_set_size: int, default = 3
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    progress: bool, default = False
+        Whether to show DCI progress bar.
     verbose: int, default = 0
         The verbosity level of logging messages.
 
@@ -766,7 +884,7 @@ def dci_orient(
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
-    if isinstance(skeletons, dict):
+    if isinstance(skeleton, dict):
         return {
             alpha: dci_orient(
                 X1,
@@ -776,12 +894,14 @@ def dci_orient(
                 rh1,
                 rh2,
                 alpha=alpha,
-                max_set_size=max_set_size
+                max_set_size=max_set_size,
+                progress=progress,
+                verbose=verbose
             )
-            for alpha, skeleton in skeletons.items()
+            for alpha, skel in skeleton.items()
         }
 
-    skeleton = {frozenset({i, j}) for i, j in skeletons}
+    skeleton = {frozenset({i, j}) for i, j in skeleton}
     nodes = {i for i, j in skeleton} | {j for i, j in skeleton}
     d_nx = nx.DiGraph()
     d_nx.add_nodes_from(nodes)
@@ -792,7 +912,9 @@ def dci_orient(
     for parent_set_size in range(max_set_size + 2):
         if verbose > 0: print(f"Trying parent sets of size {parent_set_size}")
         pvalue_dict = dict()
-        for i in nodes - nodes_with_decided_parents:
+        nodes_undecided_parents = nodes - nodes_with_decided_parents
+        nodes_undecided_parents = tqdm(nodes_undecided_parents) if (progress and len(nodes_undecided_parents) != 0) else nodes_undecided_parents
+        for i in nodes_undecided_parents:
             for cond_i in itertools.combinations(nodes_cond_set - {i}, parent_set_size):
                 beta1_i, var1_i, _ = rh1.regression(i, list(cond_i))
                 beta2_i, var2_i, _ = rh2.regression(i, list(cond_i))
@@ -805,6 +927,7 @@ def dci_orient(
             for (i, cond_i), pvalue in sorted(pvalue_dict.items(), key=op.itemgetter(1), reverse=True)
             if pvalue > alpha
         ]
+        if verbose > 0: print(f"Going through a list of p-values of size {len(sorted_pvalue_dict)}")
         while sorted_pvalue_dict:
             _, i, cond_i = sorted_pvalue_dict.pop(0)
             i_children = {j for j in nodes - cond_i - {i} if frozenset({i, j}) in skeleton}
@@ -862,12 +985,13 @@ def dci_orient(
 def dci_orient_order_dependent(
         X1,
         X2,
-        skeletons: Union[Dict[float, set], set],
+        skeleton: Union[Dict[float, set], set],
         nodes_cond_set: set,
         rh1: RegressionHelper = None,
         rh2: RegressionHelper = None,
         alpha: float = 0.1,
         max_set_size: int = 3,
+        progress: bool = False,
         verbose: int = 0
 ):
     """
@@ -879,7 +1003,7 @@ def dci_orient_order_dependent(
         First dataset.    
     X2: array, shape = [n_samples, n_features]
         Second dataset.
-    skeletons: set or dictionary of float-set pairs
+    skeleton: set or dictionary of float-set pairs
         Set of edges in the skeleton of the difference-DAG.
     nodes_cond_set: set
         Nodes to be considered as conditioning sets.
@@ -893,6 +1017,8 @@ def dci_orient_order_dependent(
     max_set_size: int, default = 3
         Maximum conditioning set size used to test regression invariance.
         Smaller maximum conditioning set size results in faster computation time. For large datasets recommended max_set_size is 3.
+    progress: bool, default = False
+        Whether to show DCI progress bar.
     verbose: int, default = 0
         The verbosity level of logging messages.
 
@@ -921,12 +1047,16 @@ def dci_orient_order_dependent(
         rh1 = RegressionHelper(suffstat1)
         rh2 = RegressionHelper(suffstat2)
 
+    skeleton = {frozenset({i, j}) for i, j in skeleton}
     nodes = {i for i, j in skeleton} | {j for i, j in skeleton}
     oriented_edges = set()
 
     n1 = rh1.suffstat['n']
     n2 = rh2.suffstat['n']
-    for i, j in skeleton:
+
+    skel_edges = copy.deepcopy(skeleton)
+    skel_edges = tqdm(skel_edges) if (progress and len(skel_edges) != 0) else skel_edges
+    for i, j in skel_edges:
         for cond_i, cond_j in zip(powerset(nodes_cond_set - {i}, r_max=max_set_size),
                                   powerset(nodes_cond_set - {j}, r_max=max_set_size)):
             # compute residual variances for i
@@ -958,8 +1088,9 @@ def dci_orient_order_dependent(
                 break
 
     # orient edges via graph traversal
-    unoriented_edges_before_traversal = skeleton - oriented_edges - {(j, i) for i, j in oriented_edges}
-    unoriented_edges = unoriented_edges_before_traversal.copy()
+    unoriented_edges_before_traversal = skeleton - {frozenset({j, i}) for i, j in oriented_edges}
+    unoriented_edges_before_traversal = copy.deepcopy(unoriented_edges_before_traversal)
+    unoriented_edges = copy.deepcopy(unoriented_edges_before_traversal)
     g = nx.DiGraph()
     for i, j in oriented_edges:
         g.add_edge(i, j)
@@ -969,14 +1100,14 @@ def dci_orient_order_dependent(
         chain_path = list(nx.all_simple_paths(g, source=i, target=j))
         if len(chain_path) > 0:
             oriented_edges.add((i, j))
-            unoriented_edges.remove((i, j))
+            unoriented_edges.remove(frozenset({i, j}))
             if verbose > 0:
                 print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (i, j)))
         else:
             chain_path = list(nx.all_simple_paths(g, source=j, target=i))
             if len(chain_path) > 0:
                 oriented_edges.add((j, i))
-                unoriented_edges.remove((i, j))
+                unoriented_edges.remove(frozenset({i, j}))
                 if verbose > 0:
                     print("Oriented (%d, %d) as %s with graph traversal" % (i, j, (j, i)))
 

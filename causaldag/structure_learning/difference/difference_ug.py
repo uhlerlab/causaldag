@@ -195,8 +195,8 @@ def constraint_diff_ug(X1, X2, alpha=0.01, verbose=0):
         First dataset.    
     X2: array, shape = [n_samples, n_features]
         Second dataset.
-    alpha: float, default = 0.01
-        Parameter for the constraint-based method, which corresponds to a p-value cutoff
+    alpha: Union[float, list], default = 0.01
+        Parameter (or list of parameters) for the constraint-based method, which corresponds to a p-value cutoff
         for hypothesis testing. Higher alpha leads to more edges in the difference undirected graph.
         If alpha is a list, then hypothesis testing for each alpha level is performed.
     verbose: int, default = 0
@@ -236,7 +236,7 @@ def constraint_diff_ug(X1, X2, alpha=0.01, verbose=0):
     cond_nodes = {i for i, _ in diff_ug} | {j for _, j in diff_ug}
     
     if verbose > 0:
-        print("Difference undirected graph: ", difference_ug)
+        print("Difference undirected graph: ", diff_ug)
 
     return diff_ug, cond_nodes
 
