@@ -6,6 +6,11 @@ Use at your own risk.**
 CausalDAG is a Python package for the creation, manipulation, and learning
 of Causal DAGs. CausalDAG requires Python 3.5+
 
+The functionalities of the package are divided into three sub-packages:
+* https://github.com/uhlerlab/graphical_models
+* https://github.com/uhlerlab/conditional_independence
+* https://github.com/uhlerlab/graphical_model_learning
+
 ### Install
 Install the latest version of CausalDAG:
 ```
