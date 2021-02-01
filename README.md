@@ -1,15 +1,16 @@
-**This package is still very young and hence maybe be subject to future revision.
-Use at your own risk.**
+**This package is nearing a V1 release, with potential (minor) breaking changes. After the release, future breaking changes will occur less frequently and with more notice. Please raise issues as needed.**
+
+The functionalities of the package have been divided into three sub-packages:
+* https://github.com/uhlerlab/graphical_models
+* https://github.com/uhlerlab/conditional_independence
+* https://github.com/uhlerlab/graphical_model_learning
+
+However, the `causaldag` package will be a common wrapper for user convenience, and hence installing and importing `causaldag` should be sufficient for most use cases.
 
 [![codecov](https://codecov.io/gh/uhlerlab/causaldag/branch/master/graph/badge.svg?token=RSM00FKU9A)](https://codecov.io/gh/uhlerlab/causaldag)
 
 CausalDAG is a Python package for the creation, manipulation, and learning
 of Causal DAGs. CausalDAG requires Python 3.5+
-
-The functionalities of the package are divided into three sub-packages:
-* https://github.com/uhlerlab/graphical_models
-* https://github.com/uhlerlab/conditional_independence
-* https://github.com/uhlerlab/graphical_model_learning
 
 ### Install
 Install the latest version of CausalDAG:
