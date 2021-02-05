@@ -17,7 +17,10 @@ $ pip3 install causaldag
 ```
 
 ### Documentation
-Documentation is available at https://causaldag.readthedocs.io/en/latest/index.html
+Documentation for each subpackage is available at:
+* graphical_models: https://graphical-models.readthedocs.io/en/latest/
+* graphical_model_learning: https://graphical-model-learning.readthedocs.io/en/latest/
+* conditional_independence: https://conditional-independence.readthedocs.io/en/latest/
 
 Examples for specific algorithms can be found at https://uhlerlab.github.io/causaldag/
 
