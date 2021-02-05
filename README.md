@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/causaldag.svg)](https://badge.fury.io/py/causaldag)
+
 **This package is nearing a V1 release, with potential (minor) breaking changes. After the release, future breaking changes will occur less frequently and with more notice. Please raise issues as needed.**
 
 `causaldag` is common wrapper for the following packages:
