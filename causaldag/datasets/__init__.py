@@ -1,6 +1,7 @@
-from ..rand.graphs import directed_erdos, alter_weights, rand_weights, unif_away_original, unif_away_zero
+from graphical_models.rand import *
 import numpy as np
 import random
+from .networks import *
 
 
 def create_synthetic_difference(
