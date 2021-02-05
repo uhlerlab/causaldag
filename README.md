@@ -25,13 +25,18 @@ Examples for specific algorithms can be found at https://uhlerlab.github.io/caus
 Find the CPDAG (complete partially directed acyclic graph,
 AKA the *essential graph*) corresponding to a DAG:
 ```
->>> import causaldag as cd
->>> dag = cd.DAG(arcs={(1, 2), (2, 3), (1, 3)})
->>> cpdag = dag.cpdag()
->>> iv = dag.optimal_intervention(cpdag=cpdag)
->>> icpdag = dag.interventional_cpdag([iv], cpdag=cpdag)
->>> dag.reversible_arcs()
-{(1,2), (2,3)}
+>>> from causaldag import rand, partial_correlation_suffstat, partial_correlation_test, MemoizedCI_Tester, gsp
+>>> import numpy as np
+>>> np.random.seed(12312)
+>>> nnodes = 5
+>>> nodes = set(range(nnodes))
+>>> dag = rand.directed_erdos(nnodes, .5)
+>>> gdag = rand.rand_weights(dag)
+>>> samples = gdag.sample(100)
+>>> suffstat = partial_correlation_suffstat(samples)
+>>> ci_tester = MemoizedCI_Tester(partial_correlation_test, suffstat, alpha=1e-3)
+>>> est_dag = gsp(nodes, ci_tester)
+>>> dag.shd_skeleton(est_dag)
 ```
 
 ### License
