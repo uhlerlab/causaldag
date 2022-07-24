@@ -18,6 +18,21 @@ Install the latest version of CausalDAG:
 $ pip3 install causaldag
 ```
 
+### Cite
+You may use the following bibtex for citing `causaldag`:
+```
+@manual{squires2018causaldag,
+  title={{\texttt{causaldag}: creation, manipulation, and learning of causal models}},
+  author={{Chandler Squires}},
+  year={2018},
+  url={https://github.com/uhlerlab/causaldag},
+}
+```
+
+Or the following text:
+
+> Chandler Squires. _causaldag: creation, manipulation, and learning of causal models_, 2018. URL https://github.com/uhlerlab/causaldag
+
 ### Documentation
 Documentation for each subpackage is available at:
 * graphical_models: https://graphical-models.readthedocs.io/en/latest/
